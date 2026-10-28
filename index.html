@@ -1667,7 +1667,7 @@ function measureHeight(d, layout, f) {
   return H;
 }
 function computeFit(d, layout) {
-  const LIM = PAGE_CONTENT_PX - 6;
+  const LIM = PAGE_CONTENT_PX - 24;
   if (measureHeight(d, layout, 1) <= LIM) return { f: 1, ok: true };
   let lo = 0.5, hi = 1;
   if (measureHeight(d, layout, lo) > LIM) return { f: lo, ok: false };
@@ -1760,7 +1760,11 @@ async function downloadPdfDirect() {
 function printCv() {
   if (window.self !== window.top) { downloadPdfDirect(); return; } // eingebettete Vorschau: Druckdialog meist gesperrt
   const d = collect(), old = document.title;
-  $("#printArea").innerHTML = buildHtml(d, state.layout, true, currentFit(d));
+  const fitV = currentFit(d), one = state.onePage;
+  // „Alles auf einer Seite": harte Höhe, damit auch bei abweichender Schrift/Druckengine keine 2. Seite entsteht
+  $("#printArea").innerHTML = one
+    ? `<div style="height:${bleed(state.layout) ? "296mm" : "255mm"};overflow:hidden;break-after:avoid;page-break-after:avoid;break-inside:avoid;">${buildHtml(d, state.layout, true, fitV)}</div>`
+    : buildHtml(d, state.layout, true, fitV);
   let pst = null;
   if (bleed(state.layout)) { // randlose Seiten (dunkler Hintergrund, Banner bis zum Rand)
     pst = document.createElement("style");
