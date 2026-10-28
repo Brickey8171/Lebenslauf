@@ -1,0 +1,1892 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lebenslauf-Ersteller</title>
+<style>
+:root { --ui: #1f4e79; --ui-dark: #163a5a; --bg: #eef1f5; --card: #fff; --line: #d7dde5; --fg: #1f2933; --muted: #6b7684; --ok: #1b7a34; --warn: #b45309; --err: #b00020; }
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; }
+h1, h2, h3, h4, p { margin: 0; }
+
+/* Kopf + Schritte */
+.top { background: var(--ui); color: #fff; }
+.top-in { max-width: 1500px; margin: 0 auto; padding: 12px 18px; display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; justify-content: space-between; }
+.brand h1 { font-size: 20px; }
+.brand p { font-size: 12.5px; opacity: .85; margin-top: 2px; }
+.stepper { display: flex; gap: 6px; }
+.stepper button { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,.12); color: #fff; border: 0; border-radius: 999px; padding: 7px 16px 7px 8px; font: inherit; font-weight: 600; cursor: pointer; }
+.stepper button span { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.25); font-size: 13px; }
+.stepper button:hover { background: rgba(255,255,255,.2); }
+.stepper button.on { background: #fff; color: var(--ui); }
+.stepper button.on span { background: var(--ui); color: #fff; }
+
+/* Layout */
+.app { display: grid; grid-template-columns: minmax(340px, 470px) minmax(0, 1fr); gap: 18px; max-width: 1500px; margin: 0 auto; padding: 16px 18px 40px; align-items: start; }
+.app > * { min-width: 0; }
+#panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
+.step { display: none; }
+.step.active { display: block; }
+h2 { font-size: 21px; margin-bottom: 6px; }
+h3 { font-size: 16px; margin-bottom: 10px; }
+h4 { font-size: 14px; margin: 16px 0 2px; }
+h4 small, summary small, label small { font-weight: 400; color: var(--muted); font-size: 12px; }
+.lead { color: var(--muted); margin-bottom: 14px; }
+.hint { font-size: 12.5px; color: var(--muted); margin: 6px 0; }
+.sub { font-weight: 400; font-size: 12.5px; color: var(--muted); }
+
+/* Bedienelemente */
+label { display: block; font-size: 12.5px; color: var(--muted); margin: 10px 0 3px; }
+label.check { display: flex; align-items: center; gap: 8px; color: var(--fg); font-size: 14px; margin: 8px 0; }
+label.check input { width: 18px; height: 18px; margin: 0; }
+input[type=text], input[type=email], select, textarea { width: 100%; font: inherit; color: inherit; padding: 8px 10px; background: #fff; border: 1px solid #b9c2cd; border-radius: 6px; }
+input[type=text]:focus, input[type=email]:focus, select:focus, textarea:focus { outline: 2px solid #8fb3d6; border-color: var(--ui); }
+textarea { resize: vertical; min-height: 60px; }
+input[type=color] { width: 100%; height: 34px; padding: 2px; border: 1px solid #b9c2cd; border-radius: 6px; background: #fff; }
+input[type=range] { width: 100%; }
+button { font: inherit; cursor: pointer; border-radius: 6px; border: 1px solid #aab4c0; background: #f4f6f8; color: var(--fg); padding: 8px 14px; }
+button:hover { background: #e8ecf0; }
+button:focus-visible, summary:focus-visible { outline: 3px solid #8fb3d6; outline-offset: 1px; }
+button.primary { background: var(--ui); border-color: var(--ui); color: #fff; font-weight: 600; }
+button.primary:hover { background: var(--ui-dark); }
+button.link { border: 0; background: none; color: var(--err); padding: 4px 6px; }
+button.danger { color: var(--err); border-color: #e3b5bd; background: #fff; }
+button.add { margin-top: 6px; border-style: dashed; width: 100%; }
+button:disabled { opacity: .5; cursor: default; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.row2.zip { grid-template-columns: 110px 1fr; }
+.inline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.inline input[type=text], .inline select { flex: 1; min-width: 140px; width: auto; }
+.nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.box { border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin-top: 16px; background: #fafbfc; }
+.box.info { background: #eef5fc; border-color: #c4d9ee; margin: 0 0 14px; }
+
+/* Vorlagen-Auswahl */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.chips button { border-radius: 999px; padding: 5px 13px; font-size: 13.5px; background: #fff; }
+.chips button.on { background: var(--ui); border-color: var(--ui); color: #fff; font-weight: 600; }
+.gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.card { border: 2px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; overflow: hidden; position: relative; }
+.card:hover { border-color: #8fb3d6; }
+.card.sel { border-color: var(--ui); box-shadow: 0 0 0 2px rgba(31,78,121,.25); }
+.card.sel .cname span::before { content: "✓ "; color: var(--ui); font-weight: 700; }
+.thumb { height: 190px; overflow: hidden; background: #fff; pointer-events: none; border-bottom: 1px solid var(--line); }
+.cname { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; font-size: 13px; font-weight: 600; }
+.cname .link { font-size: 17px; line-height: 1; padding: 0 4px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.swatches button { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #b9c2cd; }
+.swatches button.on { box-shadow: 0 0 0 3px var(--ui); }
+.swatches input[type=color] { width: 44px; height: 30px; padding: 0; }
+.seg { display: inline-flex; border: 1px solid #aab4c0; border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; background: #fff; padding: 6px 14px; font-size: 13.5px; }
+.seg button + button { border-left: 1px solid #aab4c0; }
+.seg button.on { background: var(--ui); color: #fff; }
+details.more { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 8px; }
+details.more > summary { cursor: pointer; font-weight: 600; font-size: 14px; padding: 4px 0; }
+details.more .inner, details.more > div { padding-top: 6px; }
+
+/* Daten-Eingabe (Akkordeon) */
+details.acc { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; background: #fff; }
+details.acc > summary { cursor: pointer; padding: 11px 14px; font-weight: 600; font-size: 15px; list-style: none; display: flex; align-items: center; justify-content: space-between; }
+details.acc > summary::-webkit-details-marker { display: none; }
+details.acc > summary::after { content: "▾"; color: var(--muted); transition: transform .15s; }
+details.acc[open] > summary { border-bottom: 1px solid var(--line); background: #f6f8fa; border-radius: 8px 8px 0 0; }
+details.acc[open] > summary::after { transform: rotate(180deg); }
+details.acc > .inner { padding: 4px 14px 14px; }
+.item { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px 12px; margin: 10px 0; background: #fafbfc; }
+.item .top { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 13px; color: var(--muted); }
+.item .tools button { padding: 2px 8px; font-size: 13px; }
+.item .tools button.link { padding: 2px 6px; }
+.photo-row { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+#photoThumb { width: 60px; height: 80px; object-fit: cover; border: 1px solid #b9c2cd; border-radius: 4px; }
+
+/* Schritt 3 */
+.checks { margin: 8px 0 16px; display: grid; gap: 6px; }
+.check-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px 12px; border-radius: 8px; font-size: 14px; border: 1px solid; }
+.check-item.ok { background: #effaf1; border-color: #bfe3c7; color: #14532d; }
+.check-item.warn { background: #fff7ed; border-color: #f5d3a4; color: #7c3d06; }
+.check-item .ic { font-weight: 700; }
+.check-item button { margin-left: auto; padding: 2px 10px; font-size: 13px; white-space: nowrap; }
+.bigbtns { display: grid; gap: 10px; margin: 6px 0 12px; }
+button.big { display: block; text-align: left; padding: 14px 16px; font-size: 16px; }
+button.big span { display: block; font-size: 12.5px; font-weight: 400; opacity: .85; margin-top: 2px; }
+ol { margin: 4px 0 4px 18px; padding: 0; } ol li { margin: 4px 0; }
+
+/* Vorschau */
+#stage { position: sticky; top: 10px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+.toolbar .grow { flex: 1; min-width: 120px; font-size: 12.5px; color: var(--muted); text-align: right; }
+#pageInfo.warn { color: var(--err); font-weight: 600; }
+.saved { color: var(--ok); margin-left: 8px; opacity: 0; transition: opacity .3s; }
+.saved.show { opacity: 1; }
+#sheetWrap { width: 100%; overflow: hidden; border: 1px solid var(--line); border-radius: 4px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.12); }
+#sheet { width: 794px; min-height: 1123px; padding: 76px; box-sizing: border-box; transform-origin: 0 0; background: #fff; color: #222; }
+#status { margin-top: 8px; font-size: 13px; min-height: 18px; }
+#status.ok { color: var(--ok); } #status.err { color: var(--err); }
+
+@media (max-width: 900px) {
+  .app { grid-template-columns: minmax(0, 1fr); padding: 10px 10px 40px; }
+  #stage { position: static; order: 2; }
+  .stepper { width: 100%; }
+  .stepper button { flex: 1; justify-content: center; padding: 7px 6px; }
+  .row2 { grid-template-columns: 1fr; }
+  .row2.zip { grid-template-columns: 100px 1fr; }
+  .thumb { height: 170px; }
+}
+
+/* Druck: nur der Lebenslauf */
+#printArea { display: none; }
+@page { size: A4; margin: 2cm; }
+@media print {
+  html, body { background: #fff !important; }
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+.toolbar label.check.onep { margin: 0; font-size: 13px; white-space: nowrap; }
+label.check small { color: var(--muted); font-size: 12px; }
+
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1>Lebenslauf-Ersteller</h1>
+      <p>Österreichischer Lebenslauf in 3 Schritten · alles bleibt auf deinem Gerät</p>
+    </div>
+    <nav class="stepper" id="stepper" aria-label="Schritte">
+      <button type="button" data-go="1" class="on"><span>1</span> Vorlage</button>
+      <button type="button" data-go="2"><span>2</span> Daten</button>
+      <button type="button" data-go="3"><span>3</span> Fertig</button>
+    </nav>
+  </div>
+</header>
+
+<div class="app">
+<main id="panel">
+
+  <!-- ============ SCHRITT 1 ============ -->
+  <section class="step active" id="step1">
+    <h2>Vorlage wählen</h2>
+    <p class="lead">Klicke auf eine Vorlage. Die Vorschau rechts zeigt die Vorlage mit Beispieldaten. In Schritt 2 siehst du dann deine eigenen Daten.</p>
+
+    <div class="chips" id="chips"></div>
+    <div id="gallery" class="gallery"></div>
+
+    <div class="box">
+      <h3>Vorlage anpassen <span class="sub" id="layoutCurrent"></span></h3>
+      <label class="check"><input type="checkbox" class="onePage"> Alles auf einer Seite <small>(verkleinert automatisch)</small></label>
+      <label>Farbe</label>
+      <div class="swatches" id="swatches"></div>
+      <label>Zweite Farbe <small>(für Farbverläufe &amp; mehrfarbige Vorlagen, nur PDF)</small></label>
+      <div class="swatches" id="swatches2"></div>
+      <div class="row2">
+        <div><label for="q_font">Schrift</label><select id="q_font"></select></div>
+        <div><label>Foto-Form</label><div class="seg" data-seg="photoShape"></div></div>
+      </div>
+      <label>Textgröße</label>
+      <div class="seg" data-seg="baseSize"></div>
+      <label>Abstände</label>
+      <div class="seg" data-seg="spacing"></div>
+
+      <details class="more">
+        <summary>Alle Einstellungen</summary>
+        <div id="layoutControls"></div>
+      </details>
+      <details class="more">
+        <summary>Eigene Vorlage speichern oder teilen</summary>
+        <div class="inner">
+          <label for="layoutName">Name deiner Vorlage</label>
+          <div class="inline"><input type="text" id="layoutName" placeholder="z. B. Meine blaue Vorlage"><button type="button" id="saveLayout">Speichern</button></div>
+          <p class="hint">Gespeicherte Vorlagen erscheinen oben unter „Meine“ und sind bei jedem neuen Lebenslauf wieder da.</p>
+          <label for="layoutCode">Vorlagen-Code (zum Sichern oder Weitergeben)</label>
+          <textarea id="layoutCode" rows="2" placeholder="Code hier einfügen oder erzeugen"></textarea>
+          <div class="inline"><button type="button" id="exportLayout">Code erzeugen</button><button type="button" id="importLayout">Code importieren</button></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="nav"><span></span><button type="button" class="primary" data-go="2">Weiter: Daten eingeben →</button></div>
+  </section>
+
+  <!-- ============ SCHRITT 2 ============ -->
+  <section class="step" id="step2">
+    <h2>Deine Daten</h2>
+    <div class="box info">
+      <p>Das Formular ist leer – trage deine Angaben ein, die Vorschau rechts aktualisiert sich sofort. Zum Ausprobieren kannst du ein Beispiel laden.</p>
+      <div class="inline">
+        <select id="sampleSelect" aria-label="Beispiel auswählen"></select>
+        <button type="button" id="loadSample">Beispiel laden</button>
+        <button type="button" id="clearAll">Formular leeren</button>
+      </div>
+    </div>
+
+    <details class="acc" id="acc_personal" open>
+      <summary>Persönliche Daten</summary>
+      <div class="inner">
+        <div class="photo-row">
+          <img id="photoThumb" alt="" hidden>
+          <div>
+            <button type="button" id="photoBtn">Foto hinzufügen</button>
+            <button type="button" id="photoRemove" class="link" hidden>Foto entfernen</button>
+            <input type="file" id="photoFile" accept="image/*" hidden>
+            <p class="hint">Ein Foto ist in Österreich üblich, aber freiwillig. Es wird passend zugeschnitten und bleibt auf deinem Gerät.</p>
+          </div>
+        </div>
+        <div class="row2">
+          <div><label>Titel (vor dem Namen)</label><input type="text" data-k="titleBefore" placeholder="Mag., DI, Dr."></div>
+          <div><label>Titel (nach dem Namen)</label><input type="text" data-k="titleAfter" placeholder="BA, MSc, MBA"></div>
+        </div>
+        <div class="row2">
+          <div><label>Vorname</label><input type="text" data-k="first" autocomplete="given-name"></div>
+          <div><label>Nachname</label><input type="text" data-k="last" autocomplete="family-name"></div>
+        </div>
+        <label>Berufsbezeichnung / angestrebte Stelle</label>
+        <input type="text" data-k="headline" placeholder="z. B. Buchhalter">
+        <label>Straße und Hausnummer</label>
+        <input type="text" data-k="street" autocomplete="street-address">
+        <div class="row2 zip">
+          <div><label>PLZ</label><input type="text" data-k="zip" placeholder="1010" inputmode="numeric"></div>
+          <div><label>Ort</label><input type="text" data-k="city"></div>
+        </div>
+        <div class="row2">
+          <div><label>Telefon</label><input type="text" data-k="phone" placeholder="+43 ..." inputmode="tel"></div>
+          <div><label>E-Mail</label><input type="email" data-k="email" autocomplete="email"></div>
+        </div>
+        <label>Website / LinkedIn</label>
+        <input type="text" data-k="web">
+        <h4>Weitere Angaben <small>(freiwillig – leere Felder werden nicht angezeigt)</small></h4>
+        <div class="row2">
+          <div><label>Geburtsdatum</label><input type="text" data-k="birthDate" placeholder="TT.MM.JJJJ"></div>
+          <div><label>Geburtsort</label><input type="text" data-k="birthPlace"></div>
+        </div>
+        <div class="row2">
+          <div><label>Staatsbürgerschaft</label><input type="text" data-k="nationality" placeholder="Österreich"></div>
+          <div><label>Familienstand</label><input type="text" data-k="marital" placeholder="ledig, verheiratet, ..."></div>
+        </div>
+      </div>
+    </details>
+
+    <details class="acc" id="acc_profile">
+      <summary>Kurzprofil <small>(freiwillig)</small></summary>
+      <div class="inner">
+        <label>2–3 Sätze über dich</label>
+        <textarea data-k="summary" rows="4" placeholder="z. B. Gewissenhafter Buchhalter mit 10 Jahren Erfahrung in ..."></textarea>
+      </div>
+    </details>
+
+    <details class="acc" id="acc_jobs">
+      <summary>Berufserfahrung</summary>
+      <div class="inner">
+        <p class="hint">Die neueste Stelle zuerst. Datum als MM/JJJJ. „Bis“ leer lassen = bis heute.</p>
+        <div id="jobs"></div>
+        <button type="button" id="addJob" class="add">+ Position hinzufügen</button>
+      </div>
+    </details>
+
+    <details class="acc" id="acc_edu">
+      <summary>Ausbildung</summary>
+      <div class="inner">
+        <p class="hint">Matura, Lehre, Berufsschule, FH, Universität, Zivildienst, WIFI/BFI-Kurse …</p>
+        <div id="edu"></div>
+        <button type="button" id="addEdu" class="add">+ Ausbildung hinzufügen</button>
+      </div>
+    </details>
+
+    <details class="acc" id="acc_skills">
+      <summary>Kenntnisse &amp; Sonstiges</summary>
+      <div class="inner">
+        <label>Sprachen <small>(eine pro Zeile, Niveau A1–C2)</small></label>
+        <textarea data-k="languages" rows="3" placeholder="Deutsch – Muttersprache&#10;Englisch – C1"></textarea>
+        <label>EDV / Fachkenntnisse <small>(eine pro Zeile, „Thema: Kenntnisse“)</small></label>
+        <textarea data-k="it" rows="3" placeholder="MS Office: sehr gut&#10;BMD: gut"></textarea>
+        <label>Führerschein</label>
+        <input type="text" data-k="licence" placeholder="Klasse B">
+        <label>Zertifikate &amp; Weiterbildung <small>(eine pro Zeile)</small></label>
+        <textarea data-k="certs" rows="3"></textarea>
+        <label>Interessen</label>
+        <input type="text" data-k="interests" placeholder="z. B. Klettern, Lesen">
+      </div>
+    </details>
+
+    <details class="acc" id="acc_end">
+      <summary>Ort, Datum &amp; Unterschrift</summary>
+      <div class="inner">
+        <label class="check"><input type="checkbox" data-k="showSignature"> Ort, Datum und Unterschriftszeile am Ende anfügen</label>
+        <div class="row2">
+          <div><label>Ort</label><input type="text" data-k="signPlace" placeholder="Wien"></div>
+          <div><label>Datum</label><input type="text" data-k="signDate" placeholder="leer = heutiges Datum"></div>
+        </div>
+      </div>
+    </details>
+
+    <div class="nav"><button type="button" data-go="1">← Zurück</button><button type="button" class="primary" data-go="3">Weiter: Fertig →</button></div>
+  </section>
+
+  <!-- ============ SCHRITT 3 ============ -->
+  <section class="step" id="step3">
+    <h2>Fertig – jetzt speichern</h2>
+    <div id="checks" class="checks"></div>
+
+    <label class="check"><input type="checkbox" class="onePage"> Alles auf einer Seite <small>(verkleinert automatisch)</small></label>
+    <div class="bigbtns">
+      <button type="button" class="btnPdf primary big"><b>Als PDF speichern</b><span>Öffnet den Druckdialog · Text im PDF bleibt markierbar</span></button>
+      <button type="button" class="btnPdfDirect big"><b>PDF direkt herunterladen</b><span>Falls kein Druckdialog erscheint · funktioniert überall (Text nicht markierbar)</span></button>
+      <button type="button" class="btnDocx big"><b>Als Word-Datei speichern (.docx)</b><span>Zum Weiterbearbeiten in Word</span></button>
+    </div>
+
+    <p class="hint" id="docxNote" hidden>Hinweis: Diese Vorlage ist für das PDF optimiert. In der Word-Datei erscheint sie vereinfacht (ohne Balken, Symbole und Sonderformen).</p>
+
+    <details class="more">
+      <summary>So klappt das PDF-Speichern</summary>
+      <div class="inner">
+        <ol>
+          <li>Klicke auf „Als PDF speichern“. Der Druckdialog deines Browsers öffnet sich.</li>
+          <li>Wähle als Drucker <b>„Als PDF speichern“</b> (Chrome/Edge) bzw. unten links <b>„PDF“ → „Als PDF sichern“</b> (Mac/Safari).</li>
+          <li>Papier: <b>A4</b>. Ränder: <b>Standard</b>. Hake <b>„Hintergrundgrafiken“</b> an, damit Farbflächen mitgedruckt werden.</li>
+          <li>Auf „Speichern“ klicken – fertig.</li>
+        </ol>
+      </div>
+    </details>
+
+    <div class="box">
+      <h3>Daten sichern</h3>
+      <p class="hint">Deine Eingaben werden automatisch in diesem Browser gespeichert. Für einen Gerätewechsel kannst du sie als Datei sichern.</p>
+      <div class="inline">
+        <button type="button" id="backupSave">Daten sichern (Datei)</button>
+        <button type="button" id="backupLoad">Daten laden</button>
+        <input type="file" id="backupFile" accept=".json,application/json" hidden>
+      </div>
+      <div class="inline"><button type="button" id="resetAll" class="danger">Alles zurücksetzen</button></div>
+    </div>
+
+    <div class="nav"><button type="button" data-go="2">← Zurück zu den Daten</button><span></span></div>
+  </section>
+</main>
+
+<section id="stage" aria-label="Vorschau">
+  <div class="toolbar">
+    <button type="button" class="btnPdf primary">PDF speichern</button>
+    <button type="button" class="btnPdfDirect">PDF direkt</button>
+    <button type="button" class="btnDocx">Word (.docx)</button>
+    <label class="check onep"><input type="checkbox" class="onePage"> 1 Seite</label>
+    <span class="grow"><span id="pageInfo"></span> <span id="saved" class="saved"></span></span>
+  </div>
+  <div id="sheetWrap"><div id="sheet"></div></div>
+  <div id="status" role="status" aria-live="polite"></div>
+  <p class="hint">Die Vorschau ist eine Annäherung. Zeilen- und Seitenumbrüche können im PDF und in Word minimal abweichen.</p>
+</section>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+// Beispiel-Lebensläufe (alle Daten sind erfunden): Matura, Lehre, Zivildienst, FH/TU, Sprachniveau nach GER
+window.SAMPLES = {
+  dev: {
+    label: "Softwareentwicklerin (Wien, TU Wien)",
+    data: {
+      titleBefore: "", first: "Anna", last: "Gruber", titleAfter: "MSc",
+      headline: "Softwareentwicklerin (Java / TypeScript)",
+      birthDate: "14.05.1997", birthPlace: "Wien", nationality: "Österreich", marital: "",
+      street: "Beispielgasse 12/4", zip: "1070", city: "Wien",
+      phone: "+43 660 123 45 67", email: "anna.gruber@example.at", web: "linkedin.com/in/anna-gruber-beispiel",
+      summary: "Softwareentwicklerin mit 4 Jahren Erfahrung in Backend- und Webentwicklung. Schwerpunkte: Java, Spring Boot, Angular und Cloud-Deployment. Teamorientiert, lösungsorientiert und mit Freude an sauberem Code.",
+      jobs: [
+        { from: "10/2021", to: "", role: "Softwareentwicklerin", company: "Alpenbyte Software GmbH", place: "Wien",
+          details: "Entwicklung und Wartung von Microservices mit Java und Spring Boot\nUmsetzung von Web-Frontends mit Angular und TypeScript\nEinführung von CI/CD-Pipelines (GitLab) und Docker-Deployments\nMitarbeit in einem agilen Scrum-Team mit 8 Personen" },
+        { from: "03/2018", to: "09/2021", role: "Werkstudentin Softwareentwicklung", company: "Donau Digital OG", place: "Wien",
+          details: "Entwicklung interner Tools in Python und SQL\nTestautomatisierung und Fehleranalyse" }
+      ],
+      edu: [
+        { from: "10/2019", to: "09/2021", degree: "Master Software Engineering & Internet Computing (MSc)", school: "Technische Universität Wien", place: "Wien", details: "Masterarbeit: Skalierbare Event-Streaming-Architekturen\nAbschluss mit Auszeichnung" },
+        { from: "10/2015", to: "06/2019", degree: "Bachelor Informatik (BSc)", school: "Technische Universität Wien", place: "Wien", details: "" },
+        { from: "09/2007", to: "06/2015", degree: "Matura (AHS, Realgymnasium)", school: "BRG Beispielstraße", place: "Wien", details: "" }
+      ],
+      languages: "Deutsch – Muttersprache\nEnglisch – C1 (verhandlungssicher)\nFranzösisch – A2 (Grundkenntnisse)",
+      it: "Programmiersprachen: Java, TypeScript, Python, SQL\nFrameworks: Spring Boot, Angular, JUnit\nTools: Git, Docker, GitLab CI, Jira",
+      licence: "Klasse B",
+      certs: "Professional Scrum Master I (PSM I), 2022\nAWS Certified Developer – Associate, 2023",
+      interests: "Klettern, Open-Source-Projekte, Reisen",
+      showSignature: true, signPlace: "Wien", signDate: ""
+    }
+  },
+
+  office: {
+    label: "Buchhalter (Graz, HAK, Zivildienst)",
+    data: {
+      titleBefore: "", first: "Lukas", last: "Huber", titleAfter: "",
+      headline: "Buchhalter / Sachbearbeiter Rechnungswesen",
+      birthDate: "03.11.1993", birthPlace: "Graz", nationality: "Österreich", marital: "ledig",
+      street: "Musterweg 7", zip: "8010", city: "Graz",
+      phone: "+43 664 765 43 21", email: "lukas.huber@example.at", web: "",
+      summary: "Gewissenhafter Buchhalter mit über 10 Jahren Berufserfahrung in Debitoren-, Kreditoren- und Anlagenbuchhaltung sowie Monatsabschlüssen. Sicherer Umgang mit BMD und Excel.",
+      jobs: [
+        { from: "04/2016", to: "", role: "Buchhalter", company: "Murtal Logistik GmbH", place: "Graz",
+          details: "Laufende Buchhaltung (Debitoren, Kreditoren, Bank)\nMonats- und Jahresabschlussarbeiten, UVA-Erstellung\nAnlagenbuchhaltung und Kostenstellenrechnung\nEnge Zusammenarbeit mit Steuerberatung und Wirtschaftsprüfung" },
+        { from: "07/2013", to: "03/2016", role: "Bürokaufmann", company: "Steirische Handels GmbH", place: "Graz",
+          details: "Rechnungsprüfung und Zahlungsverkehr\nAuftragsabwicklung und Kundenkorrespondenz" }
+      ],
+      edu: [
+        { from: "09/2019", to: "06/2021", degree: "Bilanzbuchhalter (berufsbegleitend)", school: "WIFI Steiermark", place: "Graz", details: "" },
+        { from: "10/2012", to: "06/2013", degree: "Zivildienst (Rettungsdienst)", school: "Rotes Kreuz Steiermark", place: "Graz", details: "" },
+        { from: "09/2007", to: "06/2012", degree: "Matura, Handelsakademie (HAK)", school: "HAK Graz", place: "Graz", details: "Schwerpunkt Rechnungswesen und Controlling" }
+      ],
+      languages: "Deutsch – Muttersprache\nEnglisch – B2\nItalienisch – A1",
+      it: "MS Office: sehr gut (Excel, Word, Outlook)\nBMD NTCS: sehr gut\nSAP FI: Grundkenntnisse",
+      licence: "Klasse B",
+      certs: "Ersthelfer-Auffrischungskurs, 2024",
+      interests: "Radfahren, Schach, Ehrenamt bei der Freiwilligen Feuerwehr",
+      showSignature: true, signPlace: "Graz", signDate: ""
+    }
+  },
+
+  lehre: {
+    label: "Einzelhandelskauffrau (Linz, Lehre, Berufseinsteigerin)",
+    data: {
+      titleBefore: "", first: "Sophie", last: "Mayer", titleAfter: "",
+      headline: "Einzelhandelskauffrau (Lehrabschluss)",
+      birthDate: "22.08.2005", birthPlace: "Linz", nationality: "Österreich", marital: "",
+      street: "Probeplatz 3/2", zip: "4020", city: "Linz",
+      phone: "+43 676 111 22 33", email: "sophie.mayer@example.at", web: "",
+      summary: "Freundliche und motivierte Einzelhandelskauffrau mit abgeschlossener Lehre. Erfahrung in Kundenberatung, Kassa und Warenpräsentation. Teamfähig, belastbar und flexibel.",
+      jobs: [
+        { from: "07/2024", to: "", role: "Verkäuferin", company: "Beispiel Markt GmbH", place: "Linz",
+          details: "Kundenberatung und Verkauf\nKassa- und Abrechnungstätigkeiten\nWarenverräumung, Preisauszeichnung und Regalpflege" },
+        { from: "09/2021", to: "06/2024", role: "Lehrling Einzelhandel", company: "Beispiel Markt GmbH", place: "Linz",
+          details: "Lehre mit Schwerpunkt Lebensmittel\nAbschluss der Lehrabschlussprüfung mit gutem Erfolg" },
+        { from: "07/2021", to: "08/2021", role: "Ferialpraktikantin", company: "Supermarkt Muster", place: "Linz", details: "" }
+      ],
+      edu: [
+        { from: "09/2021", to: "06/2024", degree: "Lehrabschlussprüfung Einzelhandel", school: "Berufsschule Linz", place: "Linz", details: "" },
+        { from: "09/2020", to: "06/2021", degree: "Polytechnische Schule", school: "PTS Linz", place: "Linz", details: "" },
+        { from: "09/2016", to: "06/2020", degree: "Mittelschule", school: "MS Beispielstraße", place: "Linz", details: "" }
+      ],
+      languages: "Deutsch – Muttersprache\nEnglisch – B1",
+      it: "MS Office: gute Kenntnisse\nWarenwirtschaftssysteme: Grundkenntnisse",
+      licence: "Klasse AM (Moped)",
+      certs: "Erste-Hilfe-Kurs, 2023",
+      interests: "Tanzen, Fußball, Backen",
+      showSignature: true, signPlace: "Linz", signDate: ""
+    }
+  }
+};
+
+</script>
+<script>
+(() => {
+"use strict";
+/* ===================================================================
+   Lebenslauf-Ersteller – Layout-Engine (Vorschau/PDF als HTML, Word als echtes .docx)
+   =================================================================== */
+const L = {
+  personal: "Persönliche Daten", profile: "Kurzprofil", experience: "Berufserfahrung", education: "Ausbildung",
+  skills: "Kenntnisse", languages: "Sprachen", it: "EDV / Fachkenntnisse", licence: "Führerschein", certs: "Zertifikate & Weiterbildung",
+  interests: "Interessen", address: "Adresse", phone: "Telefon", email: "E-Mail", web: "Web", birth: "Geboren",
+  nationality: "Staatsbürgerschaft", marital: "Familienstand", today: "heute", on: "am", cv: "Lebenslauf"
+};
+
+const FONTS = ["Calibri", "Arial", "Georgia", "Cambria", "Times New Roman", "Garamond", "Verdana", "Tahoma", "Trebuchet MS", "Segoe UI"];
+const SWATCHES = ["#1f4e79", "#2a6f97", "#00796b", "#2f5d3a", "#5a1f2b", "#b5532f", "#d35400", "#6a4c93", "#243447", "#444444"];
+
+const LAYOUT_SPEC = [
+  { k: "font", label: "Schriftart", type: "enum", options: FONTS },
+  { k: "baseSize", label: "Textgröße (pt)", type: "num", min: 9, max: 12, step: 0.5 },
+  { k: "accent", label: "Akzentfarbe", type: "color" },
+  { k: "accent2", label: "Zweite Farbe (Verläufe, nur PDF)", type: "color" },
+  { k: "page", label: "Seitenhintergrund", type: "enum", options: [["white", "Weiß"], ["cream", "Creme (nur PDF)"], ["dark", "Dunkel (nur PDF)"], ["gradient", "Pastell-Verlauf (nur PDF)"], ["sideBleed", "Seitenleiste bis zum Rand (nur PDF)"]] },
+  { k: "spacing", label: "Abstände", type: "enum", options: [["compact", "Kompakt"], ["normal", "Normal"], ["airy", "Luftig"]] },
+  { k: "columns", label: "Spalten", type: "enum", options: [["single", "Eine Spalte"], ["sidebarLeft", "Seitenleiste links"], ["sidebarRight", "Seitenleiste rechts"], ["split", "Zweispaltig, Spalte rechts"], ["splitLeft", "Zweispaltig, Spalte links (nur PDF)"]] },
+  { k: "sideWidth", label: "Breite der Seitenleiste (%)", type: "num", min: 26, max: 40, step: 1 },
+  { k: "sideDark", label: "Seitenleiste in Akzentfarbe (dunkel)", type: "bool" },
+  { k: "nameInSide", label: "Name in der Seitenleiste", type: "bool" },
+  { k: "header", label: "Kopfbereich (eine Spalte)", type: "enum", options: [["plain", "Schlicht"], ["band", "Farbiges Band"], ["tint", "Helle Tönung"], ["topbar", "Farbbalken oben"], ["center", "Zentriert"], ["accent", "Akzentlinie links"], ["stripes", "Farbstreifen oben"], ["box", "Name im Rahmen"], ["vbar", "Balken + Symbole (nur PDF)"], ["block", "Grauer Block (nur PDF)"], ["corner", "Ecke mit Rundfoto (nur PDF)"], ["title", "Großer Titel (nur PDF)"], ["navyBlock", "Dunkler Fotoblock (nur PDF)"], ["photoCorner", "Foto links mit Fläche (nur PDF)"], ["bandRound", "Band mit Rundfoto (nur PDF)"], ["circleTitle", "Titel mit Kreis (nur PDF)"], ["gradient", "Farbverlauf-Banner (nur PDF)"], ["wave", "Banner mit Welle (nur PDF)"], ["slant", "Schräges Banner (nur PDF)"], ["hero", "Foto-Hero (nur PDF)"], ["stripesDiag", "Diagonale Streifen (nur PDF)"]] },
+  { k: "nameSize", label: "Namensgröße (pt)", type: "num", min: 18, max: 54, step: 1 },
+  { k: "nameStack", label: "Vor- und Nachname untereinander (nur PDF)", type: "bool" },
+  { k: "nameUpper", label: "Name in Großbuchstaben", type: "bool" },
+  { k: "nameSplit", label: "Vorname dünn, Nachname fett", type: "bool" },
+  { k: "photoPos", label: "Foto-Position (eine Spalte)", type: "enum", options: [["right", "Rechts"], ["left", "Links"]] },
+  { k: "photoShape", label: "Foto-Form", type: "enum", options: [["rect", "Rechteck (Hochformat)"], ["round", "Rund"]] },
+  { k: "headStyle", label: "Überschriften", type: "enum", options: [["underline", "Unterstrichen"], ["plain", "Nur Farbe"], ["bar", "Farbbalken"], ["leftbar", "Balken links"], ["dotted", "Gepunktete Linie"], ["centered", "Zentriert mit Linien"], ["double", "Doppelte Linie"], ["boxed", "Rahmen"], ["spaced", "Gesperrte Schrift"], ["greybar", "Grauer Balken (nur PDF)"], ["icon", "Symbol + Linie (nur PDF)"]] },
+  { k: "headUpper", label: "Überschriften in Großbuchstaben", type: "bool" },
+  { k: "dateStyle", label: "Datumsangaben", type: "enum", options: [["left", "Linke Spalte"], ["above", "Über dem Eintrag"], ["right", "Rechte Spalte"], ["timeline", "Zeitstrahl"], ["dots", "Zeitstrahl mit Punkten (nur PDF)"]] },
+  { k: "dateWidth", label: "Breite der Datumsspalte (%)", type: "num", min: 16, max: 34, step: 1 },
+  { k: "bullet", label: "Aufzählungszeichen", type: "enum", options: [["disc", "Rund"], ["circle", "Hohl"], ["square", "Eckig"]] },
+  { k: "contact", label: "Kontaktdaten (nicht bei Seitenleiste)", type: "enum", options: [["table", "Tabelle mit Beschriftung"], ["line", "Kompakte Zeilen"], ["icons", "Zeilen mit Symbolen"], ["strip", "Farbige Leiste"], ["iconGrid", "Symbole im Raster (nur PDF)"], ["iconTable", "Symbole mit Beschriftung (nur PDF)"]] },
+  { k: "structure", label: "Aufbau der Abschnitte (eine Spalte)", type: "enum", options: [["normal", "Überschrift über dem Inhalt"], ["editorial", "Überschrift links daneben"], ["cards", "Abschnitte als Karten"], ["glass", "Karten mit Schatten (nur PDF)"]] },
+  { k: "headNum", label: "Überschriften nummerieren (01, 02 …)", type: "bool" },
+  { k: "skillStyle", label: "Sprachen & Kenntnisse", type: "enum", options: [["text", "Als Text"], ["bars", "Mit Balken (nur PDF)"], ["dots", "Mit Punkten (nur PDF)"], ["chips", "Als Etiketten (nur PDF)"], ["rings", "Als Ringe (nur PDF)"]] },
+  { k: "rules", label: "Linien zwischen Einträgen (nur PDF)", type: "bool" },
+  { k: "zebra", label: "Abwechselnd graue Zeilen (nur PDF)", type: "bool" },
+  { k: "nameBox", label: "Name im Rahmen (Seitenleiste, nur PDF)", type: "bool" },
+  { k: "sideCenter", label: "Seitenspalte zentriert (nur PDF)", type: "bool" },
+  { k: "skillsMain", label: "Kenntnisse im Hauptteil statt Seitenleiste (nur PDF)", type: "bool" }
+];
+
+const DEFAULT_LAYOUT = {
+  font: "Calibri", baseSize: 10.5, accent: "#1f4e79", accent2: "#8b5cf6", page: "white", nameStack: false, spacing: "normal", columns: "single", sideWidth: 32, sideDark: false, nameInSide: false,
+  header: "plain", nameSize: 24, nameUpper: false, nameSplit: false, photoPos: "right", photoShape: "rect",
+  headStyle: "underline", headUpper: true, dateStyle: "left", dateWidth: 24, bullet: "disc", contact: "table", structure: "normal", headNum: false, skillStyle: "text", rules: false, zebra: false, nameBox: false, sideCenter: false, skillsMain: false
+};
+
+const PRESETS = [
+  { id: "classic", cat: "klassisch", name: "Klassisch", layout: { font: "Calibri", accent: "#1f4e79", header: "plain", headStyle: "underline", dateStyle: "left" } },
+  { id: "band", cat: "modern", name: "Modern Banner", layout: { font: "Calibri", accent: "#1f4e79", header: "band", nameSize: 26, headStyle: "underline", dateStyle: "left" } },
+  { id: "exec", cat: "klassisch", name: "Executive", layout: { font: "Georgia", accent: "#5a1f2b", header: "center", nameUpper: true, nameSize: 24, headStyle: "centered", headUpper: true, contact: "line", dateWidth: 22, baseSize: 10 } },
+  { id: "sideLight", cat: "seite", name: "Seitenleiste hell", layout: { font: "Calibri", accent: "#2a6f97", columns: "sidebarLeft", sideDark: false, headStyle: "underline", dateStyle: "above" } },
+  { id: "sideDark", cat: "seite", name: "Seitenleiste dunkel", layout: { font: "Segoe UI", accent: "#243447", columns: "sidebarLeft", sideDark: true, headStyle: "leftbar", dateStyle: "above", baseSize: 10 } },
+  { id: "sideRight", cat: "seite", name: "Seitenleiste rechts", layout: { font: "Trebuchet MS", accent: "#00796b", columns: "sidebarRight", sideWidth: 30, headStyle: "plain", dateStyle: "right", dateWidth: 22, baseSize: 10 } },
+  { id: "minimal", cat: "modern", name: "Minimal", layout: { font: "Arial", accent: "#444444", header: "plain", nameSize: 22, headStyle: "plain", headUpper: true, dateStyle: "left", dateWidth: 20, spacing: "airy", bullet: "circle", contact: "line", baseSize: 10 } },
+  { id: "elegant", cat: "klassisch", name: "Elegant", layout: { font: "Cambria", accent: "#2f5d3a", header: "topbar", nameSize: 28, headStyle: "dotted", headUpper: false, dateStyle: "left", baseSize: 10.5 } },
+  { id: "bold", cat: "modern", name: "Kräftig", layout: { font: "Trebuchet MS", accent: "#d35400", header: "tint", nameSize: 28, headStyle: "bar", dateWidth: 22, bullet: "square" } },
+  { id: "europass", cat: "klassisch", name: "Europass-Stil", layout: { font: "Arial", accent: "#003399", header: "plain", nameSize: 22, headStyle: "leftbar", headUpper: false, dateWidth: 26, contact: "table", baseSize: 10 } },
+  { id: "timeline", cat: "modern", name: "Zeitstrahl", layout: { font: "Segoe UI", accent: "#6a4c93", header: "plain", nameSize: 26, headStyle: "plain", headUpper: false, dateStyle: "timeline", dateWidth: 20, contact: "line", baseSize: 10 } },
+  { id: "profil", cat: "seite", name: "Profil (rund)", layout: { font: "Calibri", accent: "#1b3a4b", columns: "sidebarLeft", sideDark: true, nameInSide: true, photoShape: "round", sideWidth: 33, headStyle: "leftbar", dateStyle: "above", baseSize: 10 } },
+  { id: "akzent", cat: "modern", name: "Akzentlinie", layout: { font: "Segoe UI", accent: "#e07a1f", header: "accent", nameSize: 26, headStyle: "spaced", headUpper: true, dateStyle: "left", dateWidth: 22, contact: "line", baseSize: 10 } },
+  { id: "rahmen", cat: "klassisch", name: "Rahmen", layout: { font: "Georgia", accent: "#3b3b98", header: "plain", nameSize: 24, headStyle: "boxed", headUpper: false, dateStyle: "above", bullet: "square", baseSize: 10 } },
+  { id: "akademisch", cat: "klassisch", name: "Akademisch", layout: { font: "Times New Roman", accent: "#1a1a1a", header: "center", nameSize: 24, nameSplit: true, headStyle: "double", headUpper: true, dateStyle: "left", dateWidth: 20, contact: "line", baseSize: 11 } },
+  { id: "nordisch", cat: "modern", name: "Nordisch", layout: { font: "Segoe UI", accent: "#2e7d6b", header: "plain", nameSize: 28, nameSplit: true, headStyle: "spaced", headUpper: true, dateStyle: "left", dateWidth: 20, spacing: "airy", contact: "line", baseSize: 10 } },
+  { id: "bannerDark", cat: "modern", name: "Banner dunkel", layout: { font: "Arial", accent: "#222b3a", header: "band", nameSize: 26, headStyle: "leftbar", headUpper: true, dateStyle: "right", dateWidth: 20, baseSize: 10 } },
+  { id: "toenung", cat: "modern", name: "Tönung", layout: { font: "Verdana", accent: "#0e7490", header: "tint", nameSize: 24, headStyle: "spaced", headUpper: true, dateStyle: "above", baseSize: 9.5 } },
+  { id: "terrakotta", cat: "seite", name: "Terrakotta", layout: { font: "Cambria", accent: "#b5532f", columns: "sidebarLeft", sideDark: false, sideWidth: 31, nameSplit: true, headStyle: "double", headUpper: false, dateStyle: "timeline", baseSize: 10.5 } },
+  { id: "kompakt", cat: "modern", name: "Kompakt (1 Seite)", layout: { font: "Calibri", accent: "#37474f", header: "plain", nameSize: 22, headStyle: "underline", dateStyle: "left", dateWidth: 18, spacing: "compact", contact: "line", baseSize: 9.5 } },
+  { id: "marine", cat: "klassisch", name: "Marine", layout: { font: "Cambria", accent: "#14325c", header: "topbar", nameSize: 26, nameUpper: true, headStyle: "bar", headUpper: true, dateStyle: "left", dateWidth: 22, bullet: "square", baseSize: 10.5 } },
+  { id: "bordeaux", cat: "klassisch", name: "Bordeaux", layout: { font: "Garamond", accent: "#6d1f3a", header: "center", nameSize: 28, nameSplit: true, headStyle: "centered", headUpper: true, contact: "line", dateStyle: "left", dateWidth: 21, baseSize: 11.5 } },
+  { id: "tradition", cat: "klassisch", name: "Tradition", layout: { font: "Times New Roman", accent: "#333333", header: "plain", nameSize: 24, headStyle: "underline", headUpper: false, dateStyle: "left", dateWidth: 22, bullet: "disc", contact: "table", baseSize: 11 } },
+  { id: "buero", cat: "klassisch", name: "Büro Österreich", layout: { font: "Arial", accent: "#b3261e", header: "plain", nameSize: 22, headStyle: "underline", headUpper: true, dateStyle: "left", dateWidth: 24, contact: "table", baseSize: 10 } },
+  { id: "salbei", cat: "klassisch", name: "Salbei", layout: { font: "Georgia", accent: "#5b7b5a", header: "topbar", nameSize: 26, headStyle: "dotted", headUpper: false, dateStyle: "above", bullet: "circle", spacing: "airy", baseSize: 10.5 } },
+  { id: "kanzlei", cat: "klassisch", name: "Kanzlei", layout: { font: "Garamond", accent: "#1a2a44", header: "plain", nameSize: 26, nameUpper: true, headStyle: "double", headUpper: true, dateStyle: "right", dateWidth: 20, contact: "line", baseSize: 12 } },
+  { id: "schiefer", cat: "klassisch", name: "Schiefer", layout: { font: "Cambria", accent: "#3d4a5c", header: "accent", nameSize: 26, nameSplit: true, headStyle: "boxed", headUpper: false, dateStyle: "left", dateWidth: 22, baseSize: 10.5 } },
+  { id: "tech", cat: "modern", name: "Tech", layout: { font: "Segoe UI", accent: "#0b7285", header: "band", nameSize: 28, nameSplit: true, headStyle: "leftbar", headUpper: true, dateStyle: "right", dateWidth: 20, bullet: "square", baseSize: 10 } },
+  { id: "koralle", cat: "modern", name: "Koralle", layout: { font: "Trebuchet MS", accent: "#e4572e", header: "tint", nameSize: 28, headStyle: "plain", headUpper: true, dateStyle: "timeline", dateWidth: 20, bullet: "circle", baseSize: 10 } },
+  { id: "lavendel", cat: "modern", name: "Lavendel", layout: { font: "Verdana", accent: "#7b61c4", header: "tint", nameSize: 24, nameSplit: true, headStyle: "spaced", headUpper: true, dateStyle: "above", spacing: "airy", baseSize: 9.5 } },
+  { id: "mint", cat: "modern", name: "Mint", layout: { font: "Tahoma", accent: "#1fa37a", header: "accent", nameSize: 26, headStyle: "bar", headUpper: true, dateStyle: "left", dateWidth: 21, contact: "line", baseSize: 10 } },
+  { id: "kontrast", cat: "modern", name: "Kontrast", layout: { font: "Arial", accent: "#111111", header: "band", nameSize: 30, nameUpper: true, headStyle: "plain", headUpper: true, dateStyle: "left", dateWidth: 20, bullet: "square", baseSize: 10 } },
+  { id: "sand", cat: "modern", name: "Sand", layout: { font: "Georgia", accent: "#a8743a", header: "plain", nameSize: 28, nameSplit: true, headStyle: "dotted", headUpper: false, dateStyle: "timeline", dateWidth: 21, spacing: "airy", contact: "line", baseSize: 10.5 } },
+  { id: "himmel", cat: "modern", name: "Himmelblau", layout: { font: "Calibri", accent: "#2b7de9", header: "topbar", nameSize: 26, headStyle: "underline", headUpper: false, dateStyle: "above", photoPos: "left", baseSize: 10.5 } },
+  { id: "fokus", cat: "modern", name: "Fokus (Foto links)", layout: { font: "Segoe UI", accent: "#c0392b", header: "plain", nameSize: 26, photoPos: "left", headStyle: "leftbar", headUpper: true, dateStyle: "left", dateWidth: 22, contact: "line", baseSize: 10 } },
+  { id: "zart", cat: "modern", name: "Zart", layout: { font: "Calibri", accent: "#8a8f98", header: "center", nameSize: 30, nameSplit: true, headStyle: "centered", headUpper: true, dateStyle: "above", spacing: "airy", contact: "line", baseSize: 10.5 } },
+  { id: "seitePetrol", cat: "seite", name: "Seite Petrol", layout: { font: "Segoe UI", accent: "#0f5c63", columns: "sidebarLeft", sideDark: true, nameInSide: true, sideWidth: 34, headStyle: "plain", headUpper: true, dateStyle: "timeline", photoShape: "round", baseSize: 10 } },
+  { id: "seiteGrau", cat: "seite", name: "Seite Grau (rechts)", layout: { font: "Arial", accent: "#4a4f57", columns: "sidebarRight", sideDark: true, sideWidth: 30, headStyle: "underline", dateStyle: "above", baseSize: 10 } },
+  { id: "seiteWarm", cat: "seite", name: "Seite Warm", layout: { font: "Georgia", accent: "#9c4a1a", columns: "sidebarLeft", sideDark: true, sideWidth: 30, nameSplit: true, headStyle: "dotted", dateStyle: "left", dateWidth: 24, baseSize: 10 } },
+  { id: "seiteSchmal", cat: "seite", name: "Seite Schmal & hell", layout: { font: "Trebuchet MS", accent: "#2f6fb0", columns: "sidebarLeft", sideDark: false, sideWidth: 27, headStyle: "bar", dateStyle: "above", baseSize: 10 } },
+  { id: "redaktion", cat: "besonders", name: "Redaktion", layout: { font: "Georgia", accent: "#222222", header: "plain", nameSize: 32, nameSplit: true, contact: "line", structure: "editorial", headUpper: true, dateStyle: "above", bullet: "circle", baseSize: 10, spacing: "airy" } },
+  { id: "redaktionRot", cat: "besonders", name: "Redaktion Rot", layout: { font: "Arial", accent: "#c62828", header: "accent", nameSize: 30, nameUpper: true, contact: "strip", structure: "editorial", headUpper: true, dateStyle: "above", bullet: "square", baseSize: 10 } },
+  { id: "karten", cat: "besonders", name: "Karten", layout: { font: "Calibri", accent: "#0f766e", header: "tint", nameSize: 28, contact: "line", structure: "cards", headStyle: "plain", headUpper: false, dateStyle: "right", dateWidth: 22, baseSize: 10.5 } },
+  { id: "kartenLeiste", cat: "besonders", name: "Karten mit Leiste", layout: { font: "Segoe UI", accent: "#4f46e5", header: "band", nameSize: 28, contact: "strip", structure: "cards", headStyle: "leftbar", headUpper: true, dateStyle: "above", baseSize: 10 } },
+  { id: "leiste", cat: "besonders", name: "Kontaktleiste", layout: { font: "Calibri", accent: "#1f4e79", header: "plain", nameSize: 30, nameSplit: true, contact: "strip", headStyle: "underline", headUpper: true, dateStyle: "left", dateWidth: 22, baseSize: 10.5 } },
+  { id: "nummern", cat: "besonders", name: "Nummeriert", layout: { font: "Segoe UI", accent: "#0b7285", header: "plain", nameSize: 32, nameSplit: true, contact: "strip", headNum: true, headStyle: "spaced", headUpper: true, dateStyle: "timeline", dateWidth: 20, baseSize: 10, spacing: "airy" } },
+  { id: "magazin", cat: "besonders", name: "Magazin", layout: { font: "Cambria", accent: "#9a3412", header: "center", nameSize: 34, nameSplit: true, nameUpper: true, contact: "line", structure: "editorial", headNum: true, headUpper: true, dateStyle: "above", spacing: "airy", baseSize: 10.5 } },
+  { id: "zwei", cat: "besonders", name: "Zweispaltig", layout: { font: "Calibri", accent: "#1f4e79", header: "plain", nameSize: 28, columns: "split", sideWidth: 30, contact: "line", headStyle: "underline", dateStyle: "above", baseSize: 10 } },
+  { id: "zweiBand", cat: "besonders", name: "Zweispaltig mit Band", layout: { font: "Segoe UI", accent: "#7c2d12", header: "band", nameSize: 28, columns: "split", sideWidth: 32, contact: "table", headStyle: "leftbar", dateStyle: "above", photoPos: "left", baseSize: 10 } },
+  { id: "zweiZeit", cat: "besonders", name: "Zweispaltig Zeitstrahl", layout: { font: "Georgia", accent: "#166534", header: "topbar", nameSize: 28, nameSplit: true, columns: "split", sideWidth: 28, contact: "strip", headStyle: "dotted", headUpper: false, dateStyle: "timeline", dateWidth: 24, baseSize: 10 } },
+  { id: "architekt", cat: "besonders", name: "Architekt", layout: { font: "Tahoma", accent: "#111827", header: "plain", nameSize: 34, nameUpper: true, contact: "line", structure: "editorial", headNum: true, headStyle: "plain", headUpper: true, dateStyle: "above", bullet: "square", baseSize: 9.5, spacing: "airy" } },
+  { id: "visitenkarte", cat: "besonders", name: "Visitenkarte", layout: { font: "Verdana", accent: "#be185d", header: "accent", nameSize: 26, contact: "strip", structure: "cards", headStyle: "spaced", headUpper: true, dateStyle: "left", dateWidth: 24, bullet: "circle", baseSize: 9.5 } },
+  { id: "modernDyn", cat: "at", name: "Modern dynamisch", layout: { font: "Segoe UI", accent: "#e4572e", header: "band", nameSize: 28, nameSplit: true, contact: "icons", headStyle: "leftbar", headUpper: true, dateStyle: "right", dateWidth: 22, baseSize: 10 } },
+  { id: "klassSchlicht", cat: "at", name: "Klassisch & einfach", layout: { font: "Arial", accent: "#333333", header: "plain", nameSize: 22, contact: "table", headStyle: "underline", headUpper: true, dateStyle: "left", dateWidth: 24, baseSize: 10.5 } },
+  { id: "tabellarisch", cat: "at", name: "Tabellarisch", layout: { font: "Times New Roman", accent: "#1a1a1a", header: "plain", nameSize: 22, contact: "table", headStyle: "plain", headUpper: false, dateStyle: "left", dateWidth: 28, baseSize: 11, spacing: "compact" } },
+  { id: "kopfZwei", cat: "at", name: "Kopfzeile & zwei Spalten", layout: { font: "Calibri", accent: "#1f4e79", header: "tint", nameSize: 28, columns: "split", sideWidth: 31, contact: "icons", headStyle: "bar", dateStyle: "above", baseSize: 10 } },
+  { id: "streifen", cat: "at", name: "Farbstreifen", layout: { font: "Trebuchet MS", accent: "#7b2cbf", header: "stripes", nameSize: 28, contact: "icons", headStyle: "underline", headUpper: true, dateStyle: "left", dateWidth: 22, baseSize: 10 } },
+  { id: "namensbox", cat: "at", name: "Namensbox", layout: { font: "Cambria", accent: "#0b4f6c", header: "box", nameSize: 26, nameSplit: true, contact: "line", headStyle: "dotted", headUpper: false, dateStyle: "left", dateWidth: 23, baseSize: 10.5 } },
+  { id: "mitIcons", cat: "at", name: "Mit Symbolen", layout: { font: "Segoe UI", accent: "#0f766e", header: "accent", nameSize: 28, contact: "icons", headStyle: "leftbar", headUpper: true, dateStyle: "timeline", dateWidth: 21, bullet: "circle", baseSize: 10 } },
+  { id: "modern26", cat: "at", name: "Modern 2026", layout: { font: "Segoe UI", accent: "#2563eb", header: "plain", nameSize: 32, nameSplit: true, contact: "strip", headStyle: "spaced", headUpper: true, dateStyle: "above", spacing: "airy", baseSize: 10 } },
+  { id: "modern25", cat: "at", name: "Modern 2025", layout: { font: "Calibri", accent: "#0e7490", columns: "sidebarLeft", sideDark: false, sideWidth: 30, photoShape: "round", headStyle: "bar", dateStyle: "above", baseSize: 10 } },
+  { id: "dynZeit", cat: "at", name: "Dynamisch Zeitstrahl", layout: { font: "Verdana", accent: "#d97706", header: "tint", nameSize: 26, contact: "icons", headStyle: "plain", headUpper: true, dateStyle: "timeline", dateWidth: 21, bullet: "square", baseSize: 9.5 } },
+  { id: "boxSide", cat: "premium", name: "Namensrahmen & Seitenleiste", layout: { font: "Arial", accent: "#6b7280", columns: "sidebarLeft", sideDark: false, sideWidth: 30, nameBox: true, nameUpper: true, nameSize: 20, skillsMain: true, skillStyle: "bars", contact: "iconTable", headStyle: "underline", headUpper: true, dateStyle: "left", dateWidth: 24, rules: true, baseSize: 9.5 } },
+  { id: "balkenSymbole", cat: "premium", name: "Balken & Symbole", layout: { font: "Calibri", accent: "#3f444b", header: "vbar", nameSize: 22, contact: "iconGrid", headStyle: "underline", headUpper: false, dateStyle: "left", dateWidth: 24, rules: true, skillStyle: "bars", baseSize: 10 } },
+  { id: "schreibmaschine", cat: "premium", name: "Schreibmaschine", layout: { font: "Courier New", accent: "#555555", header: "plain", nameSize: 20, contact: "table", headStyle: "greybar", headUpper: false, dateStyle: "left", dateWidth: 30, zebra: true, baseSize: 9.5 } },
+  { id: "rundfotoBand", cat: "premium", name: "Rundfoto im Band", layout: { font: "Segoe UI", accent: "#6b7280", header: "bandRound", nameSize: 24, columns: "splitLeft", sideWidth: 28, sideCenter: true, contact: "table", photoShape: "round", headStyle: "icon", headUpper: false, dateStyle: "left", dateWidth: 22, rules: true, baseSize: 9.5 } },
+  { id: "grauBlock", cat: "premium", name: "Grauer Datenblock", layout: { font: "Arial", accent: "#243b5a", header: "block", headStyle: "plain", headUpper: false, dateStyle: "left", dateWidth: 24, baseSize: 10 } },
+  { id: "eckeDiagonal", cat: "premium", name: "Diagonale Ecke", layout: { font: "Calibri", accent: "#2f3b49", header: "corner", photoShape: "round", headStyle: "underline", headUpper: true, dateStyle: "left", dateWidth: 24, rules: true, baseSize: 9.5 } },
+  { id: "linieSchlicht", cat: "premium", name: "Große Titelzeile", layout: { font: "Calibri", accent: "#6b7280", header: "title", headStyle: "underline", headUpper: false, dateStyle: "left", dateWidth: 26, baseSize: 9.5 } },
+  { id: "navyBlock", cat: "premium", name: "Dunkler Fotoblock", layout: { font: "Arial", accent: "#0d1b3e", header: "navyBlock", nameSize: 22, nameUpper: true, headStyle: "underline", headUpper: true, dateStyle: "left", dateWidth: 24, rules: true, skillStyle: "bars", baseSize: 9.5 } },
+  { id: "zeitBlau", cat: "premium", name: "Zeitstrahl mit Punkten", layout: { font: "Segoe UI", accent: "#4a90b8", header: "photoCorner", nameSize: 22, headStyle: "plain", headUpper: false, dateStyle: "dots", dateWidth: 22, skillStyle: "bars", baseSize: 9.5 } },
+  { id: "gelberKreis", cat: "premium", name: "Titel mit Kreis", layout: { font: "Trebuchet MS", accent: "#f2c811", header: "circleTitle", photoShape: "round", contact: "iconTable", headStyle: "icon", headUpper: false, dateStyle: "left", dateWidth: 22, skillStyle: "dots", baseSize: 9.5 } },
+  { id: "dunkelGold", cat: "fancy", name: "Dunkel & Gold", layout: { font: "Georgia", accent: "#d4af37", page: "dark", header: "center", nameSize: 34, nameUpper: true, nameSplit: true, contact: "line", headStyle: "centered", headUpper: true, dateStyle: "left", dateWidth: 22, spacing: "airy", baseSize: 10 } },
+  { id: "neonNacht", cat: "fancy", name: "Neon Nacht", layout: { font: "Segoe UI", accent: "#22d3ee", page: "dark", header: "accent", nameSize: 32, nameSplit: true, contact: "line", headStyle: "leftbar", headUpper: true, dateStyle: "timeline", dateWidth: 20, skillStyle: "bars", baseSize: 10 } },
+  { id: "riesenName", cat: "fancy", name: "Riesen-Name", layout: { font: "Arial", accent: "#e11d48", header: "plain", nameSize: 48, nameUpper: true, nameStack: true, contact: "line", headStyle: "spaced", headUpper: true, dateStyle: "left", dateWidth: 22, skillStyle: "dots", baseSize: 10, spacing: "airy" } },
+  { id: "verlaufBanner", cat: "fancy", name: "Farbverlauf-Banner", layout: { font: "Segoe UI", accent: "#6d28d9", accent2: "#ec4899", header: "gradient", nameSize: 32, photoShape: "round", headStyle: "plain", headUpper: false, dateStyle: "left", dateWidth: 22, skillStyle: "chips", baseSize: 10 } },
+  { id: "welle", cat: "fancy", name: "Welle", layout: { font: "Calibri", accent: "#0ea5e9", header: "wave", nameSize: 32, headStyle: "icon", headUpper: false, dateStyle: "left", dateWidth: 22, skillStyle: "rings", baseSize: 10 } },
+  { id: "schraeg", cat: "fancy", name: "Schräges Banner", layout: { font: "Trebuchet MS", accent: "#f97316", accent2: "#db2777", header: "slant", nameSize: 32, headStyle: "leftbar", headUpper: true, dateStyle: "dots", dateWidth: 21, skillStyle: "chips", baseSize: 10 } },
+  { id: "heroFoto", cat: "fancy", name: "Foto-Hero", layout: { font: "Segoe UI", accent: "#0f172a", header: "hero", nameSize: 36, nameStack: true, nameUpper: true, headStyle: "underline", headUpper: true, dateStyle: "left", dateWidth: 22, rules: true, skillStyle: "bars", baseSize: 10 } },
+  { id: "streifenDiag", cat: "fancy", name: "Diagonale Streifen", layout: { font: "Verdana", accent: "#2563eb", header: "stripesDiag", nameSize: 26, headStyle: "bar", headUpper: true, dateStyle: "left", dateWidth: 22, skillStyle: "dots", baseSize: 9.5 } },
+  { id: "glasPastell", cat: "fancy", name: "Pastell mit Karten", layout: { font: "Segoe UI", accent: "#8b5cf6", accent2: "#38bdf8", page: "gradient", header: "plain", nameSize: 32, nameSplit: true, contact: "line", structure: "glass", headStyle: "plain", headUpper: false, dateStyle: "above", skillStyle: "chips", baseSize: 10 } },
+  { id: "seitenVerlauf", cat: "fancy", name: "Seitenleiste Vollbild", layout: { font: "Segoe UI", accent: "#1e3a8a", accent2: "#7c3aed", page: "sideBleed", columns: "sidebarLeft", sideDark: true, sideWidth: 33, nameInSide: true, photoShape: "round", skillStyle: "bars", headStyle: "leftbar", dateStyle: "above", baseSize: 10 } },
+  { id: "seitenHell", cat: "fancy", name: "Vollbild mit Ringen", layout: { font: "Calibri", accent: "#0f766e", page: "sideBleed", columns: "sidebarRight", sideDark: false, sideWidth: 30, skillsMain: true, skillStyle: "rings", contact: "iconTable", headStyle: "icon", headUpper: false, dateStyle: "left", dateWidth: 22, rules: true, baseSize: 10 } },
+  { id: "creme", cat: "fancy", name: "Creme & Edel", layout: { font: "Georgia", accent: "#7a5c2e", page: "cream", header: "center", nameSize: 34, nameSplit: true, contact: "line", headStyle: "double", headUpper: true, dateStyle: "above", spacing: "airy", bullet: "circle", baseSize: 10.5 } }
+];
+
+const ICONS = {
+  person: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  pin: '<path d="M12 21s7-6.2 7-12a7 7 0 10-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  web: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+  brief: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M3 13h18"/>',
+  cap: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/>',
+  star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  dot: '<circle cx="12" cy="12" r="3"/>'
+};
+function levelOf(t) {
+  t = String(t || "").toLowerCase();
+  if (/mutter|\bc2\b/.test(t)) return 1;
+  if (/\bc1\b|verhandlungs|sehr gut/.test(t)) return 0.9;
+  if (/\bb2\b|fließend|fliessend|gut/.test(t)) return 0.75;
+  if (/\bb1\b|fortgeschritten/.test(t)) return 0.55;
+  if (/\ba2\b|grund/.test(t)) return 0.35;
+  if (/\ba1\b|anfänger/.test(t)) return 0.2;
+  return 0.6;
+}
+const SPECIAL_HEADERS = ["vbar", "block", "corner", "title", "navyBlock", "photoCorner", "bandRound", "circleTitle", "gradient", "wave", "slant", "hero", "stripesDiag"];
+const BLEED_HEADERS = ["gradient", "wave", "slant", "hero", "stripesDiag"];
+function bleed(l) { l = sanitizeLayout(l); return l.page !== "white" || BLEED_HEADERS.indexOf(l.header) >= 0; }
+function pageBackground(l) {
+  l = sanitizeLayout(l);
+  switch (l.page) {
+    case "dark": return "#0f141a";
+    case "cream": return "#fbf8f1";
+    case "gradient": return `linear-gradient(160deg, ${tint(l.accent, 0.9)}, ${tint(l.accent2, 0.8)})`;
+    case "sideBleed": {
+      if (l.columns !== "sidebarLeft" && l.columns !== "sidebarRight") return "#ffffff";
+      const stop = `calc(20mm + ${l.sideWidth} * 1.7mm)`, c1 = l.sideDark ? l.accent : tint(l.accent, 0.9), c2 = l.sideDark ? l.accent2 : tint(l.accent, 0.9);
+      return `linear-gradient(to ${l.columns === "sidebarLeft" ? "right" : "left"}, ${c1} 0, ${c2} ${stop}, #ffffff ${stop})`;
+    }
+  }
+  return "#ffffff";
+}
+function pdfOnly(l) {
+  l = sanitizeLayout(l);
+  return SPECIAL_HEADERS.indexOf(l.header) >= 0 || l.skillStyle !== "text" || l.rules || l.zebra || l.nameBox || l.sideCenter || l.skillsMain ||
+    l.page !== "white" || l.nameStack || l.structure === "glass" ||
+    l.headStyle === "greybar" || l.headStyle === "icon" || l.dateStyle === "dots" || l.columns === "splitLeft" || l.contact === "iconGrid" || l.contact === "iconTable";
+}
+
+function sanitizeLayout(l) {
+  const out = {}; l = l || {};
+  LAYOUT_SPEC.forEach(s => {
+    const v = l[s.k], def = DEFAULT_LAYOUT[s.k];
+    if (s.type === "enum") {
+      const allowed = s.options.map(o => Array.isArray(o) ? o[0] : o);
+      out[s.k] = allowed.indexOf(v) >= 0 ? v : def;
+    } else if (s.type === "num") {
+      const n = Number(v);
+      out[s.k] = isFinite(n) && v !== "" && v != null ? Math.min(s.max, Math.max(s.min, n)) : def;
+    } else if (s.type === "color") {
+      out[s.k] = typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? v : def;
+    } else {
+      out[s.k] = v === undefined ? def : !!v;
+    }
+  });
+  return out;
+}
+
+const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const lines = s => String(s || "").split("\n").map(x => x.trim()).filter(Boolean);
+const KV = /^(.+?)\s*(?:–|—|:)\s+(.+)$/;
+function tint(hex, t) {
+  const n = parseInt(hex.slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const m = c => Math.round(c + (255 - c) * t);
+  return "#" + [m(r), m(g), m(b)].map(x => ("0" + x.toString(16)).slice(-2)).join("");
+}
+const SP = { compact: { sec: 9, ent: 1 }, normal: { sec: 14, ent: 3 }, airy: { sec: 19, ent: 6 } };
+
+// Gemeinsame Daten-Aufbereitung für HTML und Word
+function prepare(d, Ly) {
+  const nm = { pre: (d.titleBefore || "").trim(), f: (d.first || "").trim(), l: (d.last || "").trim(), post: (d.titleAfter || "").trim() };
+  const lead = [nm.pre, nm.f].filter(Boolean).join(" ");
+  const trail = nm.l + (nm.post ? (nm.l ? ", " : "") + nm.post : "");
+  const fullName = [lead, trail].filter(Boolean).join(" ");
+  const up = s => Ly.nameUpper ? s.toUpperCase() : s;
+  const addr = [d.street, [d.zip, d.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  const pItems = [];
+  if (addr) pItems.push([L.address, addr]);
+  if (d.phone) pItems.push([L.phone, d.phone]);
+  if (d.email) pItems.push([L.email, d.email]);
+  if (d.web) pItems.push([L.web, d.web]);
+  const birth = [d.birthDate, d.birthPlace].filter(x => x && x.trim()).join(", ");
+  if (birth) pItems.push([L.birth, birth]);
+  if (d.nationality && d.nationality.trim()) pItems.push([L.nationality, d.nationality.trim()]);
+  if (d.marital && d.marital.trim()) pItems.push([L.marital, d.marital.trim()]);
+  const items = list => (list || []).filter(e => e && (e.role || e.degree || e.company || e.school));
+  const dateText = (from, to) => {
+    from = (from || "").trim(); to = (to || "").trim();
+    if (!from && !to) return "";
+    if (!from) return to;
+    return from + " – " + (to || L.today);
+  };
+  const signDate = (d.signDate || "").trim() || new Date().toLocaleDateString("de-AT", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const signPlace = (d.signPlace || d.city || "").trim();
+  return { lead, trail, fullName, up, addr, pItems, items, dateText, signLine: signPlace ? signPlace + ", " + L.on + " " + signDate : signDate };
+}
+
+/* ------------------------------ HTML (Vorschau + PDF) ------------------------------ */
+function buildHtml(d, layoutIn, forPrint, fit) {
+  const Ly = sanitizeLayout(layoutIn || DEFAULT_LAYOUT), a = Ly.accent, fs = Ly.baseSize;
+  const X = prepare(d, Ly), sp = SP[Ly.spacing], KVW = Math.max(Ly.dateWidth, 28);
+  const fontCss = `font-family:'${Ly.font}',Arial,sans-serif;`;
+  const F = fit && fit < 1 ? fit : 1, C2 = (2 / F).toFixed(3) + "cm"; // bei Verkleinerung (zoom) bleibt der Rand-Anschnitt gleich
+  const DK = Ly.page === "dark", a2 = Ly.accent2;
+  const DKMAP = { "#222222": "#f1f5f9", "#333333": "#e2e8f0", "#444444": "#e2e8f0", "#555555": "#cbd5e1", "#666666": "#cbd5e1", "#777777": "#94a3b8", "#111111": "#f8fafc" };
+  const dk = c => DK && DKMAP[c] ? DKMAP[c] : c;
+  const base = (color, size, extra) => `${fontCss}font-size:${size || fs}pt;color:${dk(color || "#222222")};${extra || ""}`;
+  const P = (style, inner) => `<p style="${style}">${inner}</p>`;
+  const sidebar = Ly.columns === "sidebarLeft" || Ly.columns === "sidebarRight", split = Ly.columns === "split" || Ly.columns === "splitLeft", splitLeft = Ly.columns === "splitLeft", dark = Ly.sideDark && sidebar;
+  const sideBg = dark ? a : tint(a, 0.9), sideFg = dark ? "#ffffff" : "#222222";
+  const sideAccent = dark ? "#ffffff" : a, sideMuted = dark ? "#e0e0e0" : "#666666";
+  const hasPhoto = !!d.photo, round = Ly.photoShape === "round";
+  const imgTag = !hasPhoto ? "" : (round
+    ? `<img src="${d.photo}" width="120" height="120" alt="Foto" style="width:120px;height:120px;border-radius:60px;object-fit:cover;object-position:50% 15%;">`
+    : `<img src="${d.photo}" width="113" height="151" alt="Foto" style="width:113px;height:151px;">`);
+
+  const svgBadge = (name, size, bg, fg) => `<svg width="${size}" height="${size}" viewBox="0 0 28 28" style="vertical-align:middle;"><circle cx="14" cy="14" r="14" fill="${bg}"/><g transform="translate(6 6) scale(.67)" fill="none" stroke="${fg || "#ffffff"}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ICONS.dot}</g></svg>`;
+  const ICON_OF = {}; ICON_OF[L.address] = "pin"; ICON_OF[L.phone] = "phone"; ICON_OF[L.email] = "mail"; ICON_OF[L.web] = "web"; ICON_OF[L.birth] = "cal"; ICON_OF["Name"] = "person";
+  const iconFor = label => ICON_OF[label] || "person";
+  const SEC_ICON = {}; SEC_ICON[L.experience] = "brief"; SEC_ICON[L.education] = "cap"; SEC_ICON[L.skills] = "star"; SEC_ICON[L.profile] = "person"; SEC_ICON[L.certs] = "star"; SEC_ICON[L.interests] = "star"; SEC_ICON[L.personal] = "person";
+  const meter = (p) => Ly.skillStyle === "dots"
+    ? `<span style="color:${a};letter-spacing:2pt;font-size:${fs + 1}pt;">${"●".repeat(Math.round(p * 6))}<span style="color:#cfd3d8;">${"●".repeat(6 - Math.round(p * 6))}</span></span>`
+    : `<div style="width:100%;height:5pt;background-color:#e3e6ea;"><div style="width:${Math.round(p * 100)}%;height:5pt;background-color:${a};"></div></div>`;
+  const chipBg = DK ? "rgba(255,255,255,0.14)" : tint(a, 0.85);
+  const chip = (nm, dt) => `<span style="display:inline-block;margin:2pt 4pt 2pt 0;padding:2pt 9pt;border-radius:11pt;background-color:${chipBg};${base("#222222", fs - 0.5)}">${esc(nm)}${dt ? ` <span style="color:#777777;">· ${esc(dt)}</span>` : ""}</span>`;
+  const ringCell = (nm, dt) => { const p = levelOf(dt), code = (String(dt).match(/\b[ABC][12]\b/) || [""])[0] || Math.round(p * 100) + "%";
+    return `<td width="25%" align="center" valign="top" style="width:25%;padding:4pt 2pt;text-align:center;"><svg width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="18" fill="none" stroke="${DK ? "#334155" : "#e5e7eb"}" stroke-width="5"/><circle cx="23" cy="23" r="18" fill="none" stroke="${a}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${(113.1 * p).toFixed(1)} 113.1" transform="rotate(-90 23 23)"/><text x="23" y="26.5" text-anchor="middle" font-size="10" font-weight="bold" fill="${DK ? "#e2e8f0" : "#333333"}" font-family="Arial,sans-serif">${esc(code)}</text></svg>${P(base("#222222", fs - 0.5, "margin:2pt 0 0 0;"), esc(nm))}</td>`; };
+  const skillGroup = (title, text) => {
+    const ls = lines(text); if (!ls.length) return "";
+    const head = P(base("#222222", fs, "font-weight:bold;margin:6pt 0 2pt 0;"), esc(title));
+    if (Ly.skillStyle === "chips") return head + `<div>${ls.map(l => { const m = l.match(KV); return chip(m ? m[1] : l, m ? m[2] : ""); }).join("")}</div>`;
+    const LV = /mutter|\b[abc][12]\b|sehr gut|gut|fließend|fliessend|grund|fortgeschritten|anfänger/i;
+    const withLv = ls.filter(l => { const m = l.match(KV); return m && LV.test(m[2]); }), noLv = ls.filter(l => withLv.indexOf(l) < 0);
+    const tail = noLv.length ? `<div>${noLv.map(l => { const m = l.match(KV); return chip(m ? m[1] : l, m ? m[2] : ""); }).join("")}</div>` : "";
+    if (!withLv.length) return head + tail;
+    const cells = withLv.map(l => { const m = l.match(KV); return ringCell(m[1], m[2]); }), rows = [];
+    for (let i = 0; i < cells.length; i += 4) { const ch = cells.slice(i, i + 4); while (ch.length < 4) ch.push('<td width="25%"></td>'); rows.push("<tr>" + ch.join("") + "</tr>"); }
+    return head + `<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">${rows.join("")}</table>` + tail;
+  };
+  const skillRow = (nm, dt) => `<tr><td width="24%" valign="middle" style="${base("#222222")}width:24%;padding:${sp.ent}pt 8pt ${sp.ent + 1}pt 0;${RB}">${esc(nm)}</td>` +
+    `<td width="32%" valign="middle" style="width:32%;padding:${sp.ent}pt 8pt ${sp.ent + 1}pt 0;${RB}">${meter(levelOf(dt))}</td>` +
+    `<td valign="middle" style="${base("#777777", fs - 1)}padding:${sp.ent}pt 0 ${sp.ent + 1}pt 0;${RB}">${esc(dt)}</td></tr>`;
+  const iconGridHtml = items => { const rows = []; for (let i = 0; i < items.length; i += 2) rows.push("<tr>" + [items[i], items[i + 1]].map(it => `<td width="50%" valign="top" style="${base("#333333", fs - 0.5)}width:50%;padding:3pt 8pt 3pt 0;">${it ? svgBadge(iconFor(it[0]), 15, "#444444") + `<span style="padding-left:5pt;">${esc(it[1])}</span>` : ""}</td>`).join("") + "</tr>"); return `<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">${rows.join("")}</table>`; };
+  const iconTableHtml = (items, lined) => `<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">${items.map(it => { const bb = lined ? "border-bottom:0.5pt solid #cccccc;" : ""; return `<tr><td width="22" valign="middle" style="width:22px;padding:3pt 4pt 3pt 0;${bb}">${svgBadge(iconFor(it[0]), 14, "#333333")}</td><td width="24%" valign="middle" style="${base("#444444", fs - 1, "font-weight:bold;")}width:24%;padding:3pt 4pt 3pt 0;${bb}">${esc(it[0])}</td><td valign="middle" style="${base("#222222", fs - 0.5)}padding:3pt 0;${bb}">${esc(it[1])}</td></tr>`; }).join("")}</table>`;
+  const iconStack = it => `<table cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin-top:6pt;"><tr><td width="22" valign="top" style="width:22px;padding:0 4pt 0 0;">${svgBadge(iconFor(it[0]), 15, "#555555")}</td><td valign="top">${P(base("#333333", fs - 1, "margin:0;font-weight:bold;"), esc(it[0]))}${P(base("#444444", fs - 1.5, "margin:0;"), esc(it[1]))}</td></tr></table>`;
+  const spacer = pt => P(`margin:0;font-size:1pt;line-height:${pt}pt;`, "&nbsp;");
+  const table = rows => `<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">${(Ly.zebra ? rows.map((r, i) => i % 2 ? r.replace("<tr>", `<tr style="background-color:#ececec;">`) : r) : rows).join("")}</table>`;
+  const RB = Ly.rules ? "border-bottom:0.5pt solid #c9c9c9;" : "";
+  const row = (left, right, w) => {
+    const lw = w || Ly.dateWidth;
+    return `<tr><td width="${lw}%" valign="top" style="${base("#555555")}width:${lw}%;padding:${sp.ent}pt 8pt ${sp.ent + 1}pt 0;${RB}">${left}</td>` +
+      `<td width="${100 - lw}%" valign="top" style="${base()}width:${100 - lw}%;padding:${sp.ent}pt 0 ${sp.ent + 1}pt 0;${RB}">${right}</td></tr>`;
+  };
+  const bullets = (arr, color) => !arr.length ? "" :
+    `<ul style="margin:2pt 0 0 14pt;padding:0;list-style-type:${Ly.bullet};">${arr.map(x => `<li style="${base(color)}margin:0;">${esc(x)}</li>`).join("")}</ul>`;
+
+  let hn = 0;
+  const headTxt = title => (Ly.headNum ? String(++hn).padStart(2, "0") + "  " : "") + (Ly.headUpper ? title.toUpperCase() : title);
+  function section(title, side) {
+    const t = side ? (Ly.headUpper ? title.toUpperCase() : title) : headTxt(title), big = fs + 1, m = `margin:${sp.sec}pt 0 4pt 0;`;
+    if (side) return P(base(sideAccent, fs + 0.5, `font-weight:bold;${m}padding-bottom:2pt;border-bottom:1pt solid ${sideAccent};`), esc(t));
+    const b = (extra, size) => P(base(a, size || big, `font-weight:bold;${m}${extra}`), esc(t));
+    switch (Ly.headStyle) {
+      case "greybar": return P(base("#222222", big, `font-weight:bold;${m}background-color:#d9d9d9;padding:2pt 6pt;`), esc(t));
+      case "icon": return `<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;margin-top:${sp.sec}pt;"><tr><td width="24" valign="middle" style="width:24px;padding:0 6px 3pt 0;border-bottom:1.5pt solid ${a};">${svgBadge(SEC_ICON[title] || "dot", 18, "#333333")}</td><td valign="middle" style="padding-bottom:3pt;border-bottom:1.5pt solid ${a};">${P(base("#222222", big, "font-weight:bold;margin:0;"), esc(t))}</td></tr></table>` + spacer(4);
+      case "plain": return b("");
+      case "bar": return spacer(sp.sec - 2) + `<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;"><tr><td bgcolor="${a}" style="background-color:${a};padding:2pt 6pt;">${P(base("#ffffff", big, "font-weight:bold;margin:0;"), esc(t))}</td></tr></table>` + spacer(4);
+      case "leftbar": return b(`border-left:4pt solid ${a};padding-left:6pt;`);
+      case "dotted": return b(`padding-bottom:2pt;border-bottom:1pt dotted ${a};`);
+      case "centered": return b(`text-align:center;padding:2pt 0;border-top:0.75pt solid ${a};border-bottom:0.75pt solid ${a};`);
+      case "double": return b(`padding-bottom:2pt;border-bottom:3pt double ${a};`);
+      case "boxed": return b(`padding:2pt 6pt;border:1pt solid ${a};`);
+      case "spaced": return b("letter-spacing:2pt;padding-bottom:2pt;border-bottom:0.5pt solid #bbbbbb;", fs);
+      default: return b(`padding-bottom:2pt;border-bottom:1pt solid ${a};`);
+    }
+  }
+  const kvRows = (text, skill) => lines(text).map(l => { const m = l.match(KV); if (skill && m && Ly.skillStyle !== "text") return skillRow(m[1], m[2]); return m ? row(esc(m[1]), esc(m[2]), KVW) : row("", esc(l), KVW); });
+  const stack = text => lines(text).map(l => {
+    const m = l.match(KV), main = m ? m[1] : l, det = m ? m[2] : "";
+    if (Ly.skillStyle === "chips") return chip(m ? m[1] : l, m ? m[2] : "");
+    if (Ly.skillStyle !== "text" && m) return P(base(sideFg, fs, "margin:4pt 0 1pt 0;"), esc(main) + ` <span style="font-size:${fs - 1}pt;color:${sideMuted};">· ${esc(det)}</span>`) + meter(levelOf(det));
+    return P(base(sideFg, fs, "margin:3pt 0 0 0;"), esc(main) + (det ? `<br><span style="font-size:${fs - 1}pt;color:${sideMuted};">${esc(det)}</span>` : ""));
+  }).join("");
+  const entryBody = (e, tk, ok) => {
+    const title = e[tk] || "", org = [e[ok], e.place].filter(Boolean).join(", ");
+    return (title ? `<b>${esc(title)}</b>` : "") + (title && org ? "<br>" : "") + (org ? esc(org) : "") + bullets(lines(e.details));
+  };
+  function entries(list, tk, ok) {
+    const its = X.items(list);
+    if (!its.length) return "";
+    const dw = Ly.dateWidth;
+    if (Ly.dateStyle === "above") {
+      return its.map(e => {
+        const dt = X.dateText(e.from, e.to);
+        return (dt ? P(base(a, fs - 0.5, `font-weight:bold;margin:${sp.ent + 4}pt 0 0 0;`), esc(dt)) : "") + `<div style="${base()}">${entryBody(e, tk, ok)}</div>`;
+      }).join("");
+    }
+    if (Ly.dateStyle === "dots") {
+      const lc = tint(a, 0.5);
+      return table(its.map(e => `<tr><td width="${dw}%" valign="top" style="${base("#555555")}width:${dw}%;padding:${sp.ent}pt 8pt ${sp.ent + 1}pt 0;">${esc(X.dateText(e.from, e.to))}</td>` +
+        `<td width="14" valign="top" style="width:14px;padding:0;border-left:1.5pt solid ${lc};position:relative;"><div style="position:absolute;left:-6pt;top:${sp.ent + 2}pt;width:8pt;height:8pt;border-radius:50%;border:1.5pt solid ${a};background-color:#ffffff;"></div></td>` +
+        `<td width="${100 - dw}%" valign="top" style="${base()}width:${100 - dw}%;padding:${sp.ent}pt 0 ${sp.ent + 1}pt 12pt;">${entryBody(e, tk, ok)}</td></tr>`));
+    }
+    if (Ly.dateStyle === "right") {
+      return table(its.map(e => `<tr><td width="${100 - dw}%" valign="top" style="${base()}width:${100 - dw}%;padding:${sp.ent}pt 8pt ${sp.ent + 1}pt 0;">${entryBody(e, tk, ok)}</td>` +
+        `<td width="${dw}%" valign="top" align="right" style="${base(a, fs - 0.5, "font-weight:bold;")}width:${dw}%;padding:${sp.ent}pt 0 ${sp.ent + 1}pt 0;text-align:right;">${esc(X.dateText(e.from, e.to))}</td></tr>`));
+    }
+    if (Ly.dateStyle === "timeline") {
+      return table(its.map(e => `<tr><td width="${dw}%" valign="top" style="${base("#555555")}width:${dw}%;padding:${sp.ent}pt 8pt ${sp.ent + 1}pt 0;">${esc(X.dateText(e.from, e.to))}</td>` +
+        `<td width="${100 - dw}%" valign="top" style="${base()}width:${100 - dw}%;border-left:2pt solid ${a};padding:${sp.ent}pt 0 ${sp.ent + 1}pt 10pt;">${entryBody(e, tk, ok)}</td></tr>`));
+    }
+    return table(its.map(e => row(esc(X.dateText(e.from, e.to)), entryBody(e, tk, ok))));
+  }
+
+  const nameHtml = !X.fullName ? esc(L.cv) :
+    (Ly.nameStack && X.lead && X.trail ? `<span style="font-weight:normal;">${esc(X.up(X.lead))}</span><br>${esc(X.up(X.trail))}` : (Ly.nameSplit && X.lead && X.trail ? `<span style="font-weight:normal;">${esc(X.up(X.lead))}</span> ${esc(X.up(X.trail))}` : esc(X.up(X.fullName))));
+  const nameBlock = (nc, sc, al, size) => P(base(nc, size || Ly.nameSize, `margin:0;font-weight:bold;text-align:${al};`), nameHtml) +
+    (d.headline ? P(base(sc, fs + 2, `margin:2pt 0 0 0;text-align:${al};`), esc(d.headline)) : "");
+
+  const summaryC = d.summary && d.summary.trim() ? P(base() + "margin:2pt 0;", esc(d.summary.trim())) : "";
+  const jobsC = entries(d.jobs, "role", "company"), eduC = entries(d.edu, "degree", "school");
+  const certs = lines(d.certs), certsC = certs.length ? bullets(certs) : "";
+  let signHtml = "";
+  if (d.showSignature) {
+    signHtml = P(base() + "margin:26pt 0 0 0;", esc(X.signLine)) + P(base() + "margin:26pt 0 0 0;", `______________________________<br>${esc(X.fullName)}`);
+  }
+  const mainSecs = () => [[L.profile, summaryC], [L.experience, jobsC], [L.education, eduC], [L.certs, certsC]].filter(x => x[1]);
+  const normal = secs => secs.map(x => section(x[0]) + x[1]).join("");
+  const compose = secs => {
+    if (!secs.length) return "";
+    if (Ly.structure === "editorial") {
+      return table(secs.map(x => `<tr><td width="28%" valign="top" style="width:28%;padding:${sp.sec}pt 10pt 2pt 0;border-top:1pt solid ${a};">${P(base(a, fs - 1, "font-weight:bold;margin:0;"), esc(headTxt(x[0])))}</td>` +
+        `<td width="72%" valign="top" style="width:72%;padding:${sp.sec - 4}pt 0 2pt 0;border-top:1pt solid #cccccc;">${x[1]}</td></tr>`));
+    }
+    if (Ly.structure === "glass") {
+      return secs.map(x => `<div style="background-color:#ffffff;border-radius:8pt;box-shadow:0 1pt 6pt rgba(0,0,0,0.18);padding:2pt 14pt 10pt 14pt;margin:0 0 10pt 0;">${section(x[0]) + x[1]}</div>`).join("");
+    }
+    if (Ly.structure === "cards") {
+      const bg = tint(a, 0.92);
+      return secs.map(x => `<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;"><tr><td bgcolor="${bg}" style="background-color:${bg};padding:0 12pt 8pt 12pt;">${section(x[0]) + x[1]}</td></tr></table>` + spacer(sp.sec - 6)).join("");
+    }
+    return normal(secs);
+  };
+  const sideBody = (pers, skills) => {
+    let sd = "";
+    if (pers && X.pItems.length) {
+      if (Ly.sideCenter) sd += X.pItems.map(it => P(base(sideMuted, fs - 1.5, "margin:7pt 0 0 0;text-align:center;"), esc(it[0])) + P(base(sideFg, fs, "margin:0;text-align:center;"), esc(it[1]))).join("");
+      else if (/^icon/.test(Ly.contact)) sd += X.pItems.map(iconStack).join("");
+      else sd += section(L.personal, true) + X.pItems.map(it => P(base(sideMuted, fs - 1.5, "margin:5pt 0 0 0;"), esc(it[0])) + P(base(sideFg, fs, "margin:0;"), esc(it[1]))).join("");
+    }
+    if (skills === false) return sd;
+    if (lines(d.languages).length) sd += section(L.languages, true) + stack(d.languages);
+    if (lines(d.it).length) sd += section(L.it, true) + stack(d.it);
+    if (d.licence && d.licence.trim()) sd += section(L.licence, true) + P(base(sideFg, fs, "margin:3pt 0 0 0;"), esc(d.licence.trim()));
+    if (d.interests && d.interests.trim()) sd += section(L.interests, true) + P(base(sideFg, fs, "margin:3pt 0 0 0;"), esc(d.interests.trim()));
+    return sd;
+  };
+  const stripHtml = () => {
+    if (!X.pItems.length) return "";
+    const per = 3, bg = tint(a, 0.9), rows = [];
+    for (let i = 0; i < X.pItems.length; i += per) {
+      const ch = X.pItems.slice(i, i + per); while (ch.length < per) ch.push(null);
+      rows.push("<tr>" + ch.map(it => `<td width="33%" valign="top" style="width:33%;padding:5pt 9pt;">${it ? P(base("#666666", fs - 1.5, "margin:0;"), esc(it[0])) + P(base("#222222", fs - 0.5, "margin:0;font-weight:bold;"), esc(it[1])) : ""}</td>`).join("") + "</tr>");
+    }
+    return spacer(8) + `<table width="100%" cellspacing="0" cellpadding="0" bgcolor="${bg}" style="width:100%;border-collapse:collapse;background-color:${bg};">${rows.join("")}</table>`;
+  };
+
+  const skillsSec = () => {
+    if (Ly.skillStyle === "chips" || Ly.skillStyle === "rings") {
+      const g = skillGroup(L.languages, d.languages) + skillGroup(L.it, d.it) + (d.licence && d.licence.trim() ? P(base("#222222", fs, "margin:6pt 0 0 0;"), `<b>${esc(L.licence)}:</b> ${esc(d.licence.trim())}`) : "");
+      return g ? [L.skills, g] : null;
+    }
+    let sk = []; const langs = kvRows(d.languages, 1), it = kvRows(d.it, 1);
+    if (langs.length) { sk.push(row(`<b>${esc(L.languages)}</b>`, "", KVW)); sk = sk.concat(langs); }
+    if (it.length) { sk.push(row(`<b>${esc(L.it)}</b>`, "", KVW)); sk = sk.concat(it); }
+    if (d.licence && d.licence.trim()) sk.push(row(`<b>${esc(L.licence)}</b>`, esc(d.licence.trim()), KVW));
+    return sk.length ? [L.skills, table(sk)] : null;
+  };
+  const interestSec = () => d.interests && d.interests.trim() ? [L.interests, P(base() + "margin:2pt 0;", esc(d.interests.trim()))] : null;
+  const msecs = () => {
+    const bs = mainSecs(); if (!Ly.skillsMain) return bs;
+    const o = bs.filter(x => x[0] !== L.certs), sk = skillsSec(), is = interestSec();
+    if (sk) o.push(sk); if (certsC) o.push([L.certs, certsC]); if (is) o.push(is);
+    return o;
+  };
+  const nameBoxHtml = () => `<div style="border:1.5pt solid ${tint(a, 0.25)};padding:8pt 12pt;margin:0 0 10pt 0;text-align:center;">${P(base("#444444", Ly.nameSize, "margin:0;letter-spacing:1pt;"), esc(X.up(X.fullName || L.cv)))}<div style="width:26pt;border-top:1pt solid #999999;margin:4pt auto;"></div>${d.headline ? P(base("#555555", fs + 1, "margin:0;"), esc(d.headline)) : ""}</div>`;
+  const photoRight = hasPhoto ? `<td width="140" valign="top" align="right" style="width:140px;text-align:right;">${imgTag}</td>` : "";
+  const nameTxt = esc(X.up(X.fullName || L.cv));
+  const personRows = () => [["Name", X.fullName || ""]].concat(X.pItems);
+  const cLines = () => { const l1 = [X.addr, d.phone, d.email, d.web].filter(Boolean).join("   ·   "), l2 = []; const bi = [d.birthDate, d.birthPlace].filter(x => x && x.trim()).join(", "); if (bi) l2.push(L.birth + ": " + bi); if (d.nationality && d.nationality.trim()) l2.push(L.nationality + ": " + d.nationality.trim()); if (d.marital && d.marital.trim()) l2.push(L.marital + ": " + d.marital.trim()); return [l1, l2.join("   ·   ")].filter(Boolean); };
+  function headerSpecial() {
+    const T = inner => `<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">${inner}</table>`;
+    switch (Ly.header) {
+      case "vbar":
+        return T(`<tr><td valign="top" style="border-left:6pt solid ${a};padding-left:10pt;">${P(base("#222222", 24, "margin:0;font-weight:bold;"), esc(L.cv))}${P(base("#555555", fs + 3, "margin:2pt 0 0 0;"), nameHtml)}${d.headline ? P(base("#777777", fs, "margin:1pt 0 0 0;"), esc(d.headline)) : ""}</td>${photoRight}</tr>`) + spacer(6) + iconGridHtml(X.pItems);
+      case "block":
+        return `<div style="display:inline-block;background-color:${a};color:#ffffff;padding:4pt 24pt;${fontCss}font-size:${fs + 3}pt;">${esc(L.cv)}</div>` +
+          `<table width="100%" cellspacing="0" cellpadding="0" bgcolor="#ececec" style="width:100%;border-collapse:collapse;background-color:#ececec;"><tr><td valign="top" style="padding:10pt 12pt;">${P(base("#222222", fs + 1, "margin:0 0 4pt 0;font-weight:bold;"), esc(L.personal))}${table(personRows().map(it => row(esc(it[0]), esc(it[1]), 24)))}</td>${hasPhoto ? `<td width="140" valign="top" align="right" style="width:140px;padding:10pt 12pt 10pt 0;text-align:right;">${imgTag}</td>` : ""}</tr></table>` + spacer(4);
+      case "corner":
+        return `<div style="position:relative;min-height:${hasPhoto ? 150 : 100}pt;"><div style="position:absolute;left:0;top:0;width:125pt;height:125pt;background:linear-gradient(135deg, ${a} 0%, ${a} 50%, transparent 50%);"></div>` +
+          (hasPhoto ? `<div style="position:absolute;left:14pt;top:14pt;">${imgTag}</div>` : "") +
+          `<div style="margin-left:${hasPhoto ? 150 : 20}pt;">${P(base("#222222", 20, "margin:0;font-weight:bold;letter-spacing:1pt;"), esc(L.cv.toUpperCase()))}${P(base("#222222", fs - 0.5, "margin:8pt 0 3pt 0;font-weight:bold;"), esc(L.personal.toUpperCase()))}${iconTableHtml(personRows(), true)}</div></div>` + spacer(4);
+      case "title":
+        return T(`<tr><td valign="top">${P(base("#555555", 26, "margin:0 0 3pt 0;"), esc(L.cv))}<div style="border-top:1.5pt solid ${a};height:1pt;"></div>${P(base("#555555", fs, "margin:6pt 0 2pt 0;"), esc(L.personal))}${table(personRows().map(it => row(esc(it[0]), esc(it[1]), 24)))}</td>${photoRight}</tr>`) + spacer(4);
+      case "navyBlock":
+        return T(`<tr><td valign="top" style="padding-right:12pt;">${P(base("#444444", fs - 0.5, "margin:0;font-weight:bold;letter-spacing:1pt;"), esc(L.cv.toUpperCase()))}${P(base("#111111", Ly.nameSize, "margin:0 0 6pt 0;font-weight:bold;"), nameHtml)}${iconTableHtml(X.pItems, false)}</td>${hasPhoto ? `<td width="170" valign="top" bgcolor="${a}" align="center" style="width:170px;background-color:${a};padding:12pt;text-align:center;">${imgTag}</td>` : ""}</tr>`) + spacer(4);
+      case "photoCorner":
+        return T(`<tr>${hasPhoto ? `<td width="150" valign="top" bgcolor="${tint(a, 0.8)}" style="width:150px;background-color:${tint(a, 0.8)};padding:10pt 0 0 10pt;">${imgTag}</td>` : ""}<td valign="top" style="padding:6pt 0 0 14pt;">${P(base("#222222", Ly.nameSize, "margin:0;font-weight:bold;"), nameHtml)}${P(base("#666666", fs + 1, "margin:0 0 6pt 0;"), esc(d.headline || L.cv))}${iconTableHtml(X.pItems, false)}</td></tr>`) + spacer(4);
+      case "bandRound":
+        return T(`<tr><td bgcolor="${a}" style="background-color:${a};padding:12pt 14pt;"><table cellspacing="0" cellpadding="0"><tr>${hasPhoto ? `<td valign="middle" style="padding-right:16pt;">${imgTag}</td>` : ""}<td valign="middle">${P(base("#ffffff", Ly.nameSize, "margin:0;"), nameHtml)}${P(base("#ffffff", fs + 1, "margin:2pt 0 0 0;"), esc(d.headline || L.cv))}</td></tr></table></td></tr>`) + spacer(8);
+      case "gradient": case "wave": case "slant": case "hero": case "stripesDiag": {
+        const lines2 = col => cLines().map(t => P(base(col, fs - 0.5, "margin:1pt 0 0 0;"), esc(t))).join("");
+        const roundPhoto = size => hasPhoto ? `<img src="${d.photo}" width="${size}" height="${size}" alt="Foto" style="width:${size}px;height:${size}px;border-radius:${size / 2}px;object-fit:cover;object-position:50% 15%;border:4pt solid #ffffff;box-sizing:content-box;">` : "";
+        const mono = `<div style="width:104px;height:104px;border-radius:52px;background-color:rgba(255,255,255,0.18);border:4pt solid #ffffff;text-align:center;line-height:104px;${fontCss}font-size:32pt;font-weight:bold;color:#ffffff;">${esc(((X.lead || "").charAt(0) + (X.trail || "").charAt(0)).toUpperCase() || "CV")}</div>`;
+        const nm = col => P(base(col, Ly.nameSize, "margin:0;font-weight:bold;line-height:1.08;"), nameHtml) + (d.headline ? P(base(col, fs + 3, "margin:4pt 0 8pt 0;"), esc(d.headline)) : "");
+        const inner = T(`<tr><td valign="middle">${nm("#ffffff")}${lines2("#ffffff")}</td>${hasPhoto ? `<td width="150" align="right" valign="middle" style="width:150px;text-align:right;">${roundPhoto(112)}</td>` : ""}</tr>`);
+        if (Ly.header === "gradient") return `<div style="margin:-${C2} -${C2} 16pt -${C2};padding:${C2} ${C2} 22pt ${C2};background:linear-gradient(120deg, ${a}, ${a2});">${inner}</div>`;
+        if (Ly.header === "wave") return `<div style="margin:-${C2} -${C2} 0 -${C2};padding:${C2} ${C2} 4pt ${C2};background-color:${a};">${inner}</div><div style="margin:0 -${C2} 10pt -${C2};line-height:0;"><svg viewBox="0 0 800 70" preserveAspectRatio="none" width="100%" height="42" style="display:block;"><path d="M0 0H800V30C660 78 520 62 400 36S130 -6 0 34Z" fill="${a}"/></svg></div>`;
+        if (Ly.header === "slant") return `<div style="margin:-${C2} -${C2} -4pt -${C2};padding:${C2} ${C2} 56pt ${C2};background:linear-gradient(120deg, ${a}, ${a2});clip-path:polygon(0 0,100% 0,100% 74%,0 100%);">${inner}</div>`;
+        if (Ly.header === "hero") return `<div style="margin:-${C2} -${C2} 16pt -${C2};background-color:${a};">${T(`<tr><td width="210" valign="top" style="width:210px;padding:0;">${hasPhoto ? `<img src="${d.photo}" alt="Foto" style="width:210px;height:280px;object-fit:cover;object-position:50% 20%;display:block;">` : `<div style="padding:${C2} 0 0 ${C2};">${mono}</div>`}</td><td valign="middle" style="padding:${C2} ${C2} 0 24pt;">${nm("#ffffff")}${lines2("#ffffff")}</td></tr>`)}</div>`;
+        return `<div style="margin:-${C2} -${C2} 14pt -${C2};padding:${C2} ${C2} 22pt ${C2};background:repeating-linear-gradient(135deg, ${a} 0px, ${a} 12px, ${tint(a, 0.3)} 12px, ${tint(a, 0.3)} 24px);">${T(`<tr><td valign="middle"><div style="display:inline-block;background-color:#ffffff;padding:12pt 20pt;">${P(base("#111111", Ly.nameSize, "margin:0;font-weight:bold;color:#111111;"), nameHtml).replace(/color:[^;]+;/, "color:#111111;")}${d.headline ? P(`${fontCss}font-size:${fs + 2}pt;color:#555555;margin:2pt 0 0 0;`, esc(d.headline)) : ""}</div></td>${hasPhoto ? `<td width="150" align="right" valign="middle" style="width:150px;text-align:right;">${roundPhoto(112)}</td>` : ""}</tr>`)}</div>` + lines2("#444444") + spacer(6);
+      }
+      case "circleTitle":
+        return T(`<tr><td valign="top"><div style="position:relative;display:inline-block;padding:8pt 0 0 16pt;"><div style="position:absolute;left:0;top:0;width:38pt;height:38pt;border-radius:50%;background-color:${a};"></div><span style="position:relative;${fontCss}font-size:26pt;font-weight:bold;color:#222222;">${esc(L.cv)}</span></div>${P(base("#555555", fs + 2, "margin:4pt 0 6pt 0;"), nameHtml)}${iconTableHtml(X.pItems, false)}</td>${photoRight}</tr>`) + spacer(4);
+    }
+    return "";
+  }
+
+  const out = [];
+  if (sidebar) {
+    let side = "";
+    if (hasPhoto) side += P("margin:0 0 8pt 0;", imgTag);
+    if (Ly.nameInSide) {
+      side += P(base(sideAccent, Math.max(16, Math.round(Ly.nameSize * 0.75)), "margin:0;font-weight:bold;"), nameHtml) +
+        (d.headline ? P(base(sideMuted, fs + 0.5, "margin:2pt 0 4pt 0;"), esc(d.headline)) : "");
+    }
+    side += sideBody(true, !Ly.skillsMain);
+    const mainHtml = (Ly.nameInSide ? "" : (Ly.nameBox ? nameBoxHtml() : nameBlock(a, "#555555", "left"))) + normal(msecs());
+    const sw = Ly.sideWidth, left = Ly.columns === "sidebarLeft";
+    const bleedSide = Ly.page === "sideBleed";
+    const sideTd = `<td width="${sw}%" valign="top"${bleedSide ? "" : ` bgcolor="${sideBg}"`} style="${bleedSide ? "" : `background-color:${sideBg};`}width:${sw}%;padding:14pt 12pt;">${side}</td>`;
+    const mainTd = `<td width="${100 - sw}%" valign="top" style="width:${100 - sw}%;padding:10pt ${left ? "0 0 16pt" : "16pt 0 0"};">${mainHtml}</td>`;
+    out.push(`<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;"><tr>${left ? sideTd + mainTd : mainTd + sideTd}</tr></table>`, signHtml);
+  } else {
+    const center = Ly.header === "center", onBand = Ly.header === "band", tinted = Ly.header === "tint";
+    const bg = onBand ? a : (tinted ? tint(a, 0.88) : "");
+    const pad = bg ? "14pt" : "0 0 6pt 0", cellStyle = (bg ? `background-color:${bg};` : "") + `padding:${pad};`, bgAttr = bg ? ` bgcolor="${bg}"` : "";
+    const specialHtml = SPECIAL_HEADERS.indexOf(Ly.header) >= 0 ? headerSpecial() : "";
+    let nb = nameBlock(onBand ? "#ffffff" : a, onBand ? "#ffffff" : "#555555", center ? "center" : "left");
+    if (Ly.header === "accent") nb = `<div style="border-left:5pt solid ${a};padding-left:10pt;">${nb}</div>`;
+    if (Ly.header === "box") nb = `<div style="border:1.5pt solid ${a};padding:8pt 14pt;">${nb}</div>`;
+    if (Ly.header === "stripes") out.push(`<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;"><tr><td width="68%" bgcolor="${a}" style="background-color:${a};height:7pt;font-size:2pt;line-height:7pt;">&nbsp;</td><td width="20%" bgcolor="${tint(a, 0.45)}" style="background-color:${tint(a, 0.45)};">&nbsp;</td><td width="12%" bgcolor="${tint(a, 0.75)}" style="background-color:${tint(a, 0.75)};">&nbsp;</td></tr></table>` + spacer(8));
+    if (Ly.header === "topbar") out.push(`<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;"><tr><td bgcolor="${a}" style="background-color:${a};height:6pt;font-size:2pt;line-height:6pt;">&nbsp;</td></tr></table>` + spacer(6));
+    let cells;
+    if (center) {
+      cells = `<td align="center"${bgAttr} style="${cellStyle}text-align:center;">${hasPhoto ? imgTag + "<br>" : ""}${nb}</td>`;
+    } else {
+      const al = Ly.photoPos === "left" ? "left" : "right";
+      const nameTd = `<td valign="middle"${bgAttr} style="${cellStyle}">${nb}</td>`;
+      const photoTd = hasPhoto ? `<td width="140" valign="top" align="${al}"${bgAttr} style="${cellStyle}width:140px;text-align:${al};">${imgTag}</td>` : "";
+      cells = Ly.photoPos === "left" ? photoTd + nameTd : nameTd + photoTd;
+    }
+    out.push(specialHtml || `<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;"><tr>${cells}</tr></table>`);
+
+    if (specialHtml) {
+      // Kontaktdaten sind schon im Kopfbereich
+    } else if (Ly.contact === "iconGrid") {
+      out.push(spacer(6) + iconGridHtml(X.pItems));
+    } else if (Ly.contact === "iconTable") {
+      out.push(spacer(6) + iconTableHtml(X.pItems, true));
+    } else if (Ly.contact === "line" || Ly.contact === "icons") {
+      const ic = Ly.contact === "icons", l1 = [[X.addr, "⌂ "], [d.phone, "☎ "], [d.email, "✉ "], [d.web, "↗ "]].filter(x => x[0]).map(x => (ic ? x[1] : "") + x[0]).join(ic ? "    " : "  ·  "), l2 = [];
+      const birth = [d.birthDate, d.birthPlace].filter(x => x && x.trim()).join(", ");
+      if (birth) l2.push(L.birth + ": " + birth);
+      if (d.nationality && d.nationality.trim()) l2.push(L.nationality + ": " + d.nationality.trim());
+      if (d.marital && d.marital.trim()) l2.push(L.marital + ": " + d.marital.trim());
+      const al2 = center ? "center" : "left";
+      if (l1) out.push(P(base("#444444", fs - 0.5, `margin:8pt 0 0 0;text-align:${al2};`), esc(l1)));
+      if (l2.length) out.push(P(base("#444444", fs - 0.5, `margin:2pt 0 0 0;text-align:${al2};`), esc(l2.join("  ·  "))));
+    } else if (Ly.contact === "strip") {
+      out.push(stripHtml());
+    }
+    if (split) {
+      const sw = Ly.sideWidth, bl = tint(a, 0.6);
+      const mainTd = `<td width="${100 - sw}%" valign="top" style="width:${100 - sw}%;padding:0 ${splitLeft ? "0 0 14pt" : "16pt 0 0"};">${normal(mainSecs())}</td>`;
+      const sideTd = `<td width="${sw}%" valign="top" style="width:${sw}%;padding:0 ${splitLeft ? "12pt 0 0" : "0 0 12pt"};border-${splitLeft ? "right" : "left"}:1pt solid ${bl};">${sideBody(Ly.contact === "table" || /^icon/.test(Ly.contact))}</td>`;
+      out.push(spacer(4) + `<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;"><tr>${splitLeft ? sideTd + mainTd : mainTd + sideTd}</tr></table>`, signHtml);
+    } else {
+      const secs = [];
+      if (Ly.contact === "table" && X.pItems.length && !specialHtml) secs.push([L.personal, table(X.pItems.map(it => row(esc(it[0]), esc(it[1]), KVW)))]);
+      secs.push(...mainSecs().filter(x => x[0] !== L.certs));
+      const sks = skillsSec(); if (sks) secs.push(sks);
+      if (certsC) secs.push([L.certs, certsC]);
+      if (d.interests && d.interests.trim()) secs.push([L.interests, P(base() + "margin:2pt 0;", esc(d.interests.trim()))]);
+      out.push(compose(secs), signHtml);
+    }
+  }
+  const root = `<div style="${base()}${F < 1 ? `zoom:${F};` : ""}">${out.join("")}</div>`;
+  return forPrint && bleed(Ly) ? `<div style="background:${pageBackground(Ly)};padding:2cm;-webkit-box-decoration-break:clone;box-decoration-break:clone;">${root}</div>` : root;
+}
+
+/* ------------------------------ Word (.docx, echtes WordprocessingML) ------------------------------ */
+const xesc = esc;
+const hex6 = c => String(c).replace("#", "").toUpperCase();
+const tw = pt => Math.round(pt * 20);
+
+function docxBody(d, layoutIn, img, fit) {
+  const Ly0 = sanitizeLayout(layoutIn || DEFAULT_LAYOUT), F = fit && fit < 1 ? fit : 1;
+  const Ly = Object.assign({}, Ly0, { baseSize: Ly0.baseSize * F, nameSize: Ly0.nameSize * F });
+  const a = hex6(Ly.accent), fs = Ly.baseSize, font = xesc(Ly.font), TEXT_W = 9638;
+  const X = prepare(d, Ly), sp = { sec: SP[Ly.spacing].sec * F, ent: SP[Ly.spacing].ent * F };
+  const EDW = Math.round(TEXT_W * 0.28);
+  const AVAIL = ["sidebarLeft", "sidebarRight", "split"].indexOf(Ly.columns) >= 0 ? TEXT_W - Math.round(TEXT_W * Ly.sideWidth / 100) - 400 : (Ly.structure === "editorial" ? TEXT_W - EDW - 120 : (Ly.structure === "cards" ? TEXT_W - 440 : TEXT_W)); // Breite der Hauptspalte
+  const NUM = { disc: 1, circle: 2, square: 3 }[Ly.bullet] || 1;
+  const sidebar = Ly.columns === "sidebarLeft" || Ly.columns === "sidebarRight", split = Ly.columns === "split", dark = Ly.sideDark && sidebar;
+  const sideBg = hex6(dark ? Ly.accent : tint(Ly.accent, 0.9));
+  const sideFg = dark ? "FFFFFF" : "222222", sideAccent = dark ? "FFFFFF" : a, sideMuted = dark ? "E0E0E0" : "666666";
+  const hasPhoto = !!img, round = Ly.photoShape === "round";
+
+  const R = (text, o) => {
+    o = o || {};
+    const sz = Math.round((o.size || fs) * 2);
+    return `<w:r><w:rPr><w:rFonts w:ascii="${font}" w:hAnsi="${font}" w:cs="${font}"/>${o.b ? "<w:b/>" : ""}<w:color w:val="${o.color || "222222"}"/>` +
+      `${o.spc ? `<w:spacing w:val="${o.spc}"/>` : ""}<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/></w:rPr><w:t xml:space="preserve">${xesc(text)}</w:t></w:r>`;
+  };
+  const BR = "<w:r><w:br/></w:r>";
+  const bd = (side, val, sz, color, space) => `<w:${side} w:val="${val}" w:sz="${sz}" w:space="${space || 1}" w:color="${color}"/>`;
+  const P = (runs, o) => {
+    o = o || {};
+    let pp = "";
+    if (o.keepNext) pp += "<w:keepNext/>";
+    if (o.num) pp += `<w:numPr><w:ilvl w:val="0"/><w:numId w:val="${o.num}"/></w:numPr>`;
+    if (o.bdr) pp += `<w:pBdr>${o.bdr}</w:pBdr>`;
+    if (o.shd) pp += `<w:shd w:val="clear" w:color="auto" w:fill="${o.shd}"/>`;
+    pp += `<w:spacing w:before="${tw(o.before || 0)}" w:after="${tw(o.after || 0)}" w:line="240" w:lineRule="auto"/>`;
+    if (o.ind) pp += `<w:ind ${o.ind}/>`;
+    if (o.jc) pp += `<w:jc w:val="${o.jc}"/>`;
+    return `<w:p><w:pPr>${pp}</w:pPr>${runs || ""}</w:p>`;
+  };
+  const bulletP = (text, color) => P(R(text, { color }), { num: NUM, ind: 'w:left="340" w:hanging="220"' });
+  const bullets = (arr, color) => arr.map(x => bulletP(x, color)).join("");
+
+  function IMG() {
+    const cx = round ? 1143000 : 1076325, cy = round ? 1143000 : 1438275, ns = "http://schemas.openxmlformats.org/drawingml/2006/";
+    return `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="Foto" descr="Foto"/>` +
+      `<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="${ns}main" noChangeAspect="1"/></wp:cNvGraphicFramePr>` +
+      `<a:graphic xmlns:a="${ns}main"><a:graphicData uri="${ns}picture"><pic:pic xmlns:pic="${ns}picture">` +
+      `<pic:nvPicPr><pic:cNvPr id="0" name="foto.${img.ext}"/><pic:cNvPicPr/></pic:nvPicPr>` +
+      `<pic:blipFill><a:blip r:embed="rIdImg"/>${round ? '<a:srcRect t="5000" b="20000"/>' : ""}<a:stretch><a:fillRect/></a:stretch></pic:blipFill>` +
+      `<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="${round ? "ellipse" : "rect"}"><a:avLst/></a:prstGeom></pic:spPr>` +
+      `</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+  }
+
+  // Jede Zelle muss mit einem Absatz enden (sonst meldet Word einen Fehler)
+  const cellXml = x => !x ? "<w:p/>" : (x.endsWith("</w:tbl>") ? x + '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/></w:pPr></w:p>' : x);
+  // Tabelle: widths in Twips; Zellen {xml, shd, mar:[o,l,u,r] (Twips), v, bl (Farbe linker Rand)}
+  function TBL(widths, rows, o) {
+    o = o || {};
+    const total = widths.reduce((s, x) => s + x, 0);
+    let x = `<w:tbl><w:tblPr><w:tblW w:w="${total}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="${tw(o.top || 0)}" w:type="dxa"/><w:left w:w="${o.left || 0}" w:type="dxa"/>` +
+      `<w:bottom w:w="${tw(o.bottom || 0)}" w:type="dxa"/><w:right w:w="${o.right || 0}" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${widths.map(w => `<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>`;
+    rows.forEach(cells => {
+      x += `<w:tr>${o.rowH ? `<w:trPr><w:trHeight w:val="${o.rowH}" w:hRule="exact"/></w:trPr>` : ""}`;
+      cells.forEach((c, i) => {
+        const m = c.mar;
+        x += `<w:tc><w:tcPr><w:tcW w:w="${widths[i]}" w:type="dxa"/>` +
+          (c.bl || c.bt ? `<w:tcBorders>${c.bt ? `<w:top w:val="single" w:sz="8" w:space="0" w:color="${c.bt}"/>` : ""}${c.bl ? `<w:left w:val="single" w:sz="12" w:space="0" w:color="${c.bl}"/>` : ""}</w:tcBorders>` : "") +
+          (c.shd ? `<w:shd w:val="clear" w:color="auto" w:fill="${c.shd}"/>` : "") +
+          (m ? `<w:tcMar><w:top w:w="${m[0]}" w:type="dxa"/><w:left w:w="${m[1]}" w:type="dxa"/><w:bottom w:w="${m[2]}" w:type="dxa"/><w:right w:w="${m[3]}" w:type="dxa"/></w:tcMar>` : "") +
+          (c.v ? `<w:vAlign w:val="${c.v}"/>` : "") + `</w:tcPr>${cellXml(c.xml)}</w:tc>`;
+      });
+      x += "</w:tr>";
+    });
+    return x + "</w:tbl>";
+  }
+
+  let hn = 0;
+  const headTxt = title => (Ly.headNum ? String(++hn).padStart(2, "0") + "  " : "") + (Ly.headUpper ? title.toUpperCase() : title);
+  function H(title, side) {
+    const t = side ? (Ly.headUpper ? title.toUpperCase() : title) : headTxt(title), big = fs + 1, base = { keepNext: true, before: sp.sec, after: 4 };
+    if (side) return P(R(t, { b: 1, color: sideAccent, size: fs + 0.5 }), { keepNext: true, before: sp.sec, after: 4, bdr: bd("bottom", "single", 6, sideAccent, 2) });
+    const o = extra => Object.assign({}, base, extra);
+    switch (Ly.headStyle) {
+      case "plain": return P(R(t, { b: 1, color: a, size: big }), o({}));
+      case "bar": return P(R(t, { b: 1, color: "FFFFFF", size: big }), o({ after: 6, shd: a, ind: 'w:left="100" w:right="100"',
+        bdr: bd("top", "single", 4, a, 2) + bd("left", "single", 4, a, 4) + bd("bottom", "single", 4, a, 2) + bd("right", "single", 4, a, 4) }));
+      case "leftbar": return P(R(t, { b: 1, color: a, size: big }), o({ ind: 'w:left="140"', bdr: bd("left", "single", 32, a, 6) }));
+      case "dotted": return P(R(t, { b: 1, color: a, size: big }), o({ bdr: bd("bottom", "dotted", 8, a, 2) }));
+      case "centered": return P(R(t, { b: 1, color: a, size: big }), o({ jc: "center", bdr: bd("top", "single", 6, a, 2) + bd("bottom", "single", 6, a, 2) }));
+      case "double": return P(R(t, { b: 1, color: a, size: big }), o({ bdr: bd("bottom", "double", 6, a, 2) }));
+      case "boxed": return P(R(t, { b: 1, color: a, size: big }), o({ ind: 'w:left="120" w:right="120"',
+        bdr: bd("top", "single", 6, a, 3) + bd("left", "single", 6, a, 5) + bd("bottom", "single", 6, a, 3) + bd("right", "single", 6, a, 5) }));
+      case "spaced": return P(R(t, { b: 1, color: a, size: fs, spc: 40 }), o({ bdr: bd("bottom", "single", 4, "BBBBBB", 2) }));
+      default: return P(R(t, { b: 1, color: a, size: big }), o({ bdr: bd("bottom", "single", 8, a, 2) }));
+    }
+  }
+
+  const body = (e, tk, ok) => {
+    const title = e[tk] || "", org = [e[ok], e.place].filter(Boolean).join(", ");
+    let x = "";
+    if (title) x += P(R(title, { b: 1 }));
+    if (org) x += P(R(org));
+    x += bullets(lines(e.details));
+    return x || "<w:p/>";
+  };
+  function ENT(list, tk, ok) {
+    const its = X.items(list);
+    if (!its.length) return "";
+    if (Ly.dateStyle === "above") {
+      return its.map(e => {
+        const dt = X.dateText(e.from, e.to);
+        return (dt ? P(R(dt, { b: 1, color: a, size: fs - 0.5 }), { before: sp.ent + 4, keepNext: true }) : "") + body(e, tk, ok);
+      }).join("");
+    }
+    const wL = Math.round(AVAIL * Ly.dateWidth / 100), wR = AVAIL - wL, topts = { top: sp.ent, bottom: sp.ent + 1, right: 120 };
+    if (Ly.dateStyle === "right") {
+      return TBL([wR, wL], its.map(e => [{ xml: body(e, tk, ok) }, { xml: P(R(X.dateText(e.from, e.to), { b: 1, color: a, size: fs - 0.5 }), { jc: "right" }) }]), topts);
+    }
+    if (Ly.dateStyle === "timeline") {
+      return TBL([wL, wR], its.map(e => [{ xml: P(R(X.dateText(e.from, e.to), { color: "555555" })) },
+        { xml: body(e, tk, ok), bl: a, mar: [tw(sp.ent), 200, tw(sp.ent + 1), 0] }]), topts);
+    }
+    return TBL([wL, wR], its.map(e => [{ xml: P(R(X.dateText(e.from, e.to), { color: "555555" })) }, { xml: body(e, tk, ok) }]), topts);
+  }
+  function kvTable(rows) {
+    const wL = Math.round(AVAIL * Math.max(Ly.dateWidth, 28) / 100), wR = AVAIL - wL;
+    return TBL([wL, wR], rows.map(r => [{ xml: P(R(r[0], { color: r[2] ? "222222" : "555555", b: !!r[2] })) }, { xml: P(R(r[1])) }]), { top: sp.ent, bottom: sp.ent + 1, right: 120 });
+  }
+  const kvRows = text => lines(text).map(l => { const m = l.match(KV); return m ? [m[1], m[2]] : ["", l]; });
+  const stack = text => lines(text).map(l => {
+    const m = l.match(KV), main = m ? m[1] : l, det = m ? m[2] : "";
+    return P(R(main, { color: sideFg }) + (det ? BR + R(det, { size: fs - 1, color: sideMuted }) : ""), { before: 3 });
+  }).join("");
+
+  const nameRuns = (color, size) => {
+    if (!X.fullName) return R(L.cv, { b: 1, color, size });
+    if (Ly.nameSplit && X.lead && X.trail) return R(X.up(X.lead) + " ", { color, size }) + R(X.up(X.trail), { b: 1, color, size });
+    return R(X.up(X.fullName), { b: 1, color, size });
+  };
+  const nameBlock = (nc, sc, al, size, bar, box) => {
+    const ex = bar ? { bdr: bd("left", "single", 36, a, 8), ind: 'w:left="280"' } : (box ? { bdr: bd("top", "single", 12, a, 6) + bd("left", "single", 12, a, 8) + bd("bottom", "single", 12, a, 6) + bd("right", "single", 12, a, 8), ind: 'w:left="260" w:right="260"' } : {});
+    return P(nameRuns(nc, size || Ly.nameSize), Object.assign({ jc: al }, ex)) +
+      (d.headline ? P(R(d.headline, { color: sc, size: fs + 2 }), Object.assign({ before: 2, jc: al }, ex)) : "");
+  };
+
+  const summaryC = d.summary && d.summary.trim() ? P(R(d.summary.trim()), { before: 2 }) : "";
+  const jobsC = ENT(d.jobs, "role", "company"), eduC = ENT(d.edu, "degree", "school");
+  const certsA = lines(d.certs), certsC = certsA.length ? bullets(certsA) : "";
+  const sign = d.showSignature ? P(R(X.signLine), { before: 26 }) + P(R("______________________________") + BR + R(X.fullName), { before: 26 }) : "";
+  const SPC = pt => P(R(" ", { size: 1 }), { after: pt });
+  const mainSecs = () => [[L.profile, summaryC], [L.experience, jobsC], [L.education, eduC], [L.certs, certsC]].filter(x => x[1]);
+  const normal = secs => secs.map(x => H(x[0]) + x[1]).join("");
+  const compose = secs => {
+    if (!secs.length) return "";
+    if (Ly.structure === "editorial") {
+      return TBL([EDW, TEXT_W - EDW], secs.map(x => [
+        { xml: P(R(headTxt(x[0]), { b: 1, color: a, size: fs - 1 })), bt: a, mar: [tw(sp.sec), 0, 40, 120] },
+        { xml: x[1], bt: "CCCCCC", mar: [tw(sp.sec - 4), 120, 40, 0] }]));
+    }
+    if (Ly.structure === "cards") {
+      const bg = hex6(tint(Ly.accent, 0.92));
+      return secs.map(x => TBL([TEXT_W], [[{ xml: H(x[0]) + x[1], shd: bg, mar: [60, 220, 140, 220] }]]) + SPC(sp.sec - 6)).join("");
+    }
+    return normal(secs);
+  };
+  const sideBody = pers => {
+    let sd = "";
+    if (pers && X.pItems.length) sd += H(L.personal, true) + X.pItems.map(it => P(R(it[0], { size: fs - 1.5, color: sideMuted }), { before: 5 }) + P(R(it[1], { color: sideFg }))).join("");
+    if (lines(d.languages).length) sd += H(L.languages, true) + stack(d.languages);
+    if (lines(d.it).length) sd += H(L.it, true) + stack(d.it);
+    if (d.licence && d.licence.trim()) sd += H(L.licence, true) + P(R(d.licence.trim(), { color: sideFg }), { before: 3 });
+    if (d.interests && d.interests.trim()) sd += H(L.interests, true) + P(R(d.interests.trim(), { color: sideFg }), { before: 3 });
+    return sd;
+  };
+  const stripDocx = () => {
+    if (!X.pItems.length) return "";
+    const per = 3, w = Math.floor(TEXT_W / per), bg = hex6(tint(Ly.accent, 0.9)), rows = [];
+    for (let i = 0; i < X.pItems.length; i += per) {
+      const ch = X.pItems.slice(i, i + per); while (ch.length < per) ch.push(null);
+      rows.push(ch.map(it => ({ xml: it ? P(R(it[0], { size: fs - 1.5, color: "666666" })) + P(R(it[1], { b: 1, size: fs - 0.5 })) : "<w:p/>", shd: bg, mar: [80, 160, 80, 120] })));
+    }
+    return SPC(6) + TBL([w, w, TEXT_W - 2 * w], rows) + SPC(2);
+  };
+
+  const cmode = /^icon(Grid|Table)$/.test(Ly.contact) ? "table" : Ly.contact;
+  let out = "";
+  if (sidebar) {
+    let side = "";
+    if (hasPhoto) side += P(IMG(), { after: 8 });
+    if (Ly.nameInSide) {
+      side += P(nameRuns(sideAccent, Math.max(16, Math.round(Ly.nameSize * 0.75))), {}) + (d.headline ? P(R(d.headline, { color: sideMuted, size: fs + 0.5 }), { before: 2, after: 4 }) : "");
+    }
+    side += sideBody(true);
+    const main = (Ly.nameInSide ? "" : nameBlock(a, "555555", "left")) + normal(mainSecs());
+    const sw = Math.round(TEXT_W * Ly.sideWidth / 100), left = Ly.columns === "sidebarLeft", gw = 400;
+    const sideCell = { xml: side || "<w:p/>", shd: sideBg, mar: [280, 240, 280, 240] };
+    const mainCell = { xml: main || "<w:p/>", mar: [200, 0, 200, 0] }, gutter = { xml: "<w:p/>" };
+    out += TBL(left ? [sw, gw, TEXT_W - sw - gw] : [TEXT_W - sw - gw, gw, sw], [left ? [sideCell, gutter, mainCell] : [mainCell, gutter, sideCell]]);
+    out += sign;
+  } else {
+    const center = Ly.header === "center", onBand = Ly.header === "band", tinted = Ly.header === "tint";
+    const bg = onBand ? a : (tinted ? hex6(tint(Ly.accent, 0.88)) : "");
+    const nb = nameBlock(onBand ? "FFFFFF" : a, onBand ? "FFFFFF" : "555555", center ? "center" : "left", null, Ly.header === "accent", Ly.header === "box");
+    if (Ly.header === "stripes") out += TBL([Math.round(TEXT_W * 0.68), Math.round(TEXT_W * 0.2), TEXT_W - Math.round(TEXT_W * 0.68) - Math.round(TEXT_W * 0.2)], [[{ xml: "<w:p/>", shd: a }, { xml: "<w:p/>", shd: hex6(tint(Ly.accent, 0.45)) }, { xml: "<w:p/>", shd: hex6(tint(Ly.accent, 0.75)) }]], { rowH: 140 }) + SPC(8);
+    if (Ly.header === "topbar") out += TBL([TEXT_W], [[{ xml: P(R(" ", { size: 1 })), shd: a }]], { rowH: 120 }) + P(R(" ", { size: 3 }), { before: 4 });
+    const pad = bg ? [280, 280, 280, 280] : [0, 0, 120, 0];
+    if (center) {
+      out += (hasPhoto ? P(IMG(), { jc: "center", after: 4 }) : "") + nb;
+    } else if (hasPhoto) {
+      const photoLeft = Ly.photoPos === "left", pw = 2100;
+      const nameCell = { xml: nb, shd: bg || null, mar: pad, v: "center" };
+      const photoCell = { xml: P(IMG(), { jc: photoLeft ? "left" : "right" }), shd: bg || null, mar: pad };
+      out += TBL(photoLeft ? [pw, TEXT_W - pw] : [TEXT_W - pw, pw], [photoLeft ? [photoCell, nameCell] : [nameCell, photoCell]]);
+    } else if (bg) {
+      out += TBL([TEXT_W], [[{ xml: nb, shd: bg, mar: pad }]]);
+    } else {
+      out += nb;
+    }
+    if (Ly.contact === "line" || Ly.contact === "icons") {
+      const ic = Ly.contact === "icons", l1 = [[X.addr, "⌂ "], [d.phone, "☎ "], [d.email, "✉ "], [d.web, "↗ "]].filter(x => x[0]).map(x => (ic ? x[1] : "") + x[0]).join(ic ? "    " : "  ·  "), l2 = [], al2 = center ? "center" : "left";
+      const birth = [d.birthDate, d.birthPlace].filter(x => x && x.trim()).join(", ");
+      if (birth) l2.push(L.birth + ": " + birth);
+      if (d.nationality && d.nationality.trim()) l2.push(L.nationality + ": " + d.nationality.trim());
+      if (d.marital && d.marital.trim()) l2.push(L.marital + ": " + d.marital.trim());
+      if (l1) out += P(R(l1, { color: "444444", size: fs - 0.5 }), { before: 8, jc: al2 });
+      if (l2.length) out += P(R(l2.join("  ·  "), { color: "444444", size: fs - 0.5 }), { before: 2, jc: al2 });
+    } else if (Ly.contact === "strip") {
+      out += stripDocx();
+    }
+    if (split) {
+      const sw = Math.round(TEXT_W * Ly.sideWidth / 100), gw = 300;
+      out += SPC(4) + TBL([TEXT_W - sw - gw, gw, sw], [[
+        { xml: normal(mainSecs()) || "<w:p/>", mar: [0, 0, 0, 0] }, { xml: "<w:p/>" },
+        { xml: sideBody(cmode === "table") || "<w:p/>", bl: hex6(tint(Ly.accent, 0.6)), mar: [0, 200, 0, 0] }]]);
+      out += sign;
+    } else {
+      const secs = [];
+      if (cmode === "table" && X.pItems.length) secs.push([L.personal, kvTable(X.pItems)]);
+      secs.push(...mainSecs().filter(x => x[0] !== L.certs));
+      let sk = []; const langs = kvRows(d.languages, 1), it = kvRows(d.it, 1);
+      if (langs.length) { sk.push([L.languages, "", true]); sk = sk.concat(langs); }
+      if (it.length) { sk.push([L.it, "", true]); sk = sk.concat(it); }
+      if (d.licence && d.licence.trim()) sk.push([L.licence, d.licence.trim(), true]);
+      if (sk.length) secs.push([L.skills, kvTable(sk)]);
+      if (certsC) secs.push([L.certs, certsC]);
+      if (d.interests && d.interests.trim()) secs.push([L.interests, P(R(d.interests.trim()), { before: 2 })]);
+      out += compose(secs) + sign;
+    }
+  }
+  return out + "<w:p/>";
+}
+
+/* ------------------------------ Zip + .docx ------------------------------ */
+const CRC_TABLE = (() => { const t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(bytes) { let c = 0xFFFFFFFF; for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipStore(files) {
+  const enc = new TextEncoder(), now = new Date();
+  const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  const chunks = [], central = []; let offset = 0;
+  files.forEach(f => {
+    const name = enc.encode(f.name), data = typeof f.data === "string" ? enc.encode(f.data) : f.data, crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    chunks.push(new Uint8Array(lh.buffer), name, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+    ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true);
+    ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true); ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), name);
+    offset += 30 + name.length + data.length;
+  });
+  const cdSize = central.reduce((s, c) => s + c.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+}
+
+function buildDocx(d, layoutIn, fit) {
+  const Ly = sanitizeLayout(layoutIn || DEFAULT_LAYOUT);
+  let img = null;
+  const m = d.photo ? /^data:image\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/.exec(d.photo) : null;
+  if (m) {
+    const bin = atob(m[2]), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    img = { ext: m[1] === "png" ? "png" : "jpg", bytes };
+  }
+  const font = xesc(Ly.font), fsz = Math.round(Ly.baseSize * 2);
+  const NSW = "http://schemas.openxmlformats.org/wordprocessingml/2006/main", NSR = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+  const XH = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n', REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/";
+  const lvl = (ch, fnt) => `<w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="${ch}"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="340" w:hanging="220"/></w:pPr>` +
+    `<w:rPr><w:rFonts w:ascii="${fnt}" w:hAnsi="${fnt}" w:cs="${fnt}" w:hint="default"/></w:rPr></w:lvl>`;
+  const numbering = `${XH}<w:numbering xmlns:w="${NSW}">` +
+    `<w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="singleLevel"/>${lvl("•", "Arial")}</w:abstractNum>` +
+    `<w:abstractNum w:abstractNumId="1"><w:multiLevelType w:val="singleLevel"/>${lvl("o", "Courier New")}</w:abstractNum>` +
+    `<w:abstractNum w:abstractNumId="2"><w:multiLevelType w:val="singleLevel"/>${lvl("▪", "Arial")}</w:abstractNum>` +
+    `<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num><w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num><w:num w:numId="3"><w:abstractNumId w:val="2"/></w:num></w:numbering>`;
+  const styles = `${XH}<w:styles xmlns:w="${NSW}"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="${font}" w:hAnsi="${font}" w:cs="${font}"/>` +
+    `<w:sz w:val="${fsz}"/><w:szCs w:val="${fsz}"/><w:lang w:val="de-AT"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>` +
+    `<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>` +
+    `<w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:uiPriority w:val="99"/><w:semiHidden/><w:unhideWhenUsed/>` +
+    `<w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style></w:styles>`;
+  const doc = `${XH}<w:document xmlns:w="${NSW}" xmlns:r="${NSR}" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>` +
+    docxBody(d, Ly, img, fit) +
+    `<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="709" w:footer="709" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const files = [
+    { name: "[Content_Types].xml", data: `${XH}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>` +
+      `<Default Extension="jpg" ContentType="image/jpeg"/><Default Extension="png" ContentType="image/png"/>` +
+      `<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>` +
+      `<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>` +
+      `<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/></Types>` },
+    { name: "_rels/.rels", data: `${XH}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}officeDocument" Target="word/document.xml"/></Relationships>` },
+    { name: "word/document.xml", data: doc },
+    { name: "word/styles.xml", data: styles },
+    { name: "word/numbering.xml", data: numbering },
+    { name: "word/_rels/document.xml.rels", data: `${XH}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}styles" Target="styles.xml"/>` +
+      `<Relationship Id="rId2" Type="${REL}numbering" Target="numbering.xml"/>${img ? `<Relationship Id="rIdImg" Type="${REL}image" Target="media/foto.${img.ext}"/>` : ""}</Relationships>` }
+  ];
+  if (img) files.push({ name: "word/media/foto." + img.ext, data: img.bytes });
+  return zipStore(files);
+}
+
+function fileBase(d) {
+  const who = [d.first, d.last].map(s => (s || "").trim()).filter(Boolean).join("_");
+  return ("Lebenslauf" + (who ? "_" + who : "")).replace(/\s+/g, "_").replace(/[^\wÀ-ſ.-]+/g, "_").slice(0, 80);
+}
+
+/* ===================================================================
+   Oberfläche
+   =================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const PAGE_W = 640, PAGE_PX = 794, PAD_PX = 76, PAGE_CONTENT_PX = 971; // A4 bei 96 dpi, 2 cm Rand
+const KEY_FIT = "lebenslauf.einseitig.v1", KEY_DRAFT = "lebenslauf.daten.v4", KEY_LAYOUTS = "lebenslauf.vorlagen.v1", KEY_CUR = "lebenslauf.vorlage.aktuell.v1";
+const lsGet = k => { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
+const lsDel = k => { try { localStorage.removeItem(k); } catch (e) { /* ignorieren */ } };
+
+const EMPTY = {
+  titleBefore: "", first: "", last: "", titleAfter: "", headline: "", street: "", zip: "", city: "", phone: "", email: "", web: "",
+  birthDate: "", birthPlace: "", nationality: "", marital: "", summary: "", jobs: [{}], edu: [{}],
+  languages: "", it: "", licence: "", certs: "", interests: "", showSignature: true, signPlace: "", signDate: "", photo: ""
+};
+const REPEATERS = {
+  jobs: { label: "Position", fields: [
+    ["from", "Von", "MM/JJJJ"], ["to", "Bis", "leer = bis heute"], ["role", "Berufsbezeichnung", "z. B. Buchhalter"],
+    ["company", "Firma", "z. B. Muster GmbH"], ["place", "Ort", "z. B. Wien"], ["details", "Aufgaben (eine pro Zeile)", "", "textarea"] ] },
+  edu: { label: "Ausbildung", fields: [
+    ["from", "Von", "MM/JJJJ"], ["to", "Bis", "MM/JJJJ"], ["degree", "Abschluss / Ausbildung", "z. B. Matura, Lehre, Bachelor"],
+    ["school", "Schule / Hochschule", "z. B. HAK Graz"], ["place", "Ort", "z. B. Graz"], ["details", "Details (eine pro Zeile)", "", "textarea"] ] }
+};
+const QUICK_SEG = {
+  photoShape: [["rect", "Rechteck"], ["round", "Rund"]],
+  baseSize: [[9.5, "Klein"], [10.5, "Normal"], [11.5, "Groß"]],
+  spacing: [["compact", "Kompakt"], ["normal", "Normal"], ["airy", "Luftig"]]
+};
+const CATS = [["alle", "Alle"], ["klassisch", "Klassisch"], ["modern", "Modern"], ["seite", "Mit Seitenleiste"], ["besonders", "Besondere"], ["at", "Beliebte Stile"], ["premium", "Mit Symbolen & Balken (PDF)"], ["fancy", "Edel & Besonders (PDF)"]];
+
+const state = { photo: "", layout: sanitizeLayout(PRESETS[0].layout), layoutId: "classic", custom: [], filter: "alle", step: 1, silhouette: "", pages: 1, onePage: false, fit: 1 };
+
+/* ---------- Meldungen ---------- */
+let statusTimer = null;
+function status(msg, kind, sticky) {
+  const el = $("#status"); if (!el) return;
+  el.textContent = msg || ""; el.className = kind || "";
+  clearTimeout(statusTimer);
+  if (msg && !sticky) statusTimer = setTimeout(() => { el.textContent = ""; el.className = ""; }, 14000);
+}
+
+/* ---------- Formular <-> Daten ---------- */
+function renumber(key) {
+  $$("#" + key + " .item").forEach((it, i) => { $(".num", it).textContent = REPEATERS[key].label + " " + (i + 1); });
+}
+function buildItem(key, values) {
+  const f = REPEATERS[key].fields, div = document.createElement("div");
+  div.className = "item";
+  const val = n => values && values[n] != null ? values[n] : "";
+  const field = x => x[3] === "textarea"
+    ? `<label>${esc(x[1])}</label><textarea data-f="${x[0]}" rows="3">${esc(val(x[0]))}</textarea>`
+    : `<label>${esc(x[1])}</label><input type="text" data-f="${x[0]}" placeholder="${esc(x[2] || "")}" value="${esc(val(x[0]))}">`;
+  div.innerHTML = `<div class="top"><span class="num"></span><span class="tools"><button type="button" data-act="up" title="Nach oben" aria-label="Nach oben">↑</button> ` +
+    `<button type="button" data-act="down" title="Nach unten" aria-label="Nach unten">↓</button> <button type="button" class="link" data-act="del">Entfernen</button></span></div>` +
+    `<div class="row2"><div>${field(f[0])}</div><div>${field(f[1])}</div></div>${field(f[2])}${field(f[3])}${field(f[4])}${field(f[5])}`;
+  return div;
+}
+function fillRepeater(key, items) {
+  const box = $("#" + key); box.innerHTML = "";
+  (items && items.length ? items : [{}]).forEach(it => box.appendChild(buildItem(key, it)));
+  renumber(key);
+}
+function bindRepeater(key) {
+  $("#" + key).addEventListener("click", e => {
+    const btn = e.target.closest("[data-act]"); if (!btn) return;
+    const item = btn.closest(".item"), act = btn.dataset.act;
+    if (act === "del") { if ($$("#" + key + " .item").length > 1) item.remove(); else $$("input,textarea", item).forEach(x => { x.value = ""; }); }
+    if (act === "up" && item.previousElementSibling) item.parentNode.insertBefore(item, item.previousElementSibling);
+    if (act === "down" && item.nextElementSibling) item.parentNode.insertBefore(item.nextElementSibling, item);
+    renumber(key);
+  });
+}
+function collect() {
+  const d = {};
+  $$("[data-k]").forEach(el => { d[el.dataset.k] = el.type === "checkbox" ? el.checked : el.value; });
+  d.photo = state.photo;
+  Object.keys(REPEATERS).forEach(key => {
+    d[key] = $$("#" + key + " .item").map(item => { const o = {}; $$("[data-f]", item).forEach(e => { o[e.dataset.f] = e.value; }); return o; });
+  });
+  return d;
+}
+function populate(d) {
+  d = Object.assign({}, EMPTY, d || {});
+  $$("[data-k]").forEach(el => { const v = d[el.dataset.k]; if (el.type === "checkbox") el.checked = !!v; else el.value = v == null ? "" : v; });
+  Object.keys(REPEATERS).forEach(key => fillRepeater(key, d[key]));
+  setPhoto(d.photo || "");
+}
+
+/* ---------- Foto ---------- */
+function setPhoto(url) {
+  state.photo = url || "";
+  const img = $("#photoThumb"), rm = $("#photoRemove"), btn = $("#photoBtn");
+  img.hidden = !state.photo; if (state.photo) img.src = state.photo;
+  rm.hidden = !state.photo; btn.textContent = state.photo ? "Anderes Foto wählen" : "Foto hinzufügen";
+  if (!state.photo) $("#photoFile").value = "";
+}
+function handlePhoto(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const W = 300, H = 400, c = document.createElement("canvas"); c.width = W; c.height = H;
+      const ctx = c.getContext("2d"), scale = Math.max(W / img.width, H / img.height), w = img.width * scale, h = img.height * scale;
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H);
+      ctx.drawImage(img, (W - w) / 2, (H - h) * 0.3, w, h); // Zuschnitt Richtung Kopf
+      setPhoto(c.toDataURL("image/jpeg", 0.85));
+      schedule();
+    };
+    img.onerror = () => status("Dieses Bild konnte nicht gelesen werden. Bitte ein JPG oder PNG wählen.", "err");
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function makeSilhouette() {
+  try {
+    const c = document.createElement("canvas"); c.width = 300; c.height = 400;
+    const x = c.getContext("2d");
+    x.fillStyle = "#cfd6df"; x.fillRect(0, 0, 300, 400);
+    x.fillStyle = "#8d99a8"; x.beginPath(); x.arc(150, 150, 62, 0, 7); x.fill();
+    x.beginPath(); x.ellipse(150, 380, 110, 120, 0, 0, 7); x.fill();
+    return c.toDataURL("image/jpeg", 0.8);
+  } catch (e) { return ""; }
+}
+
+/* ---------- Vorschau ---------- */
+function scaleInto(box, html, crop, layout) {
+  box.innerHTML = "";
+  const inner = document.createElement("div");
+  inner.style.cssText = `width:${PAGE_PX}px;min-height:1123px;padding:${PAD_PX}px;box-sizing:border-box;transform-origin:0 0;background:${layout ? pageBackground(layout) : "#fff"};color:#222;`;
+  inner.innerHTML = html; box.appendChild(inner);
+  const k = (box.clientWidth || 140) / PAGE_PX;
+  inner.style.transform = `scale(${k})`;
+  if (!crop) box.style.height = Math.ceil(inner.offsetHeight * k) + "px";
+}
+function renderPreview() {
+  const wrap = $("#sheetWrap"), sheet = $("#sheet");
+  const demo = state.step === 1;
+  const data = demo ? Object.assign({}, window.SAMPLES.dev.data, { photo: state.silhouette, showSignature: true }) : collect();
+  const fr = state.onePage ? computeFit(data, state.layout) : { f: 1, ok: true };
+  state.fit = fr.f;
+  sheet.style.background = pageBackground(state.layout);
+  sheet.innerHTML = buildHtml(data, state.layout, false, fr.f);
+  const k = wrap.clientWidth ? Math.min(1.25, wrap.clientWidth / PAGE_PX) : 1;
+  sheet.style.transform = `scale(${k})`;
+  wrap.style.height = Math.ceil(sheet.offsetHeight * k) + "px";
+  state.pages = state.onePage && fr.ok ? 1 : Math.max(1, Math.ceil((sheet.offsetHeight - 2 * PAD_PX) / PAGE_CONTENT_PX));
+  const info = $("#pageInfo");
+  info.textContent = state.onePage
+    ? (fr.ok ? "1 Seite (A4)" + (fr.f < 1 ? " · auf " + Math.round(fr.f * 100) + " % verkleinert" + (fr.f < 0.7 ? " – sehr klein, besser kürzen" : "") : "") : "Passt nicht auf 1 Seite – bitte Inhalte kürzen")
+    : "ca. " + state.pages + (state.pages === 1 ? " Seite" : " Seiten") + " (A4)";
+  info.className = (state.onePage ? (!fr.ok || fr.f < 0.7) : state.pages > 2) ? "warn" : "";
+  updateChecks();
+}
+let previewTimer = null, saveTimer = null, savedTimer = null;
+function schedule() {
+  clearTimeout(previewTimer); previewTimer = setTimeout(renderPreview, 120);
+  clearTimeout(saveTimer); saveTimer = setTimeout(() => {
+    if (lsSet(KEY_DRAFT, collect())) {
+      const s = $("#saved"); s.textContent = "✓ automatisch gespeichert"; s.classList.add("show");
+      clearTimeout(savedTimer); savedTimer = setTimeout(() => s.classList.remove("show"), 1800);
+    }
+  }, 600);
+}
+
+/* ---------- Vorlagen ---------- */
+const allLayouts = () => PRESETS.map(p => ({ id: p.id, name: p.name, cat: p.cat, layout: p.layout, custom: false }))
+  .concat(state.custom.map(c => ({ id: c.id, name: c.name, cat: "meine", layout: c.layout, custom: true })));
+
+function renderChips() {
+  const cats = CATS.concat(state.custom.length ? [["meine", "Meine"]] : []);
+  if (!cats.some(c => c[0] === state.filter)) state.filter = "alle";
+  $("#chips").innerHTML = cats.map(c => `<button type="button" data-cat="${c[0]}" class="${c[0] === state.filter ? "on" : ""}">${c[1]}</button>`).join("");
+}
+function renderGallery() {
+  const g = $("#gallery"); g.innerHTML = "";
+  const s = window.SAMPLES.dev.data;
+  const data = Object.assign({}, s, { photo: state.silhouette, showSignature: false, jobs: s.jobs.slice(0, 2), edu: s.edu.slice(0, 2) });
+  allLayouts().filter(it => state.filter === "alle" || it.cat === state.filter).forEach(it => {
+    const card = document.createElement("div");
+    card.className = "card" + (it.id === state.layoutId ? " sel" : "");
+    card.dataset.id = it.id; card.tabIndex = 0; card.setAttribute("role", "button"); card.setAttribute("aria-label", "Vorlage " + it.name);
+    card.innerHTML = `<div class="thumb"></div><div class="cname"><span>${esc(it.name)}</span>${it.custom ? '<button type="button" class="link" data-del title="Vorlage löschen" aria-label="Vorlage löschen">×</button>' : ""}</div>`;
+    g.appendChild(card);
+    scaleInto($(".thumb", card), buildHtml(data, it.layout), true, it.layout);
+  });
+}
+function highlightGallery() { $$("#gallery .card").forEach(c => c.classList.toggle("sel", c.dataset.id === state.layoutId)); }
+function updateLayoutLabel() {
+  const it = allLayouts().filter(x => x.id === state.layoutId)[0];
+  $("#layoutCurrent").textContent = it ? "· " + it.name : "· angepasst (noch nicht gespeichert)";
+}
+const persistCurrent = () => lsSet(KEY_CUR, { id: state.layoutId, layout: state.layout });
+
+function buildLayoutControls() {
+  $("#q_font").innerHTML = FONTS.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
+  $("#swatches").innerHTML = SWATCHES.map(c => `<button type="button" data-color="${c}" style="background:${c}" title="${c}" aria-label="Farbe ${c}"></button>`).join("") +
+    `<input type="color" id="q_color" aria-label="Eigene Farbe" title="Eigene Farbe wählen">`;
+  $("#swatches2").innerHTML = SWATCHES.map(c => `<button type="button" data-color="${c}" style="background:${c}" title="${c}" aria-label="Zweite Farbe ${c}"></button>`).join("") +
+    `<input type="color" id="q_color2" aria-label="Eigene zweite Farbe" title="Eigene zweite Farbe wählen">`;
+  $$("[data-seg]").forEach(box => {
+    box.innerHTML = QUICK_SEG[box.dataset.seg].map(o => `<button type="button" data-v="${o[0]}">${o[1]}</button>`).join("");
+  });
+  $("#layoutControls").innerHTML = LAYOUT_SPEC.map(s => {
+    const id = "ly_" + s.k;
+    if (s.type === "bool") return `<label class="check"><input type="checkbox" id="${id}" data-l="${s.k}"> ${esc(s.label)}</label>`;
+    if (s.type === "enum") return `<label for="${id}">${esc(s.label)}</label><select id="${id}" data-l="${s.k}">${s.options.map(o => { const v = Array.isArray(o) ? o[0] : o, t = Array.isArray(o) ? o[1] : o; return `<option value="${esc(v)}">${esc(t)}</option>`; }).join("")}</select>`;
+    if (s.type === "num") return `<label for="${id}">${esc(s.label)}: <b id="${id}_v"></b></label><input type="range" id="${id}" data-l="${s.k}" min="${s.min}" max="${s.max}" step="${s.step}">`;
+    return `<label for="${id}">${esc(s.label)}</label><input type="color" id="${id}" data-l="${s.k}">`;
+  }).join("");
+}
+function syncControls() {
+  const l = state.layout;
+  LAYOUT_SPEC.forEach(s => {
+    const el = $("#ly_" + s.k); if (!el) return;
+    if (s.type === "bool") el.checked = !!l[s.k]; else el.value = l[s.k];
+    if (s.type === "num") { const v = $("#ly_" + s.k + "_v"); if (v) v.textContent = l[s.k]; }
+  });
+  $("#q_font").value = l.font;
+  $("#q_color").value = l.accent; $("#q_color2").value = l.accent2;
+  $$("#swatches2 button").forEach(b => b.classList.toggle("on", b.dataset.color.toLowerCase() === l.accent2.toLowerCase()));
+  $$("#swatches button").forEach(b => b.classList.toggle("on", b.dataset.color.toLowerCase() === l.accent.toLowerCase()));
+  $$("[data-seg]").forEach(box => {
+    const k = box.dataset.seg, btns = $$("button", box);
+    let best = null;
+    btns.forEach(b => { const v = k === "baseSize" ? Number(b.dataset.v) : b.dataset.v; const diff = k === "baseSize" ? Math.abs(v - l[k]) : (v === l[k] ? 0 : 99); if (!best || diff < best.diff) best = { b, diff }; });
+    btns.forEach(b => b.classList.toggle("on", best && b === best.b && best.diff < 1));
+  });
+}
+function afterLayoutChange() { syncControls(); highlightGallery(); updateLayoutLabel(); persistCurrent(); schedule(); }
+function setLayoutValue(k, v) {
+  state.layout = sanitizeLayout(Object.assign({}, state.layout, { [k]: v }));
+  state.layoutId = ""; afterLayoutChange();
+}
+function selectLayout(id) {
+  const it = allLayouts().filter(x => x.id === id)[0] || allLayouts()[0];
+  state.layoutId = it.id; state.layout = sanitizeLayout(it.layout); afterLayoutChange();
+}
+function saveLayout() {
+  const name = ($("#layoutName").value || "").trim().slice(0, 40) || "Meine Vorlage";
+  let ex = state.custom.filter(c => c.name.toLowerCase() === name.toLowerCase())[0];
+  if (ex) ex.layout = state.layout; else { ex = { id: "u" + Date.now(), name, layout: state.layout }; state.custom.push(ex); }
+  const ok = lsSet(KEY_LAYOUTS, state.custom);
+  state.layoutId = ex.id; state.filter = "meine";
+  renderChips(); renderGallery(); updateLayoutLabel(); persistCurrent();
+  status(ok ? `Vorlage „${name}“ gespeichert. Du findest sie oben unter „Meine“.` : "Nur für diese Sitzung gespeichert (Browser-Speicher nicht verfügbar). Nutze den Vorlagen-Code zum Sichern.", ok ? "ok" : "err");
+}
+function deleteCustom(id) {
+  state.custom = state.custom.filter(c => c.id !== id);
+  lsSet(KEY_LAYOUTS, state.custom);
+  if (state.layoutId === id) { state.layoutId = ""; }
+  renderChips(); renderGallery(); updateLayoutLabel();
+  status("Vorlage gelöscht.", "ok");
+}
+function exportLayout() {
+  const name = ($("#layoutName").value || "").trim() || "Meine Vorlage";
+  $("#layoutCode").value = btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, n: name, l: state.layout }))));
+  status("Code erzeugt. Kopiere ihn und bewahre ihn auf – oder gib ihn weiter.", "ok");
+}
+function importLayout() {
+  try {
+    const obj = JSON.parse(decodeURIComponent(escape(atob($("#layoutCode").value.trim()))));
+    const ex = { id: "u" + Date.now(), name: String(obj.n || "Importierte Vorlage").slice(0, 40), layout: sanitizeLayout(obj.l) };
+    state.custom.push(ex); lsSet(KEY_LAYOUTS, state.custom);
+    state.filter = "meine"; renderChips(); renderGallery(); selectLayout(ex.id);
+    status(`Vorlage „${ex.name}“ importiert.`, "ok");
+  } catch (e) { status("Dieser Vorlagen-Code ist ungültig.", "err"); }
+}
+
+/* ---------- Schritte ---------- */
+function showStep(n) {
+  state.step = n;
+  $$(".step").forEach(s => s.classList.toggle("active", s.id === "step" + n));
+  $$("#stepper button").forEach(b => b.classList.toggle("on", Number(b.dataset.go) === n));
+  if (n === 1) renderGallery();
+  renderPreview();
+  const top = $("#panel").getBoundingClientRect().top + window.scrollY - 60;
+  if (window.innerWidth <= 900 || window.scrollY > top) window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+}
+function openAcc(id) {
+  showStep(2);
+  const el = $("#" + id); if (el) { el.open = true; setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 50); }
+}
+
+/* ---------- Hinweise (Schritt 3) ---------- */
+function updateChecks() {
+  const nt = $("#docxNote"); if (nt) nt.hidden = !pdfOnly(state.layout);
+  const box = $("#checks"); if (!box) return;
+  const d = collect(), w = [];
+  if (!(d.first || "").trim() && !(d.last || "").trim()) w.push(["Dein Name fehlt.", "acc_personal"]);
+  if (!(d.email || "").trim() && !(d.phone || "").trim()) w.push(["Telefon oder E-Mail fehlt – so können dich Firmen erreichen.", "acc_personal"]);
+  if (!d.jobs.some(e => e.role || e.company) && !d.edu.some(e => e.degree || e.school)) w.push(["Berufserfahrung oder Ausbildung fehlt noch.", "acc_jobs"]);
+  if (state.pages > 2) w.push([`Dein Lebenslauf ist ca. ${state.pages} Seiten lang. 1–2 Seiten sind üblich – kürze ältere Stationen, probiere die Vorlage „Kompakt“ oder aktiviere „Alles auf einer Seite“.`, null]);
+  box.innerHTML = w.length
+    ? w.map(x => `<div class="check-item warn"><span class="ic">!</span><span>${esc(x[0])}</span>${x[1] ? `<button type="button" data-acc="${x[1]}">Ergänzen</button>` : `<button type="button" data-go="1">Vorlage ändern</button>`}</div>`).join("")
+    : `<div class="check-item ok"><span class="ic">✓</span><span>Alles bereit – dein Lebenslauf sieht vollständig aus. Prüfe ihn noch einmal in der Vorschau.</span></div>`;
+}
+
+/* ---------- Export ---------- */
+/* ---------- Alles auf eine Seite ---------- */
+function measureHeight(d, layout, f) {
+  const h = document.createElement("div");
+  h.style.cssText = `position:absolute;left:-10000px;top:0;width:${PAGE_PX}px;padding:${PAD_PX}px;box-sizing:border-box;`;
+  h.innerHTML = buildHtml(d, layout, false, f);
+  document.body.appendChild(h);
+  const H = h.offsetHeight - 2 * PAD_PX; h.remove();
+  return H;
+}
+function computeFit(d, layout) {
+  const LIM = PAGE_CONTENT_PX - 6;
+  if (measureHeight(d, layout, 1) <= LIM) return { f: 1, ok: true };
+  let lo = 0.5, hi = 1;
+  if (measureHeight(d, layout, lo) > LIM) return { f: lo, ok: false };
+  for (let i = 0; i < 7; i++) { const mid = (lo + hi) / 2; if (measureHeight(d, layout, mid) <= LIM) lo = mid; else hi = mid; }
+  return { f: Math.floor(lo * 100) / 100, ok: true };
+}
+const currentFit = (d) => state.onePage ? computeFit(d, state.layout).f : 1;
+
+/* ---------- PDF direkt (ohne Druckdialog): Seiten als Bild in eine PDF-Datei ---------- */
+function buildPdf(pages) {
+  const enc = new TextEncoder(), chunks = [], offs = []; let off = 0;
+  const push = x => { chunks.push(x); off += x.length; };
+  const str = t => push(enc.encode(t));
+  push(new Uint8Array([37, 80, 68, 70, 45, 49, 46, 52, 10, 37, 226, 227, 207, 211, 10]));
+  const obj = (id, body) => { offs[id] = off; str(`${id} 0 obj\n${body}\nendobj\n`); };
+  const n = pages.length;
+  obj(1, "<< /Type /Catalog /Pages 2 0 R >>");
+  obj(2, `<< /Type /Pages /Kids [${pages.map((_, i) => `${3 + 3 * i} 0 R`).join(" ")}] /Count ${n} >>`);
+  pages.forEach((p, i) => {
+    obj(3 + 3 * i, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 ${5 + 3 * i} 0 R >> /ProcSet [/PDF /ImageC] >> /Contents ${4 + 3 * i} 0 R >>`);
+    const cs = "q 595.28 0 0 841.89 0 0 cm /Im0 Do Q";
+    obj(4 + 3 * i, `<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`);
+    offs[5 + 3 * i] = off;
+    str(`${5 + 3 * i} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.jpeg.length} >>\nstream\n`);
+    push(p.jpeg); str("\nendstream\nendobj\n");
+  });
+  const xref = off, total = 3 * n + 3;
+  str(`xref\n0 ${total}\n0000000000 65535 f \n`);
+  for (let id = 1; id < total; id++) str(String(offs[id]).padStart(10, "0") + " 00000 n \n");
+  str(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  return new Blob(chunks, { type: "application/pdf" });
+}
+async function renderPdfBlob(d, layout, fit) {
+  const W = PAGE_PX, PH = 1123, SC = 2, M = 60, pb = pageBackground(layout);
+  const holder = document.createElement("div");
+  holder.style.cssText = `position:absolute;left:-10000px;top:0;width:${W}px;`;
+  holder.innerHTML = bleed(layout)
+    ? `<div style="width:${W}px;">${buildHtml(d, layout, true, fit)}</div>`
+    : `<div style="width:${W}px;box-sizing:border-box;padding:${PAD_PX}px;background:${pb};">${buildHtml(d, layout, false, fit)}</div>`;
+  document.body.appendChild(holder);
+  try {
+    const node = holder.firstElementChild, box = node.getBoundingClientRect(), H = Math.ceil(box.height);
+    // Seitenumbrüche zwischen Absätzen/Zeilen suchen, damit keine Zeile zerschnitten wird
+    const rects = [...node.querySelectorAll("p,li,tr,img,svg")].map(e => { const r = e.getBoundingClientRect(); return [r.top - box.top, r.bottom - box.top]; }).filter(r => r[1] - r[0] > 2 && r[1] - r[0] < 260);
+    const pages = []; let y0 = 0;
+    while (y0 < H - 1) {
+      const top0 = pages.length ? M : 0;
+      let y1 = H - 70 - y0 <= PH - top0 ? H : Math.min(H, y0 + PH - top0 - M); // Rest passt (nur leerer Rand übrig) → letzte Seite
+      if (y1 < H) { for (let g = 0, moved = true; moved && g < 60; g++) { moved = false; for (const r of rects) if (r[0] < y1 && r[1] > y1 && r[0] > y0 + 120) { y1 = r[0]; moved = true; } } }
+      pages.push([y0, y1]); y0 = y1;
+    }
+    await (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve());
+    const xml = new XMLSerializer().serializeToString(node);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><foreignObject x="0" y="0" width="${W}" height="${H}">${xml}</foreignObject></svg>`;
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error("Die Seite konnte nicht als Bild erzeugt werden.")); img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); });
+    // reines Hintergrundbild (ohne Inhalt) für die Seitenränder
+    const bgSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><foreignObject x="0" y="0" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" style="width:${W}px;height:${H}px;background:${pb};"></div></foreignObject></svg>`;
+    const bgImg = new Image();
+    await new Promise((res, rej) => { bgImg.onload = res; bgImg.onerror = () => rej(new Error("Hintergrund konnte nicht erzeugt werden.")); bgImg.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(bgSvg); });
+    const bg = document.createElement("canvas"); bg.width = W * SC; bg.height = H * SC;
+    bg.getContext("2d").drawImage(bgImg, 0, 0, bg.width, bg.height);
+    const big = document.createElement("canvas"); big.width = W * SC; big.height = H * SC;
+    const g = big.getContext("2d"); g.fillStyle = "#ffffff"; g.fillRect(0, 0, big.width, big.height); g.drawImage(bg, 0, 0); g.drawImage(img, 0, 0, big.width, big.height);
+    try { g.getImageData(0, 0, 1, 1); } catch (e) { throw new Error("Dieser Browser erlaubt das direkte Erstellen nicht – bitte den Druckdialog verwenden."); }
+    const out = [];
+    for (let i = 0; i < pages.length; i++) {
+      const [a, b] = pages[i], top = i ? M : 0, pc = document.createElement("canvas"); pc.width = W * SC; pc.height = PH * SC;
+      const c = pc.getContext("2d"); c.fillStyle = "#ffffff"; c.fillRect(0, 0, pc.width, pc.height);
+      if (i) c.drawImage(bg, 0, Math.max(0, a - M) * SC, bg.width, Math.min(M, a) * SC, 0, 0, pc.width, Math.min(M, a) * SC);
+      c.drawImage(big, 0, a * SC, big.width, (b - a) * SC, 0, top * SC, pc.width, (b - a) * SC);
+      const used = top + (b - a), rem = PH - used;
+      if (rem > 0) { const sy = Math.max(0, Math.min(H - rem, b)); c.drawImage(bg, 0, sy * SC, bg.width, Math.min(rem, H - sy) * SC, 0, used * SC, pc.width, Math.min(rem, H - sy) * SC); }
+      const blob = await new Promise(r => pc.toBlob(r, "image/jpeg", 0.92));
+      out.push({ jpeg: new Uint8Array(await blob.arrayBuffer()), w: pc.width, h: pc.height });
+    }
+    return buildPdf(out);
+  } finally { holder.remove(); }
+}
+async function downloadPdfDirect() {
+  const d = collect(), name = fileBase(d) + ".pdf";
+  status("PDF wird erstellt …", "ok");
+  try {
+    const blob = await renderPdfBlob(d, state.layout, currentFit(d));
+    saveBlob(blob, name);
+    status(`„${name}“ wurde heruntergeladen. (Direkt-PDF: Text ist nicht markierbar – für markierbaren Text den Druckdialog nutzen.)`, "ok");
+  } catch (e) { status("Das PDF konnte nicht erstellt werden: " + (e && e.message ? e.message : e), "err"); }
+}
+
+function printCv() {
+  if (window.self !== window.top) { downloadPdfDirect(); return; } // eingebettete Vorschau: Druckdialog meist gesperrt
+  const d = collect(), old = document.title;
+  $("#printArea").innerHTML = buildHtml(d, state.layout, true, currentFit(d));
+  let pst = null;
+  if (bleed(state.layout)) { // randlose Seiten (dunkler Hintergrund, Banner bis zum Rand)
+    pst = document.createElement("style");
+    pst.textContent = `@page{size:A4;margin:0}@media print{html,body{background:${pageBackground(state.layout)} !important;}}`;
+    document.head.appendChild(pst);
+  }
+  document.title = fileBase(d); // wird zum Standard-Dateinamen des PDFs
+  const done = () => { document.title = old; if (pst) pst.remove(); window.removeEventListener("afterprint", done); };
+  window.addEventListener("afterprint", done);
+  status("Im Druckdialog „Als PDF speichern“ wählen · Papier A4 · „Hintergrundgrafiken“ aktivieren. Kein Dialog? Dann „PDF direkt herunterladen“ nutzen.", "ok");
+  setTimeout(() => { try { window.print(); } catch (e) { downloadPdfDirect(); } }, 80);
+}
+function saveBlob(blob, name) {
+  if (navigator.msSaveBlob) { navigator.msSaveBlob(blob, name); return; }
+  const url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 5000);
+}
+function downloadDocx() {
+  const d = collect(), name = fileBase(d) + ".docx";
+  try { saveBlob(buildDocx(d, state.layout, currentFit(d)), name); status(`„${name}“ wurde heruntergeladen. In Word öffnen und einmal speichern.`, "ok"); }
+  catch (e) { status("Die Word-Datei konnte nicht erstellt werden: " + (e && e.message ? e.message : e), "err"); }
+}
+function backupSave() {
+  const payload = { app: "lebenslauf-ersteller", v: 3, daten: collect(), vorlage: { id: state.layoutId, layout: state.layout }, eigene: state.custom };
+  saveBlob(new Blob([JSON.stringify(payload)], { type: "application/json" }), "lebenslauf-daten.json");
+  status("Datensicherung heruntergeladen: lebenslauf-daten.json", "ok");
+}
+function backupLoad(file) {
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const p = JSON.parse(r.result);
+      if (p.app !== "lebenslauf-ersteller" || !p.daten) throw new Error("falsches Format");
+      populate(p.daten);
+      (p.eigene || []).forEach(c => { if (c && c.id && c.name && !state.custom.some(x => x.id === c.id)) state.custom.push({ id: String(c.id), name: String(c.name).slice(0, 40), layout: sanitizeLayout(c.layout) }); });
+      lsSet(KEY_LAYOUTS, state.custom);
+      state.layout = sanitizeLayout((p.vorlage || {}).layout); state.layoutId = (p.vorlage || {}).id || "";
+      if (state.layoutId && !allLayouts().some(x => x.id === state.layoutId)) state.layoutId = "";
+      renderChips(); renderGallery(); afterLayoutChange(); renderPreview();
+      status("Daten geladen.", "ok");
+    } catch (e) { status("Diese Datei konnte nicht gelesen werden. Bitte eine zuvor gesicherte „lebenslauf-daten.json“ wählen.", "err"); }
+  };
+  r.readAsText(file);
+}
+
+/* ---------- Start ---------- */
+function init() {
+  state.silhouette = makeSilhouette();
+  $("#sampleSelect").innerHTML = Object.keys(window.SAMPLES).map(k => `<option value="${k}">${esc(window.SAMPLES[k].label)}</option>`).join("");
+  buildLayoutControls();
+  state.custom = (lsGet(KEY_LAYOUTS) || []).filter(c => c && c.id && c.name).map(c => ({ id: String(c.id), name: String(c.name).slice(0, 40), layout: sanitizeLayout(c.layout) }));
+  const cur = lsGet(KEY_CUR);
+  if (cur && cur.layout) { state.layout = sanitizeLayout(cur.layout); state.layoutId = cur.id || ""; }
+  if (state.layoutId && !allLayouts().some(x => x.id === state.layoutId)) state.layoutId = "";
+  populate(lsGet(KEY_DRAFT) || EMPTY);
+  renderChips(); renderGallery(); syncControls(); updateLayoutLabel();
+
+  // Schritte
+  document.addEventListener("click", e => {
+    const go = e.target.closest("[data-go]"); if (go) { showStep(Number(go.dataset.go)); return; }
+    const acc = e.target.closest("[data-acc]"); if (acc) { openAcc(acc.dataset.acc); return; }
+  });
+  // Vorlagen-Galerie
+  const g = $("#gallery");
+  g.addEventListener("click", e => {
+    const card = e.target.closest(".card"); if (!card) return;
+    if (e.target.closest("[data-del]")) { deleteCustom(card.dataset.id); return; }
+    selectLayout(card.dataset.id);
+  });
+  g.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("card")) { e.preventDefault(); selectLayout(e.target.dataset.id); } });
+  $("#chips").addEventListener("click", e => { const b = e.target.closest("[data-cat]"); if (!b) return; state.filter = b.dataset.cat; renderChips(); renderGallery(); });
+  // Anpassen
+  $("#swatches2").addEventListener("click", e => { const b = e.target.closest("[data-color]"); if (b) setLayoutValue("accent2", b.dataset.color); });
+  $("#swatches").addEventListener("click", e => { const b = e.target.closest("[data-color]"); if (b) setLayoutValue("accent", b.dataset.color); });
+  $("#q_color").addEventListener("input", e => setLayoutValue("accent", e.target.value));
+  $("#q_color2").addEventListener("input", e => setLayoutValue("accent2", e.target.value));
+  $("#q_font").addEventListener("change", e => setLayoutValue("font", e.target.value));
+  $$("[data-seg]").forEach(box => box.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    setLayoutValue(box.dataset.seg, box.dataset.seg === "baseSize" ? Number(b.dataset.v) : b.dataset.v);
+  }));
+  const lc = $("#layoutControls"), onCtl = e => {
+    const el = e.target.closest("[data-l]"); if (!el) return;
+    const spec = LAYOUT_SPEC.filter(s => s.k === el.dataset.l)[0];
+    setLayoutValue(spec.k, spec.type === "bool" ? el.checked : (spec.type === "num" ? Number(el.value) : el.value));
+  };
+  lc.addEventListener("input", onCtl); lc.addEventListener("change", onCtl);
+  $("#saveLayout").addEventListener("click", saveLayout);
+  $("#exportLayout").addEventListener("click", exportLayout);
+  $("#importLayout").addEventListener("click", importLayout);
+  // Daten
+  $("#loadSample").addEventListener("click", () => { populate(window.SAMPLES[$("#sampleSelect").value].data); status("Beispiel geladen.", "ok"); });
+  $("#clearAll").addEventListener("click", () => { populate(EMPTY); status("Formular geleert – trage jetzt deine Daten ein.", "ok"); $("#acc_personal").open = true; });
+  $("#addJob").addEventListener("click", () => { $("#jobs").appendChild(buildItem("jobs", {})); renumber("jobs"); });
+  $("#addEdu").addEventListener("click", () => { $("#edu").appendChild(buildItem("edu", {})); renumber("edu"); });
+  bindRepeater("jobs"); bindRepeater("edu");
+  $("#photoBtn").addEventListener("click", () => $("#photoFile").click());
+  $("#photoFile").addEventListener("change", e => handlePhoto(e.target.files[0]));
+  $("#photoRemove").addEventListener("click", () => { setPhoto(""); schedule(); });
+  $$("details.acc").forEach(d => d.addEventListener("toggle", () => { if (d.open) $$("details.acc").forEach(o => { if (o !== d) o.open = false; }); }));
+  // Export
+  $$(".btnPdf").forEach(b => b.addEventListener("click", printCv));
+  $$(".btnDocx").forEach(b => b.addEventListener("click", downloadDocx));
+  $$(".btnPdfDirect").forEach(b => b.addEventListener("click", downloadPdfDirect));
+  const fitPref = lsGet(KEY_FIT); state.onePage = !!(fitPref && fitPref.on);
+  $$(".onePage").forEach(cb => { cb.checked = state.onePage; cb.addEventListener("change", () => { state.onePage = cb.checked; $$(".onePage").forEach(o => { o.checked = state.onePage; }); lsSet(KEY_FIT, { on: state.onePage }); renderPreview(); }); });
+  $("#backupSave").addEventListener("click", backupSave);
+  $("#backupLoad").addEventListener("click", () => $("#backupFile").click());
+  $("#backupFile").addEventListener("change", e => { backupLoad(e.target.files[0]); e.target.value = ""; });
+  $("#resetAll").addEventListener("click", () => {
+    if (!confirm("Wirklich alles zurücksetzen? Deine Eingaben und eigenen Vorlagen in diesem Browser werden gelöscht.")) return;
+    [KEY_DRAFT, KEY_LAYOUTS, KEY_CUR].forEach(lsDel); location.reload();
+  });
+  // Live-Vorschau + automatisches Speichern
+  ["input", "change"].forEach(ev => document.addEventListener(ev, e => { if (e.target.closest("#panel")) schedule(); }));
+  document.addEventListener("click", e => { if (e.target.closest("#jobs,#edu")) schedule(); });
+  let rz = null;
+  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { renderPreview(); if (state.step === 1) renderGallery(); }, 200); });
+  renderPreview();
+}
+
+window.CVMaker = { renderPdfBlob, computeFit, pageBackground, bleed, buildHtml, buildDocx, PRESETS, sanitizeLayout, collect, populate, state, fileBase, DEFAULT_LAYOUT };
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+
+})();
+</script>
+</body>
+</html>
