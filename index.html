@@ -66,6 +66,7 @@ button:disabled { opacity: .5; cursor: default; }
 /* Vorlagen-Auswahl */
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .chips button { border-radius: 999px; padding: 5px 13px; font-size: 13.5px; background: #fff; }
+.chips button small { opacity: .65; font-size: 11.5px; margin-left: 2px; }
 .chips button.on { background: var(--ui); border-color: var(--ui); color: #fff; font-weight: 600; }
 .gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .card { border: 2px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; overflow: hidden; position: relative; }
@@ -136,6 +137,14 @@ ol { margin: 4px 0 4px 18px; padding: 0; } ol li { margin: 4px 0; }
   .thumb { height: 170px; }
 }
 
+.modal { position: fixed; inset: 0; z-index: 200; background: rgba(15,23,42,.6); display: flex; align-items: center; justify-content: center; padding: 12px; overflow: auto; }
+.modal[hidden] { display: none; }
+.modal-box { background: #fff; border-radius: 10px; padding: 16px; width: min(380px, 100%); max-height: 100%; overflow: auto; }
+.crop-wrap { display: flex; justify-content: center; margin: 8px 0; }
+#cropCanvas { width: 100%; max-width: 270px; aspect-ratio: 3 / 4; border: 1px solid #b9c2cd; border-radius: 4px; touch-action: none; cursor: grab; background: #eee; }
+#cropCanvas:active { cursor: grabbing; }
+.modal .inline .grow { flex: 1; }
+
 /* Druck: nur der Lebenslauf */
 #printArea { display: none; }
 @page { size: A4; margin: 2cm; }
@@ -182,7 +191,7 @@ label.check small { color: var(--muted); font-size: 12px; }
       <label class="check"><input type="checkbox" class="onePage"> Alles auf einer Seite <small>(verkleinert automatisch)</small></label>
       <label>Farbe</label>
       <div class="swatches" id="swatches"></div>
-      <label>Zweite Farbe <small>(für Farbverläufe &amp; mehrfarbige Vorlagen, nur PDF)</small></label>
+      <label>Zweite Farbe <small>(für Farbverläufe &amp; mehrfarbige Vorlagen)</small></label>
       <div class="swatches" id="swatches2"></div>
       <div class="row2">
         <div><label for="q_font">Schrift</label><select id="q_font"></select></div>
@@ -232,6 +241,7 @@ label.check small { color: var(--muted); font-size: 12px; }
           <img id="photoThumb" alt="" hidden>
           <div>
             <button type="button" id="photoBtn">Foto hinzufügen</button>
+            <button type="button" id="photoEdit" hidden>Foto zuschneiden</button>
             <button type="button" id="photoRemove" class="link" hidden>Foto entfernen</button>
             <input type="file" id="photoFile" accept="image/*" hidden>
             <p class="hint">Ein Foto ist in Österreich üblich, aber freiwillig. Es wird passend zugeschnitten und bleibt auf deinem Gerät.</p>
@@ -334,12 +344,9 @@ label.check small { color: var(--muted); font-size: 12px; }
 
     <label class="check"><input type="checkbox" class="onePage"> Alles auf einer Seite <small>(verkleinert automatisch)</small></label>
     <div class="bigbtns">
-      <button type="button" class="btnPdf primary big"><b>Als PDF speichern</b><span>Öffnet den Druckdialog · Text im PDF bleibt markierbar</span></button>
-      <button type="button" class="btnPdfDirect big"><b>PDF direkt herunterladen</b><span>Falls kein Druckdialog erscheint · funktioniert überall (Text nicht markierbar)</span></button>
-      <button type="button" class="btnDocx big"><b>Als Word-Datei speichern (.docx)</b><span>Zum Weiterbearbeiten in Word</span></button>
+      <button type="button" class="btnPdf primary big"><b>Als PDF speichern</b><span>Öffnet den Druckdialog des Browsers</span></button>
+      <button type="button" class="btnPdfDirect big"><b>PDF direkt herunterladen</b><span>Ohne Druckdialog · funktioniert überall, auch am Handy · Text durchsuchbar</span></button>
     </div>
-
-    <p class="hint" id="docxNote" hidden>Hinweis: Diese Vorlage ist für das PDF optimiert. In der Word-Datei erscheint sie vereinfacht (ohne Balken, Symbole und Sonderformen).</p>
 
     <details class="more">
       <summary>So klappt das PDF-Speichern</summary>
@@ -372,16 +379,29 @@ label.check small { color: var(--muted); font-size: 12px; }
   <div class="toolbar">
     <button type="button" class="btnPdf primary">PDF speichern</button>
     <button type="button" class="btnPdfDirect">PDF direkt</button>
-    <button type="button" class="btnDocx">Word (.docx)</button>
     <label class="check onep"><input type="checkbox" class="onePage"> 1 Seite</label>
     <span class="grow"><span id="pageInfo"></span> <span id="saved" class="saved"></span></span>
   </div>
   <div id="sheetWrap"><div id="sheet"></div></div>
   <div id="status" role="status" aria-live="polite"></div>
-  <p class="hint">Die Vorschau ist eine Annäherung. Zeilen- und Seitenumbrüche können im PDF und in Word minimal abweichen.</p>
+  <p class="hint">Die Vorschau ist eine Annäherung. Zeilen- und Seitenumbrüche können im PDF minimal abweichen.</p>
 </section>
 </div>
 
+<div id="photoEditor" class="modal" hidden role="dialog" aria-modal="true" aria-label="Foto zuschneiden">
+  <div class="modal-box">
+    <h3>Foto zuschneiden</h3>
+    <p class="hint">Bild mit dem Finger oder der Maus verschieben, mit dem Regler vergrößern.</p>
+    <div class="crop-wrap"><canvas id="cropCanvas" width="300" height="400" aria-label="Zuschnitt"></canvas></div>
+    <label for="cropZoom">Vergrößerung</label>
+    <input type="range" id="cropZoom" min="100" max="300" step="1" value="100">
+    <label for="cropBright">Helligkeit</label>
+    <input type="range" id="cropBright" min="-40" max="40" step="1" value="0">
+    <label class="check"><input type="checkbox" id="cropGray"> Schwarz-Weiß</label>
+    <label class="check"><input type="checkbox" id="cropGuide" checked> Rundung als Hilfslinie zeigen</label>
+    <div class="inline"><button type="button" id="cropReset">Zurücksetzen</button><span class="grow"></span><button type="button" id="cropCancel">Abbrechen</button><button type="button" id="cropOk" class="primary">Übernehmen</button></div>
+  </div>
+</div>
 <div id="printArea"></div>
 
 <script>
@@ -481,7 +501,7 @@ window.SAMPLES = {
 (() => {
 "use strict";
 /* ===================================================================
-   Lebenslauf-Ersteller – Layout-Engine (Vorschau/PDF als HTML, Word als echtes .docx)
+   Lebenslauf-Ersteller – Layout-Engine (Vorschau und PDF als HTML)
    =================================================================== */
 const L = {
   personal: "Persönliche Daten", profile: "Kurzprofil", experience: "Berufserfahrung", education: "Ausbildung",
@@ -497,34 +517,34 @@ const LAYOUT_SPEC = [
   { k: "font", label: "Schriftart", type: "enum", options: FONTS },
   { k: "baseSize", label: "Textgröße (pt)", type: "num", min: 9, max: 12, step: 0.5 },
   { k: "accent", label: "Akzentfarbe", type: "color" },
-  { k: "accent2", label: "Zweite Farbe (Verläufe, nur PDF)", type: "color" },
-  { k: "page", label: "Seitenhintergrund", type: "enum", options: [["white", "Weiß"], ["cream", "Creme (nur PDF)"], ["dark", "Dunkel (nur PDF)"], ["gradient", "Pastell-Verlauf (nur PDF)"], ["sideBleed", "Seitenleiste bis zum Rand (nur PDF)"]] },
+  { k: "accent2", label: "Zweite Farbe (für Verläufe)", type: "color" },
+  { k: "page", label: "Seitenhintergrund", type: "enum", options: [["white", "Weiß"], ["cream", "Creme"], ["dark", "Dunkel"], ["gradient", "Pastell-Verlauf"], ["sideBleed", "Seitenleiste bis zum Rand"]] },
   { k: "spacing", label: "Abstände", type: "enum", options: [["compact", "Kompakt"], ["normal", "Normal"], ["airy", "Luftig"]] },
-  { k: "columns", label: "Spalten", type: "enum", options: [["single", "Eine Spalte"], ["sidebarLeft", "Seitenleiste links"], ["sidebarRight", "Seitenleiste rechts"], ["split", "Zweispaltig, Spalte rechts"], ["splitLeft", "Zweispaltig, Spalte links (nur PDF)"]] },
+  { k: "columns", label: "Spalten", type: "enum", options: [["single", "Eine Spalte"], ["sidebarLeft", "Seitenleiste links"], ["sidebarRight", "Seitenleiste rechts"], ["split", "Zweispaltig, Spalte rechts"], ["splitLeft", "Zweispaltig, Spalte links"]] },
   { k: "sideWidth", label: "Breite der Seitenleiste (%)", type: "num", min: 26, max: 40, step: 1 },
   { k: "sideDark", label: "Seitenleiste in Akzentfarbe (dunkel)", type: "bool" },
   { k: "nameInSide", label: "Name in der Seitenleiste", type: "bool" },
-  { k: "header", label: "Kopfbereich (eine Spalte)", type: "enum", options: [["plain", "Schlicht"], ["band", "Farbiges Band"], ["tint", "Helle Tönung"], ["topbar", "Farbbalken oben"], ["center", "Zentriert"], ["accent", "Akzentlinie links"], ["stripes", "Farbstreifen oben"], ["box", "Name im Rahmen"], ["vbar", "Balken + Symbole (nur PDF)"], ["block", "Grauer Block (nur PDF)"], ["corner", "Ecke mit Rundfoto (nur PDF)"], ["title", "Großer Titel (nur PDF)"], ["navyBlock", "Dunkler Fotoblock (nur PDF)"], ["photoCorner", "Foto links mit Fläche (nur PDF)"], ["bandRound", "Band mit Rundfoto (nur PDF)"], ["circleTitle", "Titel mit Kreis (nur PDF)"], ["gradient", "Farbverlauf-Banner (nur PDF)"], ["wave", "Banner mit Welle (nur PDF)"], ["slant", "Schräges Banner (nur PDF)"], ["hero", "Foto-Hero (nur PDF)"], ["stripesDiag", "Diagonale Streifen (nur PDF)"]] },
+  { k: "header", label: "Kopfbereich (eine Spalte)", type: "enum", options: [["plain", "Schlicht"], ["band", "Farbiges Band"], ["tint", "Helle Tönung"], ["topbar", "Farbbalken oben"], ["center", "Zentriert"], ["accent", "Akzentlinie links"], ["stripes", "Farbstreifen oben"], ["box", "Name im Rahmen"], ["vbar", "Balken + Symbole"], ["block", "Grauer Block"], ["corner", "Ecke mit Rundfoto"], ["title", "Großer Titel"], ["navyBlock", "Dunkler Fotoblock"], ["photoCorner", "Foto links mit Fläche"], ["bandRound", "Band mit Rundfoto"], ["circleTitle", "Titel mit Kreis"], ["gradient", "Farbverlauf-Banner"], ["wave", "Banner mit Welle"], ["slant", "Schräges Banner"], ["hero", "Foto-Hero"], ["stripesDiag", "Diagonale Streifen"]] },
   { k: "nameSize", label: "Namensgröße (pt)", type: "num", min: 18, max: 54, step: 1 },
-  { k: "nameStack", label: "Vor- und Nachname untereinander (nur PDF)", type: "bool" },
+  { k: "nameStack", label: "Vor- und Nachname untereinander", type: "bool" },
   { k: "nameUpper", label: "Name in Großbuchstaben", type: "bool" },
   { k: "nameSplit", label: "Vorname dünn, Nachname fett", type: "bool" },
   { k: "photoPos", label: "Foto-Position (eine Spalte)", type: "enum", options: [["right", "Rechts"], ["left", "Links"]] },
   { k: "photoShape", label: "Foto-Form", type: "enum", options: [["rect", "Rechteck (Hochformat)"], ["round", "Rund"]] },
-  { k: "headStyle", label: "Überschriften", type: "enum", options: [["underline", "Unterstrichen"], ["plain", "Nur Farbe"], ["bar", "Farbbalken"], ["leftbar", "Balken links"], ["dotted", "Gepunktete Linie"], ["centered", "Zentriert mit Linien"], ["double", "Doppelte Linie"], ["boxed", "Rahmen"], ["spaced", "Gesperrte Schrift"], ["greybar", "Grauer Balken (nur PDF)"], ["icon", "Symbol + Linie (nur PDF)"]] },
+  { k: "headStyle", label: "Überschriften", type: "enum", options: [["underline", "Unterstrichen"], ["plain", "Nur Farbe"], ["bar", "Farbbalken"], ["leftbar", "Balken links"], ["dotted", "Gepunktete Linie"], ["centered", "Zentriert mit Linien"], ["double", "Doppelte Linie"], ["boxed", "Rahmen"], ["spaced", "Gesperrte Schrift"], ["greybar", "Grauer Balken"], ["icon", "Symbol + Linie"]] },
   { k: "headUpper", label: "Überschriften in Großbuchstaben", type: "bool" },
-  { k: "dateStyle", label: "Datumsangaben", type: "enum", options: [["left", "Linke Spalte"], ["above", "Über dem Eintrag"], ["right", "Rechte Spalte"], ["timeline", "Zeitstrahl"], ["dots", "Zeitstrahl mit Punkten (nur PDF)"]] },
+  { k: "dateStyle", label: "Datumsangaben", type: "enum", options: [["left", "Linke Spalte"], ["above", "Über dem Eintrag"], ["right", "Rechte Spalte"], ["timeline", "Zeitstrahl"], ["dots", "Zeitstrahl mit Punkten"]] },
   { k: "dateWidth", label: "Breite der Datumsspalte (%)", type: "num", min: 16, max: 34, step: 1 },
   { k: "bullet", label: "Aufzählungszeichen", type: "enum", options: [["disc", "Rund"], ["circle", "Hohl"], ["square", "Eckig"]] },
-  { k: "contact", label: "Kontaktdaten (nicht bei Seitenleiste)", type: "enum", options: [["table", "Tabelle mit Beschriftung"], ["line", "Kompakte Zeilen"], ["icons", "Zeilen mit Symbolen"], ["strip", "Farbige Leiste"], ["iconGrid", "Symbole im Raster (nur PDF)"], ["iconTable", "Symbole mit Beschriftung (nur PDF)"]] },
-  { k: "structure", label: "Aufbau der Abschnitte (eine Spalte)", type: "enum", options: [["normal", "Überschrift über dem Inhalt"], ["editorial", "Überschrift links daneben"], ["cards", "Abschnitte als Karten"], ["glass", "Karten mit Schatten (nur PDF)"]] },
+  { k: "contact", label: "Kontaktdaten (nicht bei Seitenleiste)", type: "enum", options: [["table", "Tabelle mit Beschriftung"], ["line", "Kompakte Zeilen"], ["icons", "Zeilen mit Symbolen"], ["strip", "Farbige Leiste"], ["iconGrid", "Symbole im Raster"], ["iconTable", "Symbole mit Beschriftung"]] },
+  { k: "structure", label: "Aufbau der Abschnitte (eine Spalte)", type: "enum", options: [["normal", "Überschrift über dem Inhalt"], ["editorial", "Überschrift links daneben"], ["cards", "Abschnitte als Karten"], ["glass", "Karten mit Schatten"]] },
   { k: "headNum", label: "Überschriften nummerieren (01, 02 …)", type: "bool" },
-  { k: "skillStyle", label: "Sprachen & Kenntnisse", type: "enum", options: [["text", "Als Text"], ["bars", "Mit Balken (nur PDF)"], ["dots", "Mit Punkten (nur PDF)"], ["chips", "Als Etiketten (nur PDF)"], ["rings", "Als Ringe (nur PDF)"]] },
-  { k: "rules", label: "Linien zwischen Einträgen (nur PDF)", type: "bool" },
-  { k: "zebra", label: "Abwechselnd graue Zeilen (nur PDF)", type: "bool" },
-  { k: "nameBox", label: "Name im Rahmen (Seitenleiste, nur PDF)", type: "bool" },
-  { k: "sideCenter", label: "Seitenspalte zentriert (nur PDF)", type: "bool" },
-  { k: "skillsMain", label: "Kenntnisse im Hauptteil statt Seitenleiste (nur PDF)", type: "bool" }
+  { k: "skillStyle", label: "Sprachen & Kenntnisse", type: "enum", options: [["text", "Als Text"], ["bars", "Mit Balken"], ["dots", "Mit Punkten"], ["chips", "Als Etiketten"], ["rings", "Als Ringe"]] },
+  { k: "rules", label: "Linien zwischen Einträgen", type: "bool" },
+  { k: "zebra", label: "Abwechselnd graue Zeilen", type: "bool" },
+  { k: "nameBox", label: "Name im Rahmen (Seitenleiste)", type: "bool" },
+  { k: "sideCenter", label: "Seitenspalte zentriert", type: "bool" },
+  { k: "skillsMain", label: "Kenntnisse im Hauptteil statt Seitenleiste", type: "bool" }
 ];
 
 const DEFAULT_LAYOUT = {
@@ -617,7 +637,37 @@ const PRESETS = [
   { id: "glasPastell", cat: "fancy", name: "Pastell mit Karten", layout: { font: "Segoe UI", accent: "#8b5cf6", accent2: "#38bdf8", page: "gradient", header: "plain", nameSize: 32, nameSplit: true, contact: "line", structure: "glass", headStyle: "plain", headUpper: false, dateStyle: "above", skillStyle: "chips", baseSize: 10 } },
   { id: "seitenVerlauf", cat: "fancy", name: "Seitenleiste Vollbild", layout: { font: "Segoe UI", accent: "#1e3a8a", accent2: "#7c3aed", page: "sideBleed", columns: "sidebarLeft", sideDark: true, sideWidth: 33, nameInSide: true, photoShape: "round", skillStyle: "bars", headStyle: "leftbar", dateStyle: "above", baseSize: 10 } },
   { id: "seitenHell", cat: "fancy", name: "Vollbild mit Ringen", layout: { font: "Calibri", accent: "#0f766e", page: "sideBleed", columns: "sidebarRight", sideDark: false, sideWidth: 30, skillsMain: true, skillStyle: "rings", contact: "iconTable", headStyle: "icon", headUpper: false, dateStyle: "left", dateWidth: 22, rules: true, baseSize: 10 } },
-  { id: "creme", cat: "fancy", name: "Creme & Edel", layout: { font: "Georgia", accent: "#7a5c2e", page: "cream", header: "center", nameSize: 34, nameSplit: true, contact: "line", headStyle: "double", headUpper: true, dateStyle: "above", spacing: "airy", bullet: "circle", baseSize: 10.5 } }
+  { id: "creme", cat: "fancy", name: "Creme & Edel", layout: { font: "Georgia", accent: "#7a5c2e", page: "cream", header: "center", nameSize: 34, nameSplit: true, contact: "line", headStyle: "double", headUpper: true, dateStyle: "above", spacing: "airy", bullet: "circle", baseSize: 10.5 } },
+  { id: "mitternacht", cat: "fancy", name: "Mitternacht Violett", layout: { font: "Segoe UI", accent: "#a78bfa", accent2: "#ec4899", page: "dark", header: "gradient", nameSize: 32, photoShape: "round", headStyle: "plain", headUpper: true, dateStyle: "left", dateWidth: 22, skillStyle: "chips", baseSize: 10 } },
+  { id: "cyberGruen", cat: "fancy", name: "Cyber Grün", layout: { font: "Verdana", accent: "#22c55e", accent2: "#06b6d4", page: "dark", header: "stripesDiag", nameSize: 26, headStyle: "bar", headUpper: true, dateStyle: "left", dateWidth: 22, skillStyle: "bars", baseSize: 9.5 } },
+  { id: "dunkelSeite", cat: "fancy", name: "Dunkel mit Seitenleiste", layout: { font: "Segoe UI", accent: "#f59e0b", accent2: "#ef4444", page: "dark", columns: "sidebarLeft", sideDark: true, sideWidth: 32, nameInSide: true, photoShape: "round", skillStyle: "rings", headStyle: "leftbar", dateStyle: "above", baseSize: 10 } },
+  { id: "goldHero", cat: "fancy", name: "Hero auf Creme", layout: { font: "Georgia", accent: "#92400e", page: "cream", header: "hero", nameSize: 36, nameStack: true, nameUpper: true, headStyle: "double", headUpper: true, dateStyle: "left", dateWidth: 22, skillStyle: "dots", baseSize: 10 } },
+  { id: "cremeWelle", cat: "fancy", name: "Creme Welle", layout: { font: "Cambria", accent: "#b45309", accent2: "#f59e0b", page: "cream", header: "wave", nameSize: 32, headStyle: "icon", headUpper: false, dateStyle: "dots", dateWidth: 22, skillStyle: "chips", baseSize: 10 } },
+  { id: "pastellSchraeg", cat: "fancy", name: "Pastell Schräg", layout: { font: "Trebuchet MS", accent: "#7c3aed", accent2: "#f472b6", page: "gradient", header: "slant", nameSize: 32, structure: "glass", headStyle: "plain", headUpper: false, dateStyle: "above", skillStyle: "chips", baseSize: 10 } },
+  { id: "sonnenuntergang", cat: "fancy", name: "Sonnenuntergang", layout: { font: "Segoe UI", accent: "#f97316", accent2: "#db2777", page: "gradient", header: "gradient", nameSize: 34, photoShape: "round", structure: "glass", headStyle: "plain", headUpper: false, dateStyle: "above", skillStyle: "rings", baseSize: 10 } },
+  { id: "dunkelGlas", cat: "fancy", name: "Dunkles Glas", layout: { font: "Segoe UI", accent: "#38bdf8", accent2: "#818cf8", page: "dark", header: "plain", nameSize: 34, nameSplit: true, contact: "icons", structure: "editorial", headStyle: "plain", headUpper: true, dateStyle: "above", skillStyle: "chips", baseSize: 10 } },
+  { id: "rostSeite", cat: "fancy", name: "Rost Vollbild rechts", layout: { font: "Georgia", accent: "#7c2d12", accent2: "#d97706", page: "sideBleed", columns: "sidebarRight", sideDark: true, sideWidth: 32, photoShape: "round", skillStyle: "bars", headStyle: "double", headUpper: true, dateStyle: "above", baseSize: 10 } },
+  { id: "linksSpalteWelle", cat: "fancy", name: "Welle mit linker Spalte", layout: { font: "Calibri", accent: "#0d9488", accent2: "#38bdf8", header: "wave", nameSize: 30, columns: "splitLeft", sideWidth: 30, contact: "iconTable", skillStyle: "rings", headStyle: "icon", headUpper: false, dateStyle: "left", dateWidth: 22, baseSize: 10 } },
+  { id: "titelCreme", cat: "fancy", name: "Großer Titel Creme", layout: { font: "Garamond", accent: "#44403c", page: "cream", header: "title", structure: "editorial", headUpper: true, dateStyle: "above", bullet: "circle", skillStyle: "dots", baseSize: 11, spacing: "airy" } },
+  { id: "blockKarten", cat: "fancy", name: "Datenblock & Karten", layout: { font: "Arial", accent: "#4338ca", accent2: "#06b6d4", page: "gradient", header: "block", structure: "glass", headStyle: "plain", headUpper: false, dateStyle: "left", dateWidth: 22, skillStyle: "bars", baseSize: 10 } },
+  { id: "eckeCreme", cat: "fancy", name: "Ecke auf Creme", layout: { font: "Segoe UI", accent: "#be123c", page: "cream", header: "corner", photoShape: "round", contact: "iconGrid", headStyle: "underline", headUpper: true, dateStyle: "dots", dateWidth: 22, skillStyle: "dots", baseSize: 9.5 } },
+  { id: "navyDunkel", cat: "fancy", name: "Navy Nacht", layout: { font: "Arial", accent: "#60a5fa", accent2: "#a78bfa", page: "dark", header: "navyBlock", nameSize: 24, nameUpper: true, headStyle: "underline", headUpper: true, dateStyle: "left", dateWidth: 24, rules: true, skillStyle: "bars", baseSize: 9.5 } },
+  { id: "kreisDunkel", cat: "fancy", name: "Kreis Creme", layout: { font: "Trebuchet MS", accent: "#0f766e", page: "cream", header: "circleTitle", photoShape: "round", contact: "iconTable", headStyle: "icon", headUpper: false, dateStyle: "dots", dateWidth: 22, skillStyle: "dots", baseSize: 9.5 } },
+  { id: "ozean", cat: "fancy", name: "Ozean", layout: { font: "Segoe UI", accent: "#0284c7", accent2: "#6366f1", page: "gradient", header: "wave", nameSize: 32, structure: "glass", headStyle: "plain", headUpper: false, dateStyle: "above", skillStyle: "rings", baseSize: 10 } },
+  { id: "rose", cat: "fancy", name: "Rosé Schräg", layout: { font: "Cambria", accent: "#be185d", accent2: "#f59e0b", page: "cream", header: "slant", nameSize: 32, headStyle: "leftbar", headUpper: true, dateStyle: "dots", dateWidth: 21, skillStyle: "chips", baseSize: 10 } },
+  { id: "schieferHero", cat: "fancy", name: "Hero Nacht", layout: { font: "Segoe UI", accent: "#fb923c", page: "dark", header: "hero", nameSize: 38, nameStack: true, nameUpper: true, headStyle: "leftbar", headUpper: true, dateStyle: "left", dateWidth: 22, skillStyle: "bars", baseSize: 10 } },
+  { id: "eins1", cat: "einseite", name: "1 Seite · Kompakt", layout: { font: "Calibri", accent: "#1f4e79", header: "plain", nameSize: 22, columns: "split", sideWidth: 32, contact: "line", headStyle: "underline", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9.5 } },
+  { id: "eins2", cat: "einseite", name: "1 Seite · Seitenleiste", layout: { font: "Segoe UI", accent: "#243447", columns: "sidebarLeft", sideDark: true, sideWidth: 31, nameInSide: true, photoShape: "round", headStyle: "plain", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins3", cat: "einseite", name: "1 Seite · Band & 2 Spalten", layout: { font: "Arial", accent: "#0b7285", header: "band", nameSize: 24, columns: "split", sideWidth: 33, contact: "line", headStyle: "leftbar", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins4", cat: "einseite", name: "1 Seite · Linke Spalte", layout: { font: "Calibri", accent: "#7c2d12", header: "tint", nameSize: 24, columns: "splitLeft", sideWidth: 30, contact: "line", skillStyle: "dots", headStyle: "underline", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins5", cat: "einseite", name: "1 Seite · Etiketten", layout: { font: "Segoe UI", accent: "#4f46e5", header: "accent", nameSize: 24, contact: "line", skillStyle: "chips", headStyle: "plain", headUpper: true, dateStyle: "left", dateWidth: 17, spacing: "compact", baseSize: 9 } },
+  { id: "eins6", cat: "einseite", name: "1 Seite · Dunkel", layout: { font: "Segoe UI", accent: "#38bdf8", page: "dark", columns: "sidebarLeft", sideDark: false, sideWidth: 30, nameInSide: true, photoShape: "round", skillStyle: "bars", headStyle: "leftbar", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins7", cat: "einseite", name: "1 Seite · Zeitstrahl", layout: { font: "Calibri", accent: "#0f766e", header: "plain", nameSize: 22, contact: "iconGrid", headStyle: "icon", headUpper: false, dateStyle: "dots", dateWidth: 18, spacing: "compact", skillStyle: "dots", baseSize: 9 } },
+  { id: "eins8", cat: "einseite", name: "1 Seite · Verlauf", layout: { font: "Trebuchet MS", accent: "#6d28d9", accent2: "#ec4899", header: "gradient", nameSize: 26, photoShape: "round", columns: "split", sideWidth: 32, skillStyle: "chips", headStyle: "plain", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins9", cat: "einseite", name: "1 Seite · Vollbild rechts", layout: { font: "Calibri", accent: "#1e3a8a", accent2: "#3b82f6", page: "sideBleed", columns: "sidebarRight", sideDark: true, sideWidth: 30, photoShape: "round", skillStyle: "bars", headStyle: "underline", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins10", cat: "einseite", name: "1 Seite · Creme", layout: { font: "Georgia", accent: "#7a5c2e", page: "cream", header: "center", nameSize: 24, nameSplit: true, columns: "split", sideWidth: 31, contact: "line", headStyle: "double", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins11", cat: "einseite", name: "1 Seite · Tabelle", layout: { font: "Arial", accent: "#374151", header: "block", headStyle: "greybar", headUpper: false, dateStyle: "left", dateWidth: 17, zebra: true, spacing: "compact", baseSize: 9 } },
+  { id: "eins12", cat: "einseite", name: "1 Seite · Wellenband", layout: { font: "Segoe UI", accent: "#0ea5e9", accent2: "#6366f1", header: "wave", nameSize: 26, columns: "split", sideWidth: 32, skillStyle: "rings", headStyle: "icon", headUpper: false, dateStyle: "above", spacing: "compact", baseSize: 9 } }
 ];
 
 const ICONS = {
@@ -645,6 +695,17 @@ function levelOf(t) {
 const SPECIAL_HEADERS = ["vbar", "block", "corner", "title", "navyBlock", "photoCorner", "bandRound", "circleTitle", "gradient", "wave", "slant", "hero", "stripesDiag"];
 const BLEED_HEADERS = ["gradient", "wave", "slant", "hero", "stripesDiag"];
 function bleed(l) { l = sanitizeLayout(l); return l.page !== "white" || BLEED_HEADERS.indexOf(l.header) >= 0; }
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function lumHex(h) { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; const c = hexRgb(h); return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); }
+function contrastHex(a, b) { const x = lumHex(a), y = lumHex(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+const mixHex = (h, to, t) => { const c = hexRgb(h), d = hexRgb(to); return "#" + c.map((v, i) => ("0" + Math.round(v + (d[i] - v) * t).toString(16)).slice(-2)).join(""); };
+// Akzentfarbe lesbar machen: auf hellen Seiten abdunkeln (weißer Text auf Farbflächen, Farbe auf Weiß), auf dunklen Seiten aufhellen
+function safeColor(hex, page) {
+  let c = hex;
+  if (page === "dark") { for (let i = 0; i < 14 && contrastHex(c, "#0f141a") < 3.4; i++) c = mixHex(c, "#ffffff", 0.1); }
+  else { for (let i = 0; i < 14 && contrastHex(c, "#ffffff") < 3.0; i++) c = mixHex(c, "#000000", 0.1); }
+  return c;
+}
 function pageBackground(l) {
   l = sanitizeLayout(l);
   switch (l.page) {
@@ -653,17 +714,12 @@ function pageBackground(l) {
     case "gradient": return `linear-gradient(160deg, ${tint(l.accent, 0.9)}, ${tint(l.accent2, 0.8)})`;
     case "sideBleed": {
       if (l.columns !== "sidebarLeft" && l.columns !== "sidebarRight") return "#ffffff";
-      const stop = `calc(20mm + ${l.sideWidth} * 1.7mm)`, c1 = l.sideDark ? l.accent : tint(l.accent, 0.9), c2 = l.sideDark ? l.accent2 : tint(l.accent, 0.9);
+      const sa = safeColor(l.accent, l.page), sb = safeColor(l.accent2, l.page);
+      const stop = `calc(20mm + ${l.sideWidth} * 1.7mm)`, c1 = l.sideDark ? sa : tint(l.accent, 0.9), c2 = l.sideDark ? sb : tint(l.accent, 0.9);
       return `linear-gradient(to ${l.columns === "sidebarLeft" ? "right" : "left"}, ${c1} 0, ${c2} ${stop}, #ffffff ${stop})`;
     }
   }
   return "#ffffff";
-}
-function pdfOnly(l) {
-  l = sanitizeLayout(l);
-  return SPECIAL_HEADERS.indexOf(l.header) >= 0 || l.skillStyle !== "text" || l.rules || l.zebra || l.nameBox || l.sideCenter || l.skillsMain ||
-    l.page !== "white" || l.nameStack || l.structure === "glass" ||
-    l.headStyle === "greybar" || l.headStyle === "icon" || l.dateStyle === "dots" || l.columns === "splitLeft" || l.contact === "iconGrid" || l.contact === "iconTable";
 }
 
 function sanitizeLayout(l) {
@@ -695,7 +751,7 @@ function tint(hex, t) {
 }
 const SP = { compact: { sec: 9, ent: 1 }, normal: { sec: 14, ent: 3 }, airy: { sec: 19, ent: 6 } };
 
-// Gemeinsame Daten-Aufbereitung für HTML und Word
+// Gemeinsame Daten-Aufbereitung für die Vorschau und das PDF
 function prepare(d, Ly) {
   const nm = { pre: (d.titleBefore || "").trim(), f: (d.first || "").trim(), l: (d.last || "").trim(), post: (d.titleAfter || "").trim() };
   const lead = [nm.pre, nm.f].filter(Boolean).join(" ");
@@ -726,18 +782,20 @@ function prepare(d, Ly) {
 
 /* ------------------------------ HTML (Vorschau + PDF) ------------------------------ */
 function buildHtml(d, layoutIn, forPrint, fit) {
-  const Ly = sanitizeLayout(layoutIn || DEFAULT_LAYOUT), a = Ly.accent, fs = Ly.baseSize;
+  const Ly = sanitizeLayout(layoutIn || DEFAULT_LAYOUT), a = safeColor(Ly.accent, Ly.page), fs = Ly.baseSize;
   const X = prepare(d, Ly), sp = SP[Ly.spacing], KVW = Math.max(Ly.dateWidth, 28);
   const fontCss = `font-family:'${Ly.font}',Arial,sans-serif;`;
   const F = fit && fit < 1 ? fit : 1, C2 = (2 / F).toFixed(3) + "cm"; // bei Verkleinerung (zoom) bleibt der Rand-Anschnitt gleich
-  const DK = Ly.page === "dark", a2 = Ly.accent2;
+  const DK = Ly.page === "dark", a2 = safeColor(Ly.accent2, Ly.page);
   const DKMAP = { "#222222": "#f1f5f9", "#333333": "#e2e8f0", "#444444": "#e2e8f0", "#555555": "#cbd5e1", "#666666": "#cbd5e1", "#777777": "#94a3b8", "#111111": "#f8fafc" };
   const dk = c => DK && DKMAP[c] ? DKMAP[c] : c;
   const base = (color, size, extra) => `${fontCss}font-size:${size || fs}pt;color:${dk(color || "#222222")};${extra || ""}`;
   const P = (style, inner) => `<p style="${style}">${inner}</p>`;
   const sidebar = Ly.columns === "sidebarLeft" || Ly.columns === "sidebarRight", split = Ly.columns === "split" || Ly.columns === "splitLeft", splitLeft = Ly.columns === "splitLeft", dark = Ly.sideDark && sidebar;
-  const sideBg = dark ? a : tint(a, 0.9), sideFg = dark ? "#ffffff" : "#222222";
-  const sideAccent = dark ? "#ffffff" : a, sideMuted = dark ? "#e0e0e0" : "#666666";
+  const dkPanel = DK && sidebar && !Ly.sideDark; // dunkle Seite + „helle" Leiste → dunkles Feld mit hellem Text
+  const lightFill = dark && contrastHex(a, "#ffffff") < 3.2; // helle Farbfläche → dunkle Schrift
+  const sideBg = dkPanel ? "#18202c" : dark ? a : tint(a, 0.9), sideFg = lightFill ? "#111827" : dark || dkPanel ? "#ffffff" : "#222222";
+  const sideAccent = lightFill ? "#111827" : dark ? "#ffffff" : a, sideMuted = lightFill ? "#374151" : dark || dkPanel ? "#e0e0e0" : "#666666";
   const hasPhoto = !!d.photo, round = Ly.photoShape === "round";
   const imgTag = !hasPhoto ? "" : (round
     ? `<img src="${d.photo}" width="120" height="120" alt="Foto" style="width:120px;height:120px;border-radius:60px;object-fit:cover;object-position:50% 15%;">`
@@ -785,7 +843,8 @@ function buildHtml(d, layoutIn, forPrint, fit) {
 
   let hn = 0;
   const headTxt = title => (Ly.headNum ? String(++hn).padStart(2, "0") + "  " : "") + (Ly.headUpper ? title.toUpperCase() : title);
-  function section(title, side) {
+  const section = (title, side) => `<div data-h="1" style="break-after:avoid;page-break-after:avoid;">${sectionInner(title, side)}</div>`;
+  function sectionInner(title, side) {
     const t = side ? (Ly.headUpper ? title.toUpperCase() : title) : headTxt(title), big = fs + 1, m = `margin:${sp.sec}pt 0 4pt 0;`;
     if (side) return P(base(sideAccent, fs + 0.5, `font-weight:bold;${m}padding-bottom:2pt;border-bottom:1pt solid ${sideAccent};`), esc(t));
     const b = (extra, size) => P(base(a, size || big, `font-weight:bold;${m}${extra}`), esc(t));
@@ -1028,329 +1087,6 @@ function buildHtml(d, layoutIn, forPrint, fit) {
   return forPrint ? `<div style="background:${pageBackground(Ly)};padding:2cm;-webkit-box-decoration-break:clone;box-decoration-break:clone;">${root}</div>` : root;
 }
 
-/* ------------------------------ Word (.docx, echtes WordprocessingML) ------------------------------ */
-const xesc = esc;
-const hex6 = c => String(c).replace("#", "").toUpperCase();
-const tw = pt => Math.round(pt * 20);
-
-function docxBody(d, layoutIn, img, fit) {
-  const Ly0 = sanitizeLayout(layoutIn || DEFAULT_LAYOUT), F = fit && fit < 1 ? fit : 1;
-  const Ly = Object.assign({}, Ly0, { baseSize: Ly0.baseSize * F, nameSize: Ly0.nameSize * F });
-  const a = hex6(Ly.accent), fs = Ly.baseSize, font = xesc(Ly.font), TEXT_W = 9638;
-  const X = prepare(d, Ly), sp = { sec: SP[Ly.spacing].sec * F, ent: SP[Ly.spacing].ent * F };
-  const EDW = Math.round(TEXT_W * 0.28);
-  const AVAIL = ["sidebarLeft", "sidebarRight", "split"].indexOf(Ly.columns) >= 0 ? TEXT_W - Math.round(TEXT_W * Ly.sideWidth / 100) - 400 : (Ly.structure === "editorial" ? TEXT_W - EDW - 120 : (Ly.structure === "cards" ? TEXT_W - 440 : TEXT_W)); // Breite der Hauptspalte
-  const NUM = { disc: 1, circle: 2, square: 3 }[Ly.bullet] || 1;
-  const sidebar = Ly.columns === "sidebarLeft" || Ly.columns === "sidebarRight", split = Ly.columns === "split", dark = Ly.sideDark && sidebar;
-  const sideBg = hex6(dark ? Ly.accent : tint(Ly.accent, 0.9));
-  const sideFg = dark ? "FFFFFF" : "222222", sideAccent = dark ? "FFFFFF" : a, sideMuted = dark ? "E0E0E0" : "666666";
-  const hasPhoto = !!img, round = Ly.photoShape === "round";
-
-  const R = (text, o) => {
-    o = o || {};
-    const sz = Math.round((o.size || fs) * 2);
-    return `<w:r><w:rPr><w:rFonts w:ascii="${font}" w:hAnsi="${font}" w:cs="${font}"/>${o.b ? "<w:b/>" : ""}<w:color w:val="${o.color || "222222"}"/>` +
-      `${o.spc ? `<w:spacing w:val="${o.spc}"/>` : ""}<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/></w:rPr><w:t xml:space="preserve">${xesc(text)}</w:t></w:r>`;
-  };
-  const BR = "<w:r><w:br/></w:r>";
-  const bd = (side, val, sz, color, space) => `<w:${side} w:val="${val}" w:sz="${sz}" w:space="${space || 1}" w:color="${color}"/>`;
-  const P = (runs, o) => {
-    o = o || {};
-    let pp = "";
-    if (o.keepNext) pp += "<w:keepNext/>";
-    if (o.num) pp += `<w:numPr><w:ilvl w:val="0"/><w:numId w:val="${o.num}"/></w:numPr>`;
-    if (o.bdr) pp += `<w:pBdr>${o.bdr}</w:pBdr>`;
-    if (o.shd) pp += `<w:shd w:val="clear" w:color="auto" w:fill="${o.shd}"/>`;
-    pp += `<w:spacing w:before="${tw(o.before || 0)}" w:after="${tw(o.after || 0)}" w:line="240" w:lineRule="auto"/>`;
-    if (o.ind) pp += `<w:ind ${o.ind}/>`;
-    if (o.jc) pp += `<w:jc w:val="${o.jc}"/>`;
-    return `<w:p><w:pPr>${pp}</w:pPr>${runs || ""}</w:p>`;
-  };
-  const bulletP = (text, color) => P(R(text, { color }), { num: NUM, ind: 'w:left="340" w:hanging="220"' });
-  const bullets = (arr, color) => arr.map(x => bulletP(x, color)).join("");
-
-  function IMG() {
-    const cx = round ? 1143000 : 1076325, cy = round ? 1143000 : 1438275, ns = "http://schemas.openxmlformats.org/drawingml/2006/";
-    return `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="Foto" descr="Foto"/>` +
-      `<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="${ns}main" noChangeAspect="1"/></wp:cNvGraphicFramePr>` +
-      `<a:graphic xmlns:a="${ns}main"><a:graphicData uri="${ns}picture"><pic:pic xmlns:pic="${ns}picture">` +
-      `<pic:nvPicPr><pic:cNvPr id="0" name="foto.${img.ext}"/><pic:cNvPicPr/></pic:nvPicPr>` +
-      `<pic:blipFill><a:blip r:embed="rIdImg"/>${round ? '<a:srcRect t="5000" b="20000"/>' : ""}<a:stretch><a:fillRect/></a:stretch></pic:blipFill>` +
-      `<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="${round ? "ellipse" : "rect"}"><a:avLst/></a:prstGeom></pic:spPr>` +
-      `</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
-  }
-
-  // Jede Zelle muss mit einem Absatz enden (sonst meldet Word einen Fehler)
-  const cellXml = x => !x ? "<w:p/>" : (x.endsWith("</w:tbl>") ? x + '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/></w:pPr></w:p>' : x);
-  // Tabelle: widths in Twips; Zellen {xml, shd, mar:[o,l,u,r] (Twips), v, bl (Farbe linker Rand)}
-  function TBL(widths, rows, o) {
-    o = o || {};
-    const total = widths.reduce((s, x) => s + x, 0);
-    let x = `<w:tbl><w:tblPr><w:tblW w:w="${total}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="${tw(o.top || 0)}" w:type="dxa"/><w:left w:w="${o.left || 0}" w:type="dxa"/>` +
-      `<w:bottom w:w="${tw(o.bottom || 0)}" w:type="dxa"/><w:right w:w="${o.right || 0}" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${widths.map(w => `<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>`;
-    rows.forEach(cells => {
-      x += `<w:tr>${o.rowH ? `<w:trPr><w:trHeight w:val="${o.rowH}" w:hRule="exact"/></w:trPr>` : ""}`;
-      cells.forEach((c, i) => {
-        const m = c.mar;
-        x += `<w:tc><w:tcPr><w:tcW w:w="${widths[i]}" w:type="dxa"/>` +
-          (c.bl || c.bt ? `<w:tcBorders>${c.bt ? `<w:top w:val="single" w:sz="8" w:space="0" w:color="${c.bt}"/>` : ""}${c.bl ? `<w:left w:val="single" w:sz="12" w:space="0" w:color="${c.bl}"/>` : ""}</w:tcBorders>` : "") +
-          (c.shd ? `<w:shd w:val="clear" w:color="auto" w:fill="${c.shd}"/>` : "") +
-          (m ? `<w:tcMar><w:top w:w="${m[0]}" w:type="dxa"/><w:left w:w="${m[1]}" w:type="dxa"/><w:bottom w:w="${m[2]}" w:type="dxa"/><w:right w:w="${m[3]}" w:type="dxa"/></w:tcMar>` : "") +
-          (c.v ? `<w:vAlign w:val="${c.v}"/>` : "") + `</w:tcPr>${cellXml(c.xml)}</w:tc>`;
-      });
-      x += "</w:tr>";
-    });
-    return x + "</w:tbl>";
-  }
-
-  let hn = 0;
-  const headTxt = title => (Ly.headNum ? String(++hn).padStart(2, "0") + "  " : "") + (Ly.headUpper ? title.toUpperCase() : title);
-  function H(title, side) {
-    const t = side ? (Ly.headUpper ? title.toUpperCase() : title) : headTxt(title), big = fs + 1, base = { keepNext: true, before: sp.sec, after: 4 };
-    if (side) return P(R(t, { b: 1, color: sideAccent, size: fs + 0.5 }), { keepNext: true, before: sp.sec, after: 4, bdr: bd("bottom", "single", 6, sideAccent, 2) });
-    const o = extra => Object.assign({}, base, extra);
-    switch (Ly.headStyle) {
-      case "plain": return P(R(t, { b: 1, color: a, size: big }), o({}));
-      case "bar": return P(R(t, { b: 1, color: "FFFFFF", size: big }), o({ after: 6, shd: a, ind: 'w:left="100" w:right="100"',
-        bdr: bd("top", "single", 4, a, 2) + bd("left", "single", 4, a, 4) + bd("bottom", "single", 4, a, 2) + bd("right", "single", 4, a, 4) }));
-      case "leftbar": return P(R(t, { b: 1, color: a, size: big }), o({ ind: 'w:left="140"', bdr: bd("left", "single", 32, a, 6) }));
-      case "dotted": return P(R(t, { b: 1, color: a, size: big }), o({ bdr: bd("bottom", "dotted", 8, a, 2) }));
-      case "centered": return P(R(t, { b: 1, color: a, size: big }), o({ jc: "center", bdr: bd("top", "single", 6, a, 2) + bd("bottom", "single", 6, a, 2) }));
-      case "double": return P(R(t, { b: 1, color: a, size: big }), o({ bdr: bd("bottom", "double", 6, a, 2) }));
-      case "boxed": return P(R(t, { b: 1, color: a, size: big }), o({ ind: 'w:left="120" w:right="120"',
-        bdr: bd("top", "single", 6, a, 3) + bd("left", "single", 6, a, 5) + bd("bottom", "single", 6, a, 3) + bd("right", "single", 6, a, 5) }));
-      case "spaced": return P(R(t, { b: 1, color: a, size: fs, spc: 40 }), o({ bdr: bd("bottom", "single", 4, "BBBBBB", 2) }));
-      default: return P(R(t, { b: 1, color: a, size: big }), o({ bdr: bd("bottom", "single", 8, a, 2) }));
-    }
-  }
-
-  const body = (e, tk, ok) => {
-    const title = e[tk] || "", org = [e[ok], e.place].filter(Boolean).join(", ");
-    let x = "";
-    if (title) x += P(R(title, { b: 1 }));
-    if (org) x += P(R(org));
-    x += bullets(lines(e.details));
-    return x || "<w:p/>";
-  };
-  function ENT(list, tk, ok) {
-    const its = X.items(list);
-    if (!its.length) return "";
-    if (Ly.dateStyle === "above") {
-      return its.map(e => {
-        const dt = X.dateText(e.from, e.to);
-        return (dt ? P(R(dt, { b: 1, color: a, size: fs - 0.5 }), { before: sp.ent + 4, keepNext: true }) : "") + body(e, tk, ok);
-      }).join("");
-    }
-    const wL = Math.round(AVAIL * Ly.dateWidth / 100), wR = AVAIL - wL, topts = { top: sp.ent, bottom: sp.ent + 1, right: 120 };
-    if (Ly.dateStyle === "right") {
-      return TBL([wR, wL], its.map(e => [{ xml: body(e, tk, ok) }, { xml: P(R(X.dateText(e.from, e.to), { b: 1, color: a, size: fs - 0.5 }), { jc: "right" }) }]), topts);
-    }
-    if (Ly.dateStyle === "timeline") {
-      return TBL([wL, wR], its.map(e => [{ xml: P(R(X.dateText(e.from, e.to), { color: "555555" })) },
-        { xml: body(e, tk, ok), bl: a, mar: [tw(sp.ent), 200, tw(sp.ent + 1), 0] }]), topts);
-    }
-    return TBL([wL, wR], its.map(e => [{ xml: P(R(X.dateText(e.from, e.to), { color: "555555" })) }, { xml: body(e, tk, ok) }]), topts);
-  }
-  function kvTable(rows) {
-    const wL = Math.round(AVAIL * Math.max(Ly.dateWidth, 28) / 100), wR = AVAIL - wL;
-    return TBL([wL, wR], rows.map(r => [{ xml: P(R(r[0], { color: r[2] ? "222222" : "555555", b: !!r[2] })) }, { xml: P(R(r[1])) }]), { top: sp.ent, bottom: sp.ent + 1, right: 120 });
-  }
-  const kvRows = text => lines(text).map(l => { const m = l.match(KV); return m ? [m[1], m[2]] : ["", l]; });
-  const stack = text => lines(text).map(l => {
-    const m = l.match(KV), main = m ? m[1] : l, det = m ? m[2] : "";
-    return P(R(main, { color: sideFg }) + (det ? BR + R(det, { size: fs - 1, color: sideMuted }) : ""), { before: 3 });
-  }).join("");
-
-  const nameRuns = (color, size) => {
-    if (!X.fullName) return R(L.cv, { b: 1, color, size });
-    if (Ly.nameSplit && X.lead && X.trail) return R(X.up(X.lead) + " ", { color, size }) + R(X.up(X.trail), { b: 1, color, size });
-    return R(X.up(X.fullName), { b: 1, color, size });
-  };
-  const nameBlock = (nc, sc, al, size, bar, box) => {
-    const ex = bar ? { bdr: bd("left", "single", 36, a, 8), ind: 'w:left="280"' } : (box ? { bdr: bd("top", "single", 12, a, 6) + bd("left", "single", 12, a, 8) + bd("bottom", "single", 12, a, 6) + bd("right", "single", 12, a, 8), ind: 'w:left="260" w:right="260"' } : {});
-    return P(nameRuns(nc, size || Ly.nameSize), Object.assign({ jc: al }, ex)) +
-      (d.headline ? P(R(d.headline, { color: sc, size: fs + 2 }), Object.assign({ before: 2, jc: al }, ex)) : "");
-  };
-
-  const summaryC = d.summary && d.summary.trim() ? P(R(d.summary.trim()), { before: 2 }) : "";
-  const jobsC = ENT(d.jobs, "role", "company"), eduC = ENT(d.edu, "degree", "school");
-  const certsA = lines(d.certs), certsC = certsA.length ? bullets(certsA) : "";
-  const sign = d.showSignature ? P(R(X.signLine), { before: 26 }) + P(R("______________________________") + BR + R(X.fullName), { before: 26 }) : "";
-  const SPC = pt => P(R(" ", { size: 1 }), { after: pt });
-  const mainSecs = () => [[L.profile, summaryC], [L.experience, jobsC], [L.education, eduC], [L.certs, certsC]].filter(x => x[1]);
-  const normal = secs => secs.map(x => H(x[0]) + x[1]).join("");
-  const compose = secs => {
-    if (!secs.length) return "";
-    if (Ly.structure === "editorial") {
-      return TBL([EDW, TEXT_W - EDW], secs.map(x => [
-        { xml: P(R(headTxt(x[0]), { b: 1, color: a, size: fs - 1 })), bt: a, mar: [tw(sp.sec), 0, 40, 120] },
-        { xml: x[1], bt: "CCCCCC", mar: [tw(sp.sec - 4), 120, 40, 0] }]));
-    }
-    if (Ly.structure === "cards") {
-      const bg = hex6(tint(Ly.accent, 0.92));
-      return secs.map(x => TBL([TEXT_W], [[{ xml: H(x[0]) + x[1], shd: bg, mar: [60, 220, 140, 220] }]]) + SPC(sp.sec - 6)).join("");
-    }
-    return normal(secs);
-  };
-  const sideBody = pers => {
-    let sd = "";
-    if (pers && X.pItems.length) sd += H(L.personal, true) + X.pItems.map(it => P(R(it[0], { size: fs - 1.5, color: sideMuted }), { before: 5 }) + P(R(it[1], { color: sideFg }))).join("");
-    if (lines(d.languages).length) sd += H(L.languages, true) + stack(d.languages);
-    if (lines(d.it).length) sd += H(L.it, true) + stack(d.it);
-    if (d.licence && d.licence.trim()) sd += H(L.licence, true) + P(R(d.licence.trim(), { color: sideFg }), { before: 3 });
-    if (d.interests && d.interests.trim()) sd += H(L.interests, true) + P(R(d.interests.trim(), { color: sideFg }), { before: 3 });
-    return sd;
-  };
-  const stripDocx = () => {
-    if (!X.pItems.length) return "";
-    const per = 3, w = Math.floor(TEXT_W / per), bg = hex6(tint(Ly.accent, 0.9)), rows = [];
-    for (let i = 0; i < X.pItems.length; i += per) {
-      const ch = X.pItems.slice(i, i + per); while (ch.length < per) ch.push(null);
-      rows.push(ch.map(it => ({ xml: it ? P(R(it[0], { size: fs - 1.5, color: "666666" })) + P(R(it[1], { b: 1, size: fs - 0.5 })) : "<w:p/>", shd: bg, mar: [80, 160, 80, 120] })));
-    }
-    return SPC(6) + TBL([w, w, TEXT_W - 2 * w], rows) + SPC(2);
-  };
-
-  const cmode = /^icon(Grid|Table)$/.test(Ly.contact) ? "table" : Ly.contact;
-  let out = "";
-  if (sidebar) {
-    let side = "";
-    if (hasPhoto) side += P(IMG(), { after: 8 });
-    if (Ly.nameInSide) {
-      side += P(nameRuns(sideAccent, Math.max(16, Math.round(Ly.nameSize * 0.75))), {}) + (d.headline ? P(R(d.headline, { color: sideMuted, size: fs + 0.5 }), { before: 2, after: 4 }) : "");
-    }
-    side += sideBody(true);
-    const main = (Ly.nameInSide ? "" : nameBlock(a, "555555", "left")) + normal(mainSecs());
-    const sw = Math.round(TEXT_W * Ly.sideWidth / 100), left = Ly.columns === "sidebarLeft", gw = 400;
-    const sideCell = { xml: side || "<w:p/>", shd: sideBg, mar: [280, 240, 280, 240] };
-    const mainCell = { xml: main || "<w:p/>", mar: [200, 0, 200, 0] }, gutter = { xml: "<w:p/>" };
-    out += TBL(left ? [sw, gw, TEXT_W - sw - gw] : [TEXT_W - sw - gw, gw, sw], [left ? [sideCell, gutter, mainCell] : [mainCell, gutter, sideCell]]);
-    out += sign;
-  } else {
-    const center = Ly.header === "center", onBand = Ly.header === "band", tinted = Ly.header === "tint";
-    const bg = onBand ? a : (tinted ? hex6(tint(Ly.accent, 0.88)) : "");
-    const nb = nameBlock(onBand ? "FFFFFF" : a, onBand ? "FFFFFF" : "555555", center ? "center" : "left", null, Ly.header === "accent", Ly.header === "box");
-    if (Ly.header === "stripes") out += TBL([Math.round(TEXT_W * 0.68), Math.round(TEXT_W * 0.2), TEXT_W - Math.round(TEXT_W * 0.68) - Math.round(TEXT_W * 0.2)], [[{ xml: "<w:p/>", shd: a }, { xml: "<w:p/>", shd: hex6(tint(Ly.accent, 0.45)) }, { xml: "<w:p/>", shd: hex6(tint(Ly.accent, 0.75)) }]], { rowH: 140 }) + SPC(8);
-    if (Ly.header === "topbar") out += TBL([TEXT_W], [[{ xml: P(R(" ", { size: 1 })), shd: a }]], { rowH: 120 }) + P(R(" ", { size: 3 }), { before: 4 });
-    const pad = bg ? [280, 280, 280, 280] : [0, 0, 120, 0];
-    if (center) {
-      out += (hasPhoto ? P(IMG(), { jc: "center", after: 4 }) : "") + nb;
-    } else if (hasPhoto) {
-      const photoLeft = Ly.photoPos === "left", pw = 2100;
-      const nameCell = { xml: nb, shd: bg || null, mar: pad, v: "center" };
-      const photoCell = { xml: P(IMG(), { jc: photoLeft ? "left" : "right" }), shd: bg || null, mar: pad };
-      out += TBL(photoLeft ? [pw, TEXT_W - pw] : [TEXT_W - pw, pw], [photoLeft ? [photoCell, nameCell] : [nameCell, photoCell]]);
-    } else if (bg) {
-      out += TBL([TEXT_W], [[{ xml: nb, shd: bg, mar: pad }]]);
-    } else {
-      out += nb;
-    }
-    if (Ly.contact === "line" || Ly.contact === "icons") {
-      const ic = Ly.contact === "icons", l1 = [[X.addr, "⌂ "], [d.phone, "☎ "], [d.email, "✉ "], [d.web, "↗ "]].filter(x => x[0]).map(x => (ic ? x[1] : "") + x[0]).join(ic ? "    " : "  ·  "), l2 = [], al2 = center ? "center" : "left";
-      const birth = [d.birthDate, d.birthPlace].filter(x => x && x.trim()).join(", ");
-      if (birth) l2.push(L.birth + ": " + birth);
-      if (d.nationality && d.nationality.trim()) l2.push(L.nationality + ": " + d.nationality.trim());
-      if (d.marital && d.marital.trim()) l2.push(L.marital + ": " + d.marital.trim());
-      if (l1) out += P(R(l1, { color: "444444", size: fs - 0.5 }), { before: 8, jc: al2 });
-      if (l2.length) out += P(R(l2.join("  ·  "), { color: "444444", size: fs - 0.5 }), { before: 2, jc: al2 });
-    } else if (Ly.contact === "strip") {
-      out += stripDocx();
-    }
-    if (split) {
-      const sw = Math.round(TEXT_W * Ly.sideWidth / 100), gw = 300;
-      out += SPC(4) + TBL([TEXT_W - sw - gw, gw, sw], [[
-        { xml: normal(mainSecs()) || "<w:p/>", mar: [0, 0, 0, 0] }, { xml: "<w:p/>" },
-        { xml: sideBody(cmode === "table") || "<w:p/>", bl: hex6(tint(Ly.accent, 0.6)), mar: [0, 200, 0, 0] }]]);
-      out += sign;
-    } else {
-      const secs = [];
-      if (cmode === "table" && X.pItems.length) secs.push([L.personal, kvTable(X.pItems)]);
-      secs.push(...mainSecs().filter(x => x[0] !== L.certs));
-      let sk = []; const langs = kvRows(d.languages, 1), it = kvRows(d.it, 1);
-      if (langs.length) { sk.push([L.languages, "", true]); sk = sk.concat(langs); }
-      if (it.length) { sk.push([L.it, "", true]); sk = sk.concat(it); }
-      if (d.licence && d.licence.trim()) sk.push([L.licence, d.licence.trim(), true]);
-      if (sk.length) secs.push([L.skills, kvTable(sk)]);
-      if (certsC) secs.push([L.certs, certsC]);
-      if (d.interests && d.interests.trim()) secs.push([L.interests, P(R(d.interests.trim()), { before: 2 })]);
-      out += compose(secs) + sign;
-    }
-  }
-  return out + "<w:p/>";
-}
-
-/* ------------------------------ Zip + .docx ------------------------------ */
-const CRC_TABLE = (() => { const t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
-function crc32(bytes) { let c = 0xFFFFFFFF; for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
-function zipStore(files) {
-  const enc = new TextEncoder(), now = new Date();
-  const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
-  const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
-  const chunks = [], central = []; let offset = 0;
-  files.forEach(f => {
-    const name = enc.encode(f.name), data = typeof f.data === "string" ? enc.encode(f.data) : f.data, crc = crc32(data);
-    const lh = new DataView(new ArrayBuffer(30));
-    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
-    lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true); lh.setUint32(14, crc, true);
-    lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
-    chunks.push(new Uint8Array(lh.buffer), name, data);
-    const ch = new DataView(new ArrayBuffer(46));
-    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
-    ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true);
-    ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true); ch.setUint32(42, offset, true);
-    central.push(new Uint8Array(ch.buffer), name);
-    offset += 30 + name.length + data.length;
-  });
-  const cdSize = central.reduce((s, c) => s + c.length, 0);
-  const end = new DataView(new ArrayBuffer(22));
-  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
-  return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-}
-
-function buildDocx(d, layoutIn, fit) {
-  const Ly = sanitizeLayout(layoutIn || DEFAULT_LAYOUT);
-  let img = null;
-  const m = d.photo ? /^data:image\/(jpeg|png);base64,([A-Za-z0-9+/=]+)$/.exec(d.photo) : null;
-  if (m) {
-    const bin = atob(m[2]), bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    img = { ext: m[1] === "png" ? "png" : "jpg", bytes };
-  }
-  const font = xesc(Ly.font), fsz = Math.round(Ly.baseSize * 2);
-  const NSW = "http://schemas.openxmlformats.org/wordprocessingml/2006/main", NSR = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
-  const XH = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n', REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/";
-  const lvl = (ch, fnt) => `<w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="${ch}"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="340" w:hanging="220"/></w:pPr>` +
-    `<w:rPr><w:rFonts w:ascii="${fnt}" w:hAnsi="${fnt}" w:cs="${fnt}" w:hint="default"/></w:rPr></w:lvl>`;
-  const numbering = `${XH}<w:numbering xmlns:w="${NSW}">` +
-    `<w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="singleLevel"/>${lvl("•", "Arial")}</w:abstractNum>` +
-    `<w:abstractNum w:abstractNumId="1"><w:multiLevelType w:val="singleLevel"/>${lvl("o", "Courier New")}</w:abstractNum>` +
-    `<w:abstractNum w:abstractNumId="2"><w:multiLevelType w:val="singleLevel"/>${lvl("▪", "Arial")}</w:abstractNum>` +
-    `<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num><w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num><w:num w:numId="3"><w:abstractNumId w:val="2"/></w:num></w:numbering>`;
-  const styles = `${XH}<w:styles xmlns:w="${NSW}"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="${font}" w:hAnsi="${font}" w:cs="${font}"/>` +
-    `<w:sz w:val="${fsz}"/><w:szCs w:val="${fsz}"/><w:lang w:val="de-AT"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>` +
-    `<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>` +
-    `<w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:uiPriority w:val="99"/><w:semiHidden/><w:unhideWhenUsed/>` +
-    `<w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style></w:styles>`;
-  const doc = `${XH}<w:document xmlns:w="${NSW}" xmlns:r="${NSR}" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>` +
-    docxBody(d, Ly, img, fit) +
-    `<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="709" w:footer="709" w:gutter="0"/></w:sectPr></w:body></w:document>`;
-  const files = [
-    { name: "[Content_Types].xml", data: `${XH}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>` +
-      `<Default Extension="jpg" ContentType="image/jpeg"/><Default Extension="png" ContentType="image/png"/>` +
-      `<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>` +
-      `<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>` +
-      `<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/></Types>` },
-    { name: "_rels/.rels", data: `${XH}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}officeDocument" Target="word/document.xml"/></Relationships>` },
-    { name: "word/document.xml", data: doc },
-    { name: "word/styles.xml", data: styles },
-    { name: "word/numbering.xml", data: numbering },
-    { name: "word/_rels/document.xml.rels", data: `${XH}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}styles" Target="styles.xml"/>` +
-      `<Relationship Id="rId2" Type="${REL}numbering" Target="numbering.xml"/>${img ? `<Relationship Id="rIdImg" Type="${REL}image" Target="media/foto.${img.ext}"/>` : ""}</Relationships>` }
-  ];
-  if (img) files.push({ name: "word/media/foto." + img.ext, data: img.bytes });
-  return zipStore(files);
-}
-
 function fileBase(d) {
   const who = [d.first, d.last].map(s => (s || "").trim()).filter(Boolean).join("_");
   return ("Lebenslauf" + (who ? "_" + who : "")).replace(/\s+/g, "_").replace(/[^\wÀ-ſ.-]+/g, "_").slice(0, 80);
@@ -1370,7 +1106,7 @@ const lsDel = k => { try { localStorage.removeItem(k); } catch (e) { /* ignorier
 const EMPTY = {
   titleBefore: "", first: "", last: "", titleAfter: "", headline: "", street: "", zip: "", city: "", phone: "", email: "", web: "",
   birthDate: "", birthPlace: "", nationality: "", marital: "", summary: "", jobs: [{}], edu: [{}],
-  languages: "", it: "", licence: "", certs: "", interests: "", showSignature: true, signPlace: "", signDate: "", photo: ""
+  languages: "", it: "", licence: "", certs: "", interests: "", showSignature: true, signPlace: "", signDate: "", photo: "", photoSrc: "", photoCrop: null
 };
 const REPEATERS = {
   jobs: { label: "Position", fields: [
@@ -1385,9 +1121,18 @@ const QUICK_SEG = {
   baseSize: [[9.5, "Klein"], [10.5, "Normal"], [11.5, "Groß"]],
   spacing: [["compact", "Kompakt"], ["normal", "Normal"], ["airy", "Luftig"]]
 };
-const CATS = [["alle", "Alle"], ["klassisch", "Klassisch"], ["modern", "Modern"], ["seite", "Mit Seitenleiste"], ["besonders", "Besondere"], ["at", "Beliebte Stile"], ["premium", "Mit Symbolen & Balken (PDF)"], ["fancy", "Edel & Besonders (PDF)"]];
+const CATS = [["alle", "Alle"], ["klassisch", "Klassisch"], ["modern", "Modern"], ["spalten", "Seitenleiste & Spalten"], ["kreativ", "Kreativ & Auffällig"]];
+// Kategorie aus den Eigenschaften der Vorlage ableiten (statt feste Listen)
+function catOf(p) {
+  const l = sanitizeLayout(p.layout);
+  if (l.columns !== "single") return "spalten";
+  if (l.page !== "white" || SPECIAL_HEADERS.indexOf(l.header) >= 0 || l.structure === "glass") return "kreativ";
+  if (p.cat === "klassisch") return "klassisch";
+  if ((p.cat === "at" || p.cat === "premium") && (l.headStyle === "underline" || l.headStyle === "double" || l.headStyle === "centered") && (l.header === "plain" || l.header === "center") && l.structure === "normal") return "klassisch";
+  return "modern";
+}
 
-const state = { photo: "", layout: sanitizeLayout(PRESETS[0].layout), layoutId: "classic", custom: [], filter: "alle", step: 1, silhouette: "", pages: 1, onePage: false, fit: 1 };
+const state = { photo: "", photoSrc: "", photoCrop: null, layout: sanitizeLayout(PRESETS[0].layout), layoutId: "classic", custom: [], filter: "alle", step: 1, silhouette: "", pages: 1, onePage: false, fit: 1 };
 
 /* ---------- Meldungen ---------- */
 let statusTimer = null;
@@ -1432,7 +1177,7 @@ function bindRepeater(key) {
 function collect() {
   const d = {};
   $$("[data-k]").forEach(el => { d[el.dataset.k] = el.type === "checkbox" ? el.checked : el.value; });
-  d.photo = state.photo;
+  d.photo = state.photo; d.photoSrc = state.photoSrc; d.photoCrop = state.photoCrop;
   Object.keys(REPEATERS).forEach(key => {
     d[key] = $$("#" + key + " .item").map(item => { const o = {}; $$("[data-f]", item).forEach(e => { o[e.dataset.f] = e.value; }); return o; });
   });
@@ -1442,16 +1187,83 @@ function populate(d) {
   d = Object.assign({}, EMPTY, d || {});
   $$("[data-k]").forEach(el => { const v = d[el.dataset.k]; if (el.type === "checkbox") el.checked = !!v; else el.value = v == null ? "" : v; });
   Object.keys(REPEATERS).forEach(key => fillRepeater(key, d[key]));
+  state.photoSrc = d.photoSrc || ""; state.photoCrop = d.photoCrop || null;
   setPhoto(d.photo || "");
 }
 
 /* ---------- Foto ---------- */
+const CROP_DEF = { zoom: 1, px: 0.5, py: 0.3, gray: false, bright: 0 };
 function setPhoto(url) {
   state.photo = url || "";
-  const img = $("#photoThumb"), rm = $("#photoRemove"), btn = $("#photoBtn");
+  if (!state.photo) { state.photoSrc = ""; state.photoCrop = null; }
+  const img = $("#photoThumb"), rm = $("#photoRemove"), btn = $("#photoBtn"), ed = $("#photoEdit");
   img.hidden = !state.photo; if (state.photo) img.src = state.photo;
-  rm.hidden = !state.photo; btn.textContent = state.photo ? "Anderes Foto wählen" : "Foto hinzufügen";
+  rm.hidden = !state.photo; ed.hidden = !state.photo; btn.textContent = state.photo ? "Anderes Foto wählen" : "Foto hinzufügen";
   if (!state.photo) $("#photoFile").value = "";
+}
+// zeichnet den Zuschnitt (Zoom/Verschiebung/Filter) – gleiche Funktion für Editor und fertiges Foto
+function drawCrop(canvas, img, crop, guide) {
+  const W = canvas.width, H = canvas.height, c = canvas.getContext("2d");
+  const s = Math.max(W / img.width, H / img.height) * crop.zoom, w = img.width * s, h = img.height * s;
+  c.fillStyle = "#fff"; c.fillRect(0, 0, W, H);
+  c.drawImage(img, -(w - W) * crop.px, -(h - H) * crop.py, w, h);
+  if (crop.gray || crop.bright) {
+    const id = c.getImageData(0, 0, W, H), p = id.data, add = crop.bright * 2.55;
+    for (let i = 0; i < p.length; i += 4) {
+      let r = p[i], g = p[i + 1], b = p[i + 2];
+      if (crop.gray) { r = g = b = 0.299 * r + 0.587 * g + 0.114 * b; }
+      p[i] = Math.max(0, Math.min(255, r + add)); p[i + 1] = Math.max(0, Math.min(255, g + add)); p[i + 2] = Math.max(0, Math.min(255, b + add));
+    }
+    c.putImageData(id, 0, 0);
+  }
+  if (guide) { // Hilfslinie: Bereich außerhalb des Kreises abdunkeln
+    c.save(); c.fillStyle = "rgba(15,23,42,.5)"; c.beginPath(); c.rect(0, 0, W, H); c.arc(W / 2, H / 2, Math.min(W, H) / 2, 0, Math.PI * 2, true); c.fill("evenodd"); c.restore();
+  }
+}
+const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+let ed = null; // aktueller Editor-Zustand
+async function openPhotoEditor() {
+  if (!state.photoSrc && state.photo) state.photoSrc = state.photo;
+  if (!state.photoSrc) return;
+  let img; try { img = await loadImg(state.photoSrc); } catch (e) { status("Dieses Bild konnte nicht gelesen werden.", "err"); return; }
+  ed = { img, crop: Object.assign({}, CROP_DEF, state.photoCrop || {}) };
+  $("#cropZoom").value = Math.round(ed.crop.zoom * 100); $("#cropBright").value = ed.crop.bright; $("#cropGray").checked = !!ed.crop.gray;
+  $("#cropGuide").checked = state.layout.photoShape === "round";
+  $("#photoEditor").hidden = false; document.body.style.overflow = "hidden"; paintCrop();
+}
+function paintCrop() { if (ed) drawCrop($("#cropCanvas"), ed.img, ed.crop, $("#cropGuide").checked); }
+function closePhotoEditor() { $("#photoEditor").hidden = true; document.body.style.overflow = ""; ed = null; }
+function applyPhotoEditor() {
+  if (!ed) return;
+  const c = document.createElement("canvas"); c.width = 300; c.height = 400;
+  drawCrop(c, ed.img, ed.crop, false);
+  state.photoCrop = Object.assign({}, ed.crop);
+  const keep = state.photoSrc; setPhoto(c.toDataURL("image/jpeg", 0.88)); state.photoSrc = keep; state.photoCrop = Object.assign({}, ed.crop);
+  closePhotoEditor(); schedule();
+}
+function initPhotoEditor() {
+  const cv = $("#cropCanvas");
+  $("#photoEdit").addEventListener("click", openPhotoEditor);
+  $("#cropZoom").addEventListener("input", e => { if (!ed) return; ed.crop.zoom = e.target.value / 100; paintCrop(); });
+  $("#cropBright").addEventListener("input", e => { if (!ed) return; ed.crop.bright = Number(e.target.value); paintCrop(); });
+  $("#cropGray").addEventListener("change", e => { if (!ed) return; ed.crop.gray = e.target.checked; paintCrop(); });
+  $("#cropGuide").addEventListener("change", paintCrop);
+  $("#cropReset").addEventListener("click", () => { if (!ed) return; ed.crop = Object.assign({}, CROP_DEF); $("#cropZoom").value = 100; $("#cropBright").value = 0; $("#cropGray").checked = false; paintCrop(); });
+  $("#cropCancel").addEventListener("click", closePhotoEditor);
+  $("#cropOk").addEventListener("click", applyPhotoEditor);
+  $("#photoEditor").addEventListener("click", e => { if (e.target.id === "photoEditor") closePhotoEditor(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#photoEditor").hidden) closePhotoEditor(); });
+  let drag = null;
+  cv.addEventListener("pointerdown", e => { if (!ed) return; drag = { x: e.clientX, y: e.clientY }; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener("pointermove", e => {
+    if (!drag || !ed) return;
+    const r = cv.getBoundingClientRect(), k = cv.width / r.width, dx = (e.clientX - drag.x) * k, dy = (e.clientY - drag.y) * k; drag = { x: e.clientX, y: e.clientY };
+    const s = Math.max(cv.width / ed.img.width, cv.height / ed.img.height) * ed.crop.zoom, ow = ed.img.width * s - cv.width, oh = ed.img.height * s - cv.height;
+    if (ow > 0.5) ed.crop.px = Math.max(0, Math.min(1, ed.crop.px - dx / ow));
+    if (oh > 0.5) ed.crop.py = Math.max(0, Math.min(1, ed.crop.py - dy / oh));
+    paintCrop();
+  });
+  ["pointerup", "pointercancel"].forEach(t => cv.addEventListener(t, () => { drag = null; }));
 }
 function handlePhoto(file) {
   if (!file) return;
@@ -1459,12 +1271,12 @@ function handlePhoto(file) {
   reader.onload = () => {
     const img = new Image();
     img.onload = () => {
-      const W = 300, H = 400, c = document.createElement("canvas"); c.width = W; c.height = H;
-      const ctx = c.getContext("2d"), scale = Math.max(W / img.width, H / img.height), w = img.width * scale, h = img.height * scale;
-      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H);
-      ctx.drawImage(img, (W - w) / 2, (H - h) * 0.3, w, h); // Zuschnitt Richtung Kopf
-      setPhoto(c.toDataURL("image/jpeg", 0.85));
-      schedule();
+      const k = Math.min(1, 900 / Math.max(img.width, img.height)), c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+      const src = c.toDataURL("image/jpeg", 0.85), out = document.createElement("canvas"); out.width = 300; out.height = 400;
+      drawCrop(out, c, CROP_DEF, false);
+      setPhoto(out.toDataURL("image/jpeg", 0.88)); state.photoSrc = src; state.photoCrop = Object.assign({}, CROP_DEF);
+      schedule(); openPhotoEditor(); // gleich zum Anpassen öffnen
     };
     img.onerror = () => status("Dieses Bild konnte nicht gelesen werden. Bitte ein JPG oder PNG wählen.", "err");
     img.src = reader.result;
@@ -1523,13 +1335,14 @@ function schedule() {
 }
 
 /* ---------- Vorlagen ---------- */
-const allLayouts = () => PRESETS.map(p => ({ id: p.id, name: p.name, cat: p.cat, layout: p.layout, custom: false }))
+const allLayouts = () => PRESETS.map(p => ({ id: p.id, name: p.name, cat: catOf(p), one: p.cat === "einseite", layout: p.layout, custom: false }))
   .concat(state.custom.map(c => ({ id: c.id, name: c.name, cat: "meine", layout: c.layout, custom: true })));
 
 function renderChips() {
   const cats = CATS.concat(state.custom.length ? [["meine", "Meine"]] : []);
   if (!cats.some(c => c[0] === state.filter)) state.filter = "alle";
-  $("#chips").innerHTML = cats.map(c => `<button type="button" data-cat="${c[0]}" class="${c[0] === state.filter ? "on" : ""}">${c[1]}</button>`).join("");
+  const all = allLayouts();
+  $("#chips").innerHTML = cats.map(c => `<button type="button" data-cat="${c[0]}" class="${c[0] === state.filter ? "on" : ""}">${c[1]} <small>${all.filter(x => c[0] === "alle" || x.cat === c[0]).length}</small></button>`).join("");
 }
 function renderGallery() {
   const g = $("#gallery"); g.style.minHeight = g.offsetHeight + "px"; g.innerHTML = "";
@@ -1594,7 +1407,9 @@ function setLayoutValue(k, v) {
 }
 function selectLayout(id) {
   const it = allLayouts().filter(x => x.id === id)[0] || allLayouts()[0];
-  state.layoutId = it.id; state.layout = sanitizeLayout(it.layout); afterLayoutChange();
+  state.layoutId = it.id; state.layout = sanitizeLayout(it.layout);
+  if (it.one && !state.onePage) { const cb = $(".onePage"); if (cb) { cb.checked = true; cb.dispatchEvent(new Event("change", { bubbles: true })); } } // 1-Seite-Vorlagen: Option automatisch an
+  afterLayoutChange();
 }
 function saveLayout() {
   const name = ($("#layoutName").value || "").trim().slice(0, 40) || "Meine Vorlage";
@@ -1644,7 +1459,6 @@ function openAcc(id) {
 
 /* ---------- Hinweise (Schritt 3) ---------- */
 function updateChecks() {
-  const nt = $("#docxNote"); if (nt) nt.hidden = !pdfOnly(state.layout);
   const box = $("#checks"); if (!box) return;
   const d = collect(), w = [];
   if (!(d.first || "").trim() && !(d.last || "").trim()) w.push(["Dein Name fehlt.", "acc_personal"]);
@@ -1683,22 +1497,57 @@ function buildPdf(pages) {
   const str = t => push(enc.encode(t));
   push(new Uint8Array([37, 80, 68, 70, 45, 49, 46, 52, 10, 37, 226, 227, 207, 211, 10]));
   const obj = (id, body) => { offs[id] = off; str(`${id} 0 obj\n${body}\nendobj\n`); };
-  const n = pages.length;
+  const n = pages.length, fontId = 3 * n + 3;
   obj(1, "<< /Type /Catalog /Pages 2 0 R >>");
   obj(2, `<< /Type /Pages /Kids [${pages.map((_, i) => `${3 + 3 * i} 0 R`).join(" ")}] /Count ${n} >>`);
   pages.forEach((p, i) => {
-    obj(3 + 3 * i, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 ${5 + 3 * i} 0 R >> /ProcSet [/PDF /ImageC] >> /Contents ${4 + 3 * i} 0 R >>`);
-    const cs = "q 595.28 0 0 841.89 0 0 cm /Im0 Do Q";
+    obj(3 + 3 * i, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im0 ${5 + 3 * i} 0 R >> /Font << /F1 ${fontId} 0 R >> /ProcSet [/PDF /ImageC /Text] >> /Contents ${4 + 3 * i} 0 R >>`);
+    // unsichtbare Textebene (Render-Modus 3): Text ist durchsuchbar/markierbar und für Bewerbungsportale lesbar
+    let cs = "q 595.28 0 0 841.89 0 0 cm /Im0 Do Q\nBT 3 Tr\n";
+    (p.words || []).forEach(w => { cs += `/F1 ${w.size.toFixed(2)} Tf ${w.tz.toFixed(1)} Tz 1 0 0 1 ${w.x.toFixed(2)} ${w.y.toFixed(2)} Tm <${w.hex}> Tj\n`; });
+    cs += "ET";
     obj(4 + 3 * i, `<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`);
     offs[5 + 3 * i] = off;
     str(`${5 + 3 * i} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.jpeg.length} >>\nstream\n`);
     push(p.jpeg); str("\nendstream\nendobj\n");
   });
-  const xref = off, total = 3 * n + 3;
+  obj(fontId, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+  const xref = off, total = 3 * n + 4;
   str(`xref\n0 ${total}\n0000000000 65535 f \n`);
   for (let id = 1; id < total; id++) str(String(offs[id]).padStart(10, "0") + " 00000 n \n");
   str(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
   return new Blob(chunks, { type: "application/pdf" });
+}
+const WIN1252 = { "€": 0x80, "‚": 0x82, "„": 0x84, "…": 0x85, "‘": 0x91, "’": 0x92, "“": 0x93, "”": 0x94, "•": 0x95, "–": 0x96, "—": 0x97, "™": 0x99, "·": 0xB7 };
+function winHex(s) {
+  let h = "";
+  for (const ch of s.normalize("NFC")) {
+    let c = ch.codePointAt(0);
+    if (WIN1252[ch] != null) c = WIN1252[ch];
+    else if (c > 255 || (c >= 128 && c < 160)) { const f = ch.normalize("NFD")[0].codePointAt(0); c = f < 128 ? f : 63; }
+    h += c.toString(16).padStart(2, "0");
+  }
+  return h;
+}
+// alle Wörter mit Position einsammeln (für die unsichtbare Textebene)
+function collectWords(node, box) {
+  const out = [], cv = document.createElement("canvas").getContext("2d"), K = 595.28 / PAGE_PX;
+  const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+  const range = document.createRange();
+  for (let t = walker.nextNode(); t; t = walker.nextNode()) {
+    const el = t.parentElement; if (!el || /^(STYLE|SCRIPT)$/.test(el.tagName) || el.closest("svg")) continue;
+    const cs = getComputedStyle(el); if (cs.display === "none" || cs.visibility === "hidden") continue;
+    const up = cs.textTransform === "uppercase", txt = t.nodeValue, re = /\S+/g; let m;
+    while ((m = re.exec(txt))) {
+      range.setStart(t, m.index); range.setEnd(t, m.index + m[0].length);
+      const r = range.getBoundingClientRect(); if (r.width < 1 || r.height < 1) continue;
+      const word = up ? m[0].toUpperCase() : m[0], size = r.height / 1.15;
+      cv.font = `100px Helvetica, Arial, sans-serif`;
+      const mw = cv.measureText(word).width / 100 * size * K;
+      out.push({ cy: (r.top + r.bottom) / 2 - box.top, left: r.left - box.left, base: r.bottom - box.top - r.height * 0.22, wpt: r.width * K, size: size * K, mw, word });
+    }
+  }
+  return out;
 }
 async function renderPdfBlob(d, layout, fit) {
   const W = PAGE_PX, PH = 1123, SC = 2, M = 60, pb = pageBackground(layout);
@@ -1712,6 +1561,8 @@ async function renderPdfBlob(d, layout, fit) {
     const node = holder.firstElementChild, box = node.getBoundingClientRect(), H = Math.ceil(box.height);
     // Seitenumbrüche zwischen Absätzen/Zeilen suchen, damit keine Zeile zerschnitten wird
     const rects = [...node.querySelectorAll("p,li,tr,img,svg")].map(e => { const r = e.getBoundingClientRect(); return [r.top - box.top, r.bottom - box.top]; }).filter(r => r[1] - r[0] > 2 && r[1] - r[0] < 260);
+    // Überschriften nie allein am Seitenende: Umbruch davor, wenn weniger als ~55 px Inhalt folgen
+    node.querySelectorAll("[data-h]").forEach(e => { const r = e.getBoundingClientRect(); rects.push([r.top - box.top, r.bottom - box.top + 55]); });
     const pages = []; let y0 = 0;
     while (y0 < H - 1) {
       const top0 = pages.length ? M : 0;
@@ -1720,8 +1571,9 @@ async function renderPdfBlob(d, layout, fit) {
       pages.push([y0, y1]); y0 = y1;
     }
     await (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve());
+    const words = collectWords(node, box), K = 595.28 / W;
     const xml = new XMLSerializer().serializeToString(node);
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><foreignObject x="0" y="0" width="${W}" height="${H}">${xml}</foreignObject></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><foreignObject x="0" y="0" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" style="width:${W}px;font:15px/1.45 'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;color:#1f2933;"><style>*{box-sizing:border-box}h1,h2,h3,h4,p{margin:0}</style>${xml}</div></foreignObject></svg>`;
     const img = new Image();
     await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error("Die Seite konnte nicht als Bild erzeugt werden.")); img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); });
     // reines Hintergrundbild (ohne Inhalt) für die Seitenränder
@@ -1742,7 +1594,8 @@ async function renderPdfBlob(d, layout, fit) {
       const used = top + (b - a), rem = PH - used;
       if (rem > 0) { const sy = Math.max(0, Math.min(H - rem, b)); c.drawImage(bg, 0, sy * SC, bg.width, Math.min(rem, H - sy) * SC, 0, used * SC, pc.width, Math.min(rem, H - sy) * SC); }
       const blob = await new Promise(r => pc.toBlob(r, "image/jpeg", 0.92));
-      out.push({ jpeg: new Uint8Array(await blob.arrayBuffer()), w: pc.width, h: pc.height });
+      const pw = words.filter(w => w.cy >= a && w.cy < b).map(w => ({ x: w.left * K, y: 841.89 - (top + w.base - a) * K, size: w.size, tz: Math.max(30, Math.min(300, w.wpt / (w.mw || 1) * 100)), hex: winHex(w.word) + "20" }));
+      out.push({ jpeg: new Uint8Array(await blob.arrayBuffer()), w: pc.width, h: pc.height, words: pw });
     }
     return buildPdf(out);
   } finally { holder.remove(); }
@@ -1753,7 +1606,7 @@ async function downloadPdfDirect() {
   try {
     const blob = await renderPdfBlob(d, state.layout, currentFit(d));
     if (!(await saveBlob(blob, name))) { status("Speichern abgebrochen.", "err"); return; }
-    status(`„${name}“ wurde gespeichert. (Direkt-PDF: Text ist nicht markierbar – für markierbaren Text den Druckdialog nutzen.)`, "ok");
+    status(`„${name}“ wurde gespeichert. (Der Text im PDF ist durchsuchbar und markierbar.)`, "ok");
   } catch (e) { status("Das PDF konnte nicht erstellt werden: " + (e && e.message ? e.message : e), "err"); }
 }
 
@@ -1790,11 +1643,6 @@ async function saveBlob(blob, name) {
   const url = URL.createObjectURL(blob), a = document.createElement("a");
   a.href = url; a.download = name; document.body.appendChild(a); a.click();
   setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 5000);
-}
-async function downloadDocx() {
-  const d = collect(), name = fileBase(d) + ".docx";
-  try { if (!(await saveBlob(buildDocx(d, state.layout, currentFit(d)), name))) { status("Speichern abgebrochen.", "err"); return; } status(`„${name}“ wurde gespeichert. In Word öffnen und einmal speichern.`, "ok"); }
-  catch (e) { status("Die Word-Datei konnte nicht erstellt werden: " + (e && e.message ? e.message : e), "err"); }
 }
 async function backupSave() {
   const payload = { app: "lebenslauf-ersteller", v: 3, daten: collect(), vorlage: { id: state.layoutId, layout: state.layout }, eigene: state.custom };
@@ -1871,13 +1719,13 @@ function init() {
   $("#addJob").addEventListener("click", () => { $("#jobs").appendChild(buildItem("jobs", {})); renumber("jobs"); });
   $("#addEdu").addEventListener("click", () => { $("#edu").appendChild(buildItem("edu", {})); renumber("edu"); });
   bindRepeater("jobs"); bindRepeater("edu");
+  initPhotoEditor();
   $("#photoBtn").addEventListener("click", () => $("#photoFile").click());
   $("#photoFile").addEventListener("change", e => handlePhoto(e.target.files[0]));
   $("#photoRemove").addEventListener("click", () => { setPhoto(""); schedule(); });
   $$("details.acc").forEach(d => d.addEventListener("toggle", () => { if (d.open) $$("details.acc").forEach(o => { if (o !== d) o.open = false; }); }));
   // Export
   $$(".btnPdf").forEach(b => b.addEventListener("click", printCv));
-  $$(".btnDocx").forEach(b => b.addEventListener("click", downloadDocx));
   $$(".btnPdfDirect").forEach(b => b.addEventListener("click", downloadPdfDirect));
   const fitPref = lsGet(KEY_FIT); state.onePage = !!(fitPref && fitPref.on);
   $$(".onePage").forEach(cb => { cb.checked = state.onePage; cb.addEventListener("change", () => { state.onePage = cb.checked; $$(".onePage").forEach(o => { o.checked = state.onePage; }); lsSet(KEY_FIT, { on: state.onePage }); renderPreview(); }); });
@@ -1897,7 +1745,7 @@ function init() {
   renderPreview();
 }
 
-window.CVMaker = { renderPdfBlob, computeFit, pageBackground, bleed, buildHtml, buildDocx, PRESETS, sanitizeLayout, collect, populate, state, fileBase, DEFAULT_LAYOUT };
+window.CVMaker = { renderPdfBlob, computeFit, pageBackground, bleed, buildHtml, PRESETS, sanitizeLayout, collect, populate, state, fileBase, DEFAULT_LAYOUT };
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 
 })();
