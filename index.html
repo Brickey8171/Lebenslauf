@@ -573,7 +573,7 @@ const PRESETS = [
   { id: "bannerDark", cat: "modern", name: "Banner dunkel", layout: { font: "Arial", accent: "#222b3a", header: "band", nameSize: 26, headStyle: "leftbar", headUpper: true, dateStyle: "right", dateWidth: 20, baseSize: 10 } },
   { id: "toenung", cat: "modern", name: "Tönung", layout: { font: "Verdana", accent: "#0e7490", header: "tint", nameSize: 24, headStyle: "spaced", headUpper: true, dateStyle: "above", baseSize: 9.5 } },
   { id: "terrakotta", cat: "seite", name: "Terrakotta", layout: { font: "Cambria", accent: "#b5532f", columns: "sidebarLeft", sideDark: false, sideWidth: 31, nameSplit: true, headStyle: "double", headUpper: false, dateStyle: "timeline", baseSize: 10.5 } },
-  { id: "kompakt", cat: "modern", name: "Kompakt (1 Seite)", layout: { font: "Calibri", accent: "#37474f", header: "plain", nameSize: 22, headStyle: "underline", dateStyle: "left", dateWidth: 18, spacing: "compact", contact: "line", baseSize: 9.5 } },
+  { id: "kompakt", cat: "modern", name: "Kompakt", layout: { font: "Calibri", accent: "#37474f", header: "plain", nameSize: 22, headStyle: "underline", dateStyle: "left", dateWidth: 18, spacing: "compact", contact: "line", baseSize: 9.5 } },
   { id: "marine", cat: "klassisch", name: "Marine", layout: { font: "Cambria", accent: "#14325c", header: "topbar", nameSize: 26, nameUpper: true, headStyle: "bar", headUpper: true, dateStyle: "left", dateWidth: 22, bullet: "square", baseSize: 10.5 } },
   { id: "bordeaux", cat: "klassisch", name: "Bordeaux", layout: { font: "Garamond", accent: "#6d1f3a", header: "center", nameSize: 28, nameSplit: true, headStyle: "centered", headUpper: true, contact: "line", dateStyle: "left", dateWidth: 21, baseSize: 11.5 } },
   { id: "tradition", cat: "klassisch", name: "Tradition", layout: { font: "Times New Roman", accent: "#333333", header: "plain", nameSize: 24, headStyle: "underline", headUpper: false, dateStyle: "left", dateWidth: 22, bullet: "disc", contact: "table", baseSize: 11 } },
@@ -656,18 +656,18 @@ const PRESETS = [
   { id: "ozean", cat: "fancy", name: "Ozean", layout: { font: "Segoe UI", accent: "#0284c7", accent2: "#6366f1", page: "gradient", header: "wave", nameSize: 32, structure: "glass", headStyle: "plain", headUpper: false, dateStyle: "above", skillStyle: "rings", baseSize: 10 } },
   { id: "rose", cat: "fancy", name: "Rosé Schräg", layout: { font: "Cambria", accent: "#be185d", accent2: "#f59e0b", page: "cream", header: "slant", nameSize: 32, headStyle: "leftbar", headUpper: true, dateStyle: "dots", dateWidth: 21, skillStyle: "chips", baseSize: 10 } },
   { id: "schieferHero", cat: "fancy", name: "Hero Nacht", layout: { font: "Segoe UI", accent: "#fb923c", page: "dark", header: "hero", nameSize: 38, nameStack: true, nameUpper: true, headStyle: "leftbar", headUpper: true, dateStyle: "left", dateWidth: 22, skillStyle: "bars", baseSize: 10 } },
-  { id: "eins1", cat: "einseite", name: "1 Seite · Kompakt", layout: { font: "Calibri", accent: "#1f4e79", header: "plain", nameSize: 22, columns: "split", sideWidth: 32, contact: "line", headStyle: "underline", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9.5 } },
-  { id: "eins2", cat: "einseite", name: "1 Seite · Seitenleiste", layout: { font: "Segoe UI", accent: "#243447", columns: "sidebarLeft", sideDark: true, sideWidth: 31, nameInSide: true, photoShape: "round", headStyle: "plain", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
-  { id: "eins3", cat: "einseite", name: "1 Seite · Band & 2 Spalten", layout: { font: "Arial", accent: "#0b7285", header: "band", nameSize: 24, columns: "split", sideWidth: 33, contact: "line", headStyle: "leftbar", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
-  { id: "eins4", cat: "einseite", name: "1 Seite · Linke Spalte", layout: { font: "Calibri", accent: "#7c2d12", header: "tint", nameSize: 24, columns: "splitLeft", sideWidth: 30, contact: "line", skillStyle: "dots", headStyle: "underline", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
-  { id: "eins5", cat: "einseite", name: "1 Seite · Etiketten", layout: { font: "Segoe UI", accent: "#4f46e5", header: "accent", nameSize: 24, contact: "line", skillStyle: "chips", headStyle: "plain", headUpper: true, dateStyle: "left", dateWidth: 17, spacing: "compact", baseSize: 9 } },
-  { id: "eins6", cat: "einseite", name: "1 Seite · Dunkel", layout: { font: "Segoe UI", accent: "#38bdf8", page: "dark", columns: "sidebarLeft", sideDark: false, sideWidth: 30, nameInSide: true, photoShape: "round", skillStyle: "bars", headStyle: "leftbar", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
-  { id: "eins7", cat: "einseite", name: "1 Seite · Zeitstrahl", layout: { font: "Calibri", accent: "#0f766e", header: "plain", nameSize: 22, contact: "iconGrid", headStyle: "icon", headUpper: false, dateStyle: "dots", dateWidth: 18, spacing: "compact", skillStyle: "dots", baseSize: 9 } },
-  { id: "eins8", cat: "einseite", name: "1 Seite · Verlauf", layout: { font: "Trebuchet MS", accent: "#6d28d9", accent2: "#ec4899", header: "gradient", nameSize: 26, photoShape: "round", columns: "split", sideWidth: 32, skillStyle: "chips", headStyle: "plain", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
-  { id: "eins9", cat: "einseite", name: "1 Seite · Vollbild rechts", layout: { font: "Calibri", accent: "#1e3a8a", accent2: "#3b82f6", page: "sideBleed", columns: "sidebarRight", sideDark: true, sideWidth: 30, photoShape: "round", skillStyle: "bars", headStyle: "underline", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
-  { id: "eins10", cat: "einseite", name: "1 Seite · Creme", layout: { font: "Georgia", accent: "#7a5c2e", page: "cream", header: "center", nameSize: 24, nameSplit: true, columns: "split", sideWidth: 31, contact: "line", headStyle: "double", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
-  { id: "eins11", cat: "einseite", name: "1 Seite · Tabelle", layout: { font: "Arial", accent: "#374151", header: "block", headStyle: "greybar", headUpper: false, dateStyle: "left", dateWidth: 17, zebra: true, spacing: "compact", baseSize: 9 } },
-  { id: "eins12", cat: "einseite", name: "1 Seite · Wellenband", layout: { font: "Segoe UI", accent: "#0ea5e9", accent2: "#6366f1", header: "wave", nameSize: 26, columns: "split", sideWidth: 32, skillStyle: "rings", headStyle: "icon", headUpper: false, dateStyle: "above", spacing: "compact", baseSize: 9 } }
+  { id: "eins1", cat: "einseite", name: "Kompakt Zweispaltig", layout: { font: "Calibri", accent: "#1f4e79", header: "plain", nameSize: 22, columns: "split", sideWidth: 32, contact: "line", headStyle: "underline", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9.5 } },
+  { id: "eins2", cat: "einseite", name: "Kompakt Seitenleiste", layout: { font: "Segoe UI", accent: "#243447", columns: "sidebarLeft", sideDark: true, sideWidth: 31, nameInSide: true, photoShape: "round", headStyle: "plain", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins3", cat: "einseite", name: "Band & 2 Spalten", layout: { font: "Arial", accent: "#0b7285", header: "band", nameSize: 24, columns: "split", sideWidth: 33, contact: "line", headStyle: "leftbar", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins4", cat: "einseite", name: "Linke Spalte", layout: { font: "Calibri", accent: "#7c2d12", header: "tint", nameSize: 24, columns: "splitLeft", sideWidth: 30, contact: "line", skillStyle: "dots", headStyle: "underline", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins5", cat: "einseite", name: "Etiketten", layout: { font: "Segoe UI", accent: "#4f46e5", header: "accent", nameSize: 24, contact: "line", skillStyle: "chips", headStyle: "plain", headUpper: true, dateStyle: "left", dateWidth: 17, spacing: "compact", baseSize: 9 } },
+  { id: "eins6", cat: "einseite", name: "Kompakt Dunkel", layout: { font: "Segoe UI", accent: "#38bdf8", page: "dark", columns: "sidebarLeft", sideDark: false, sideWidth: 30, nameInSide: true, photoShape: "round", skillStyle: "bars", headStyle: "leftbar", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins7", cat: "einseite", name: "Zeitstrahl mit Symbolen", layout: { font: "Calibri", accent: "#0f766e", header: "plain", nameSize: 22, contact: "iconGrid", headStyle: "icon", headUpper: false, dateStyle: "dots", dateWidth: 18, spacing: "compact", skillStyle: "dots", baseSize: 9 } },
+  { id: "eins8", cat: "einseite", name: "Verlauf & Spalten", layout: { font: "Trebuchet MS", accent: "#6d28d9", accent2: "#ec4899", header: "gradient", nameSize: 26, photoShape: "round", columns: "split", sideWidth: 32, skillStyle: "chips", headStyle: "plain", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins9", cat: "einseite", name: "Vollbild rechts", layout: { font: "Calibri", accent: "#1e3a8a", accent2: "#3b82f6", page: "sideBleed", columns: "sidebarRight", sideDark: true, sideWidth: 30, photoShape: "round", skillStyle: "bars", headStyle: "underline", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins10", cat: "einseite", name: "Creme Zweispaltig", layout: { font: "Georgia", accent: "#7a5c2e", page: "cream", header: "center", nameSize: 24, nameSplit: true, columns: "split", sideWidth: 31, contact: "line", headStyle: "double", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  { id: "eins11", cat: "einseite", name: "Tabelle Grau", layout: { font: "Arial", accent: "#374151", header: "block", headStyle: "greybar", headUpper: false, dateStyle: "left", dateWidth: 17, zebra: true, spacing: "compact", baseSize: 9 } },
+  { id: "eins12", cat: "einseite", name: "Wellenband", layout: { font: "Segoe UI", accent: "#0ea5e9", accent2: "#6366f1", header: "wave", nameSize: 26, columns: "split", sideWidth: 32, skillStyle: "rings", headStyle: "icon", headUpper: false, dateStyle: "above", spacing: "compact", baseSize: 9 } }
 ];
 
 const ICONS = {
@@ -1338,6 +1338,48 @@ function schedule() {
 const allLayouts = () => PRESETS.map(p => ({ id: p.id, name: p.name, cat: catOf(p), one: p.cat === "einseite", layout: p.layout, custom: false }))
   .concat(state.custom.map(c => ({ id: c.id, name: c.name, cat: "meine", layout: c.layout, custom: true })));
 
+
+/* ---------- Sortierung nach Ähnlichkeit ---------- */
+function hslOf(hex) {
+  const c = hexRgb(hex).map(v => v / 255), mx = Math.max(...c), mn = Math.min(...c), l = (mx + mn) / 2, d = mx - mn;
+  let h = 0; if (d) { h = mx === c[0] ? ((c[1] - c[2]) / d) % 6 : mx === c[1] ? (c[2] - c[0]) / d + 2 : (c[0] - c[1]) / d + 4; h *= 60; if (h < 0) h += 360; }
+  return { h, s: d ? d / (1 - Math.abs(2 * l - 1)) : 0, l };
+}
+const FAM = f => /Georgia|Cambria|Times|Garamond/.test(f) ? 1 : /Courier/.test(f) ? 2 : 0;
+const HGROUP = h => ["band", "tint"].indexOf(h) >= 0 ? 1 : SPECIAL_HEADERS.indexOf(h) >= 0 ? 2 : 0;
+function layoutDist(a, b) {
+  let d = 0;
+  if (a.page !== b.page) d += (a.page === "dark") !== (b.page === "dark") ? 4 : 2;
+  const col = c => c === "single" ? 0 : c === "split" || c === "splitLeft" ? 1 : 2;
+  if (col(a.columns) !== col(b.columns)) d += Math.abs(col(a.columns) - col(b.columns)) === 2 ? 3 : 2;
+  else if (a.columns !== b.columns) d += 0.6;
+  if (col(a.columns) === 2 && a.sideDark !== b.sideDark) d += 1.2;
+  if (a.header !== b.header) d += HGROUP(a.header) !== HGROUP(b.header) ? 2.5 : (HGROUP(a.header) === 2 ? 1.5 : 0.8);
+  if (a.headStyle !== b.headStyle) d += 1;
+  if (a.dateStyle !== b.dateStyle) d += 1.2;
+  if (a.structure !== b.structure) d += 2;
+  if (a.skillStyle !== b.skillStyle) d += 1.2;
+  if (a.contact !== b.contact) d += 0.6;
+  if (FAM(a.font) !== FAM(b.font)) d += 1.5;
+  if (!!a.rules !== !!b.rules || !!a.zebra !== !!b.zebra) d += 0.4;
+  if (a.spacing !== b.spacing) d += 0.4;
+  d += Math.abs(a.baseSize - b.baseSize) * 0.4 + Math.abs(a.nameSize - b.nameSize) / 10;
+  const x = hslOf(a.accent), y = hslOf(b.accent), dh = Math.min(Math.abs(x.h - y.h), 360 - Math.abs(x.h - y.h)) / 180;
+  d += dh * 2.5 * Math.min(1, Math.min(x.s, y.s) * 1.5) + Math.abs(x.l - y.l) * 1.2;
+  return d;
+}
+let simOrder = null;
+function similarityOrder() { // Kette: immer die ähnlichste noch nicht gezeigte Vorlage als Nächste
+  if (simOrder) return simOrder;
+  const items = PRESETS.map(p => ({ id: p.id, l: sanitizeLayout(p.layout) })), out = [];
+  let cur = items.find(i => i.id === "classic") || items[0]; const left = items.filter(i => i !== cur); out.push(cur);
+  while (left.length) {
+    let bi = 0, bd = Infinity;
+    left.forEach((it, i) => { const dd = layoutDist(cur.l, it.l); if (dd < bd) { bd = dd; bi = i; } });
+    cur = left.splice(bi, 1)[0]; out.push(cur);
+  }
+  simOrder = out.map(i => i.id); return simOrder;
+}
 function renderChips() {
   const cats = CATS.concat(state.custom.length ? [["meine", "Meine"]] : []);
   if (!cats.some(c => c[0] === state.filter)) state.filter = "alle";
@@ -1348,7 +1390,8 @@ function renderGallery() {
   const g = $("#gallery"); g.style.minHeight = g.offsetHeight + "px"; g.innerHTML = "";
   const s = window.SAMPLES.dev.data;
   const data = Object.assign({}, s, { photo: state.silhouette, showSignature: false, jobs: s.jobs.slice(0, 2), edu: s.edu.slice(0, 2) });
-  allLayouts().filter(it => state.filter === "alle" || it.cat === state.filter).forEach(it => {
+  const rank = id => { const i = similarityOrder().indexOf(id); return i < 0 ? 9999 : i; };
+  allLayouts().filter(it => state.filter === "alle" || it.cat === state.filter).sort((x, y) => rank(x.id) - rank(y.id)).forEach(it => {
     const card = document.createElement("div");
     card.className = "card" + (it.id === state.layoutId ? " sel" : "");
     card.dataset.id = it.id; card.tabIndex = 0; card.setAttribute("role", "button"); card.setAttribute("aria-label", "Vorlage " + it.name);
