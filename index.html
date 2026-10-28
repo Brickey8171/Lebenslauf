@@ -1025,7 +1025,7 @@ function buildHtml(d, layoutIn, forPrint, fit) {
     }
   }
   const root = `<div style="${base()}${F < 1 ? `zoom:${F};` : ""}">${out.join("")}</div>`;
-  return forPrint && bleed(Ly) ? `<div style="background:${pageBackground(Ly)};padding:2cm;-webkit-box-decoration-break:clone;box-decoration-break:clone;">${root}</div>` : root;
+  return forPrint ? `<div style="background:${pageBackground(Ly)};padding:2cm;-webkit-box-decoration-break:clone;box-decoration-break:clone;">${root}</div>` : root;
 }
 
 /* ------------------------------ Word (.docx, echtes WordprocessingML) ------------------------------ */
@@ -1758,15 +1758,17 @@ async function downloadPdfDirect() {
 }
 
 function printCv() {
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (ios) { downloadPdfDirect(); return; } // iOS-Druckvorschau ignoriert Seitenränder/Skalierung und fügt eigene Kopf-/Fußzeilen hinzu
   if (window.self !== window.top) { downloadPdfDirect(); return; } // eingebettete Vorschau: Druckdialog meist gesperrt
   const d = collect(), old = document.title;
   const fitV = currentFit(d), one = state.onePage;
   // „Alles auf einer Seite": harte Höhe, damit auch bei abweichender Schrift/Druckengine keine 2. Seite entsteht
   $("#printArea").innerHTML = one
-    ? `<div style="height:${bleed(state.layout) ? "296mm" : "255mm"};overflow:hidden;break-after:avoid;page-break-after:avoid;break-inside:avoid;">${buildHtml(d, state.layout, true, fitV)}</div>`
+    ? `<div style="height:296mm;overflow:hidden;break-after:avoid;page-break-after:avoid;break-inside:avoid;">${buildHtml(d, state.layout, true, fitV)}</div>`
     : buildHtml(d, state.layout, true, fitV);
   let pst = null;
-  if (bleed(state.layout)) { // randlose Seiten (dunkler Hintergrund, Banner bis zum Rand)
+  { // immer randlos (@page-Rand 0): so blendet der Browser Adresse/Datum/Seitenzahl nicht ein; Rand kommt aus dem Inhalt
     pst = document.createElement("style");
     pst.textContent = `@page{size:A4;margin:0}@media print{html,body{background:${pageBackground(state.layout)} !important;}}`;
     document.head.appendChild(pst);
