@@ -1532,7 +1532,7 @@ function renderChips() {
   $("#chips").innerHTML = cats.map(c => `<button type="button" data-cat="${c[0]}" class="${c[0] === state.filter ? "on" : ""}">${c[1]}</button>`).join("");
 }
 function renderGallery() {
-  const g = $("#gallery"); g.innerHTML = "";
+  const g = $("#gallery"); g.style.minHeight = g.offsetHeight + "px"; g.innerHTML = "";
   const s = window.SAMPLES.dev.data;
   const data = Object.assign({}, s, { photo: state.silhouette, showSignature: false, jobs: s.jobs.slice(0, 2), edu: s.edu.slice(0, 2) });
   allLayouts().filter(it => state.filter === "alle" || it.cat === state.filter).forEach(it => {
@@ -1543,6 +1543,7 @@ function renderGallery() {
     g.appendChild(card);
     scaleInto($(".thumb", card), buildHtml(data, it.layout), true, it.layout);
   });
+  g.style.minHeight = "";
 }
 function highlightGallery() { $$("#gallery .card").forEach(c => c.classList.toggle("sel", c.dataset.id === state.layoutId)); }
 function updateLayoutLabel() {
@@ -1751,8 +1752,8 @@ async function downloadPdfDirect() {
   status("PDF wird erstellt …", "ok");
   try {
     const blob = await renderPdfBlob(d, state.layout, currentFit(d));
-    saveBlob(blob, name);
-    status(`„${name}“ wurde heruntergeladen. (Direkt-PDF: Text ist nicht markierbar – für markierbaren Text den Druckdialog nutzen.)`, "ok");
+    if (!(await saveBlob(blob, name))) { status("Speichern abgebrochen.", "err"); return; }
+    status(`„${name}“ wurde gespeichert. (Direkt-PDF: Text ist nicht markierbar – für markierbaren Text den Druckdialog nutzen.)`, "ok");
   } catch (e) { status("Das PDF konnte nicht erstellt werden: " + (e && e.message ? e.message : e), "err"); }
 }
 
@@ -1772,21 +1773,27 @@ function printCv() {
   status("Im Druckdialog „Als PDF speichern“ wählen · Papier A4 · „Hintergrundgrafiken“ aktivieren. Kein Dialog? Dann „PDF direkt herunterladen“ nutzen.", "ok");
   setTimeout(() => { try { window.print(); } catch (e) { downloadPdfDirect(); } }, 80);
 }
-function saveBlob(blob, name) {
+let dlCap = null;
+try { if (window.claude && window.claude.use) window.claude.use("downloads").then(c => { dlCap = c || null; }, () => {}); } catch (e) {}
+async function saveBlob(blob, name) {
+  if (dlCap) { // veröffentlichtes Artefakt: Speichern über den Viewer
+    try { await dlCap.save({ filename: name, data: blob }); return true; }
+    catch (e) { if (e && e.code === "declined") return false; if (e && (e.code === "unavailable" || e.code === "not_granted" || e.code === "capability_disabled" || e.code === "capability_removed")) dlCap = null; else throw e; }
+  }
   if (navigator.msSaveBlob) { navigator.msSaveBlob(blob, name); return; }
   const url = URL.createObjectURL(blob), a = document.createElement("a");
   a.href = url; a.download = name; document.body.appendChild(a); a.click();
   setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 5000);
 }
-function downloadDocx() {
+async function downloadDocx() {
   const d = collect(), name = fileBase(d) + ".docx";
-  try { saveBlob(buildDocx(d, state.layout, currentFit(d)), name); status(`„${name}“ wurde heruntergeladen. In Word öffnen und einmal speichern.`, "ok"); }
+  try { if (!(await saveBlob(buildDocx(d, state.layout, currentFit(d)), name))) { status("Speichern abgebrochen.", "err"); return; } status(`„${name}“ wurde gespeichert. In Word öffnen und einmal speichern.`, "ok"); }
   catch (e) { status("Die Word-Datei konnte nicht erstellt werden: " + (e && e.message ? e.message : e), "err"); }
 }
-function backupSave() {
+async function backupSave() {
   const payload = { app: "lebenslauf-ersteller", v: 3, daten: collect(), vorlage: { id: state.layoutId, layout: state.layout }, eigene: state.custom };
-  saveBlob(new Blob([JSON.stringify(payload)], { type: "application/json" }), "lebenslauf-daten.json");
-  status("Datensicherung heruntergeladen: lebenslauf-daten.json", "ok");
+  if (!(await saveBlob(new Blob([JSON.stringify(payload)], { type: "application/json" }), "lebenslauf-daten.json"))) return;
+  status("Datensicherung gespeichert: lebenslauf-daten.json", "ok");
 }
 function backupLoad(file) {
   if (!file) return;
@@ -1879,7 +1886,8 @@ function init() {
   ["input", "change"].forEach(ev => document.addEventListener(ev, e => { if (e.target.closest("#panel")) schedule(); }));
   document.addEventListener("click", e => { if (e.target.closest("#jobs,#edu")) schedule(); });
   let rz = null;
-  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { renderPreview(); if (state.step === 1) renderGallery(); }, 200); });
+  let lastW = window.innerWidth;
+  window.addEventListener("resize", () => { if (window.innerWidth === lastW) return; /* Handy: Adressleiste ein-/ausblenden löst nur eine Höhenänderung aus */ lastW = window.innerWidth; clearTimeout(rz); rz = setTimeout(() => { renderPreview(); if (state.step === 1) renderGallery(); }, 200); });
   renderPreview();
 }
 
