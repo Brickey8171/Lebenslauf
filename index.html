@@ -1186,7 +1186,8 @@ function buildHtml(d, layoutIn, forPrint, fit) {
   const certs = lines(d.certs), certsC = certs.length ? bullets(certs) : "";
   let signHtml = "";
   if (d.showSignature) {
-    const sigImg = /^data:image\//.test(d.signature || "") ? `<div style="margin:8pt 0 -12pt 0;"><img src="${d.signature}" alt="" style="height:44px;width:auto;max-width:240px;"></div>` : "";
+    const sigSrc = DK && /^data:image\//.test(d.signatureLight || "") ? d.signatureLight : d.signature;
+    const sigImg = /^data:image\//.test(d.signature || "") ? `<div style="margin:8pt 0 -12pt 0;"><img src="${sigSrc}" alt="" style="height:44px;width:auto;max-width:240px;"></div>` : "";
     signHtml = P(base() + "margin:22pt 0 0 0;", esc(X.signLine)) + sigImg + P(base() + "margin:" + (sigImg ? "0" : "26pt") + " 0 0 0;", `______________________________<br>${esc(X.fullName)}`);
   }
   const mainSecs = () => [[L.profile, summaryC], [L.experience, jobsC], [L.education, eduC], [L.certs, certsC]].filter(x => x[1]);
@@ -1886,7 +1887,7 @@ function catOf(p) {
   return "modern";
 }
 
-const state = { signature: "", photo: "", photoSrc: "", photoCrop: null, layout: sanitizeLayout(PRESETS[0].layout), layoutId: "classic", custom: [], filter: "alle", step: 1, silhouette: "", pages: 1, onePage: false, fit: 1 };
+const state = { signature: "", signatureLight: "", photo: "", photoSrc: "", photoCrop: null, layout: sanitizeLayout(PRESETS[0].layout), layoutId: "classic", custom: [], filter: "alle", step: 1, silhouette: "", pages: 1, onePage: false, fit: 1 };
 
 /* ---------- Dokument: Lebenslauf oder Anschreiben ---------- */
 let curDoc = "cv";
@@ -1965,7 +1966,7 @@ function bindRepeater(key) {
 function collect() {
   const d = {};
   $$("[data-k]").forEach(el => { d[el.dataset.k] = el.type === "checkbox" ? el.checked : el.value; });
-  d.signature = state.signature; d.photo = state.photo; d.photoSrc = state.photoSrc; d.photoCrop = state.photoCrop;
+  d.signature = state.signature; d.signatureLight = state.signatureLight; d.photo = state.photo; d.photoSrc = state.photoSrc; d.photoCrop = state.photoCrop;
   Object.keys(REPEATERS).forEach(key => {
     d[key] = $$("#" + key + " .item").map(item => { const o = {}; $$("[data-f]", item).forEach(e => { o[e.dataset.f] = e.value; }); return o; });
   });
@@ -2087,7 +2088,20 @@ function makeSilhouette() {
 
 /* ---------- Unterschrift (zeichnen oder Foto hochladen) ---------- */
 function setSignature(url) {
-  state.signature = /^data:image\//.test(url || "") ? url : "";
+  state.signature = /^data:image\//.test(url || "") ? url : ""; state.signatureLight = "";
+  if (state.signature) { // helle Variante für dunkle Seiten (Tinte → fast weiß, Transparenz bleibt)
+    const mine = state.signature, im = new Image();
+    im.onload = () => {
+      try {
+        const c = document.createElement("canvas"); c.width = im.width; c.height = im.height; const g = c.getContext("2d"); g.drawImage(im, 0, 0);
+        const id = g.getImageData(0, 0, c.width, c.height), p = id.data;
+        for (let i = 0; i < p.length; i += 4) { p[i] = 241; p[i + 1] = 245; p[i + 2] = 249; }
+        g.putImageData(id, 0, 0);
+        if (state.signature === mine) { state.signatureLight = c.toDataURL("image/png"); if (typeof renderPreview === "function" && uiReady) schedule(); }
+      } catch (e) { /* ohne helle Variante weiter */ }
+    };
+    im.src = mine;
+  }
   $$(".sigThumb").forEach(i => { i.hidden = !state.signature; if (state.signature) i.src = state.signature; });
   $$(".sigRemove").forEach(b => { b.hidden = !state.signature; });
   $$(".sigDraw").forEach(b => { b.textContent = t(state.signature ? "Neu zeichnen" : "Unterschrift zeichnen"); });
