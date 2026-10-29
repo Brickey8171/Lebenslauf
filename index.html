@@ -185,9 +185,41 @@ label.check small { color: var(--muted); font-size: 12px; }
 .cvrow .tag { font-size: 12px; font-weight: 700; color: var(--ui); }
 @media (max-width: 900px) { .top-in { position: relative; } .stepper button.tab4 { position: absolute; top: 8px; right: 0; flex: none; width: 36px; padding: 0; } }
 
+#step5 textarea { width: 100%; }
+#ltBody { font-family: inherit; line-height: 1.45; }
+@media (max-width: 900px) {
+  .stepper { flex-wrap: wrap; padding-right: 0; }
+  .stepper button { flex: 1 1 auto; font-size: 13px; padding: 6px 8px 6px 6px; gap: 5px; }
+  .stepper button span { width: 20px; height: 20px; font-size: 12px; }
+  .stepper button.tab4 { position: absolute; top: 8px; right: 0; flex: none; width: 36px; padding: 0; font-size: 18px; }
+}
+
+/* Hauptmenü + Modi */
+.home { max-width: 760px; margin: 0 auto; padding: 36px 16px 48px; text-align: center; }
+.home h2 { font-size: 28px; }
+.home .lead { margin: 6px 0 22px; color: var(--muted); }
+.homecards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.homecard { display: flex; flex-direction: column; align-items: center; gap: 8px; background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 28px 18px; font: inherit; color: var(--fg); cursor: pointer; text-align: center; }
+.homecard:hover, .homecard:focus-visible { border-color: var(--ui); box-shadow: 0 6px 20px rgba(31,78,121,.15); }
+.homecard b { font-size: 20px; color: var(--ui); }
+.homecard .hic { font-size: 44px; line-height: 1; }
+.homecard .hd { color: var(--muted); font-size: 14px; }
+.homecv { margin-top: 22px; color: var(--muted); font-size: 14px; }
+.homecv .link { margin-left: 6px; }
+@media (max-width: 600px) { .homecards { grid-template-columns: 1fr; } }
+body:not([data-mode="home"]) #home { display: none; }
+body[data-mode="home"] .app, body[data-mode="home"] .stepper { display: none; }
+body[data-mode="letter"] .stepper [data-go="1"], body[data-mode="letter"] .stepper [data-go="2"], body[data-mode="letter"] .stepper [data-go="3"] { display: none; }
+.stepper button.tabmenu { padding: 7px 14px; }
+body:not([data-mode="cv"]) .brand p { display: none; }
+.homecv .link { color: var(--ui); }
+
+#ltSwatches button.txt { width: auto; border-radius: 999px; padding: 0 12px; background: #fff; border: 1px solid var(--line); font: inherit; font-size: 13px; color: var(--fg); }
+#ltSwatches button.txt.on { border-color: var(--ui); box-shadow: 0 0 0 2px rgba(31,78,121,.25); }
+
 </style>
 </head>
-<body>
+<body data-mode="home">
 <header class="top">
   <div class="top-in">
     <div class="brand">
@@ -195,6 +227,7 @@ label.check small { color: var(--muted); font-size: 12px; }
       <p>Lebenslauf in 3 Schritten · alles bleibt auf deinem Gerät</p>
     </div>
     <nav class="stepper" id="stepper" aria-label="Schritte">
+      <button type="button" data-menu class="tabmenu">☰ Hauptmenü</button>
       <button type="button" data-go="1" class="on"><span>1</span> Vorlage</button>
       <button type="button" data-go="2"><span>2</span> Daten</button>
       <button type="button" data-go="3"><span>3</span> Fertig</button>
@@ -202,6 +235,16 @@ label.check small { color: var(--muted); font-size: 12px; }
     </nav>
   </div>
 </header>
+
+<section id="home" class="home">
+  <h2>Hauptmenü</h2>
+  <p class="lead">Was möchtest du erstellen?</p>
+  <div class="homecards">
+    <button type="button" class="homecard" data-open="cv"><span class="hic">📄</span><b>Lebenslauf</b><span class="hd">Vorlage wählen, Daten eingeben und als PDF speichern</span></button>
+    <button type="button" class="homecard" data-open="letter"><span class="hic">✉</span><b>Bewerbungsschreiben</b><span class="hd">Ein Anschreiben passend zu deinem Lebenslauf erzeugen</span></button>
+  </div>
+  <p class="homecv">Aktueller Lebenslauf: <b id="homeCvName" class="cvn"></b> <button type="button" class="link" data-go="4">Verwalten</button></p>
+</section>
 
 <div class="app">
 <main id="panel">
@@ -421,7 +464,78 @@ label.check small { color: var(--muted); font-size: 12px; }
       <input type="text" id="cvName" maxlength="40" placeholder="Name">
       <div class="inline"><button type="button" id="cvNew">Neu</button><button type="button" id="cvCopy">Kopie</button><button type="button" id="cvDel" class="danger">Löschen</button></div>
     </div>
-    <div class="nav"><button type="button" data-go="2">← Zurück zu den Daten</button><span></span></div>
+    <div class="nav"><button type="button" id="back4" data-go="1">← Zurück</button><span></span></div>
+  </section>
+  <!-- ============ TAB 5: BEWERBUNGSSCHREIBEN ============ -->
+  <section class="step" id="step5">
+    <h2>Bewerbungsschreiben</h2>
+    <p class="lead">Der Brieftext wird aus deinen Lebenslauf-Daten und den Angaben unten erzeugt – danach kannst du ihn frei bearbeiten. Absender ist dein Name aus Schritt 2.</p>
+
+    <div class="box">
+      <h3>Layout</h3>
+      <input type="hidden" data-lt="layout"><input type="hidden" data-lt="accent">
+      <div id="ltGallery" class="gallery"></div>
+      <label>Farbe</label>
+      <div class="swatches" id="ltSwatches"></div>
+      <label for="ltFont">Schrift</label>
+      <select id="ltFont" data-lt="font"></select>
+    </div>
+
+    <div class="box">
+      <h3>Empfänger</h3>
+      <label>Firma</label><input type="text" data-lt="company" autocomplete="off">
+      <div class="row2">
+        <div><label>Ansprechperson</label><input type="text" data-lt="contact" placeholder="z. B. Anna Muster"></div>
+        <div><label>Anrede</label><select data-lt="gender"><option value="none">Unbekannt (Damen und Herren)</option><option value="f">Frau</option><option value="m">Herr</option><option value="x">Neutral (Vor- und Nachname)</option></select></div>
+      </div>
+      <label>Straße und Hausnummer</label><input type="text" data-lt="street" autocomplete="off">
+      <div class="row2 zip">
+        <div><label>PLZ</label><input type="text" data-lt="zip" inputmode="numeric" autocomplete="off"></div>
+        <div><label>Ort</label><input type="text" data-lt="city" autocomplete="off"></div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h3>Stelle</h3>
+      <label>Stelle / Position</label><input type="text" data-lt="job" placeholder="z. B. Buchhalter">
+      <div class="row2">
+        <div><label>Kennzahl <small>(optional)</small></label><input type="text" data-lt="ref"></div>
+        <div><label>Gefunden auf <small>(optional)</small></label><input type="text" data-lt="source" placeholder="z. B. karriere.at"></div>
+      </div>
+      <div class="row2">
+        <div><label>Verfügbar ab</label><input type="text" data-lt="start" placeholder="z. B. ab sofort"></div>
+        <div><label>Gehaltsvorstellung <small>(optional)</small></label><input type="text" data-lt="salary" placeholder="z. B. EUR 3.000 brutto/Monat"></div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h3>Inhalt</h3>
+      <label>Ton</label>
+      <select data-lt="tone"><option value="formal">Förmlich</option><option value="modern">Modern &amp; persönlich</option></select>
+      <label>Meine Stärken</label><input type="text" data-lt="strengths" placeholder="z. B. Teamfähigkeit, Zuverlässigkeit, analytisches Denken">
+      <label>Warum diese Firma? <small>(eigene Worte)</small></label>
+      <textarea data-lt="motivation" rows="3" placeholder="z. B. Ich verfolge Ihre Projekte im Bereich … seit Jahren und möchte …"></textarea>
+      <label>Anlagen <small>(eine pro Zeile)</small></label>
+      <textarea data-lt="attach" rows="2" placeholder="Lebenslauf&#10;Zeugnisse"></textarea>
+      <div class="row2">
+        <div><label>Ort</label><input type="text" data-lt="place" placeholder="Wien"></div>
+        <div><label>Datum</label><input type="text" data-lt="date" placeholder="leer = heutiges Datum"></div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h3>Brieftext</h3>
+      <p class="hint">Wird automatisch erzeugt, solange du ihn nicht selbst änderst. Eigene Änderungen bleiben erhalten.</p>
+      <textarea id="ltBody" data-lt="body" rows="14"></textarea>
+      <div class="inline"><button type="button" id="ltRegen">Text neu erzeugen</button></div>
+    </div>
+
+    <div class="bigbtns">
+      <button type="button" class="btnPdf primary big"><b>Als PDF speichern</b><span>Öffnet den Druckdialog des Browsers</span></button>
+      <button type="button" class="btnPdfDirect big"><b>PDF direkt herunterladen</b><span>Ohne Druckdialog · funktioniert überall, auch am Handy · Text durchsuchbar</span></button>
+    </div>
+    <p class="hint">Tipp: Lege für jede Bewerbung eine Kopie des Lebenslaufs an (Zahnrad oben rechts) – dann hat jede Bewerbung ihr eigenes Anschreiben.</p>
+    <div class="nav"><button type="button" data-menu>← Hauptmenü</button><span></span></div>
   </section>
 </main>
 
@@ -1207,9 +1321,171 @@ function buildHtml(d, layoutIn, forPrint, fit) {
   return forPrint ? `<div style="background:${pageBackground(Ly)};padding:2cm;-webkit-box-decoration-break:clone;box-decoration-break:clone;">${root}</div>` : root;
 }
 
+let DOC = "cv"; // "cv" | "letter" (Dateiname)
+function setDoc(k) { DOC = k; }
 function fileBase(d) {
   const who = [d.first, d.last].map(s => (s || "").trim()).filter(Boolean).join("_");
-  applyLang(d && d.lang); return (L.fileCv + (who ? "_" + who : "")).replace(/\s+/g, "_").replace(/[^\wÀ-ſ.-]+/g, "_").slice(0, 80);
+  applyLang(d && d.lang); return ((DOC === "letter" ? (LETTER[LANG] || LETTER.de).file : L.fileCv) + (who ? "_" + who : "")).replace(/\s+/g, "_").replace(/[^\wÀ-ſ.-]+/g, "_").slice(0, 80);
+}
+
+/* ===================================================================
+   Bewerbungsschreiben (Anschreiben): Text erzeugen + Brief als HTML (Vorschau + PDF)
+   Der Brief ist in der Sprache des Lebenslaufs (d.lang).
+   =================================================================== */
+const LETTER = {
+  de: {
+    subject: j => "Bewerbung als " + j, ref: r => " (Kennzahl: " + r + ")", attach: "Anlagen:", file: "Bewerbung", attn: "z. Hd. ",
+    greet: { none: "Sehr geehrte Damen und Herren,", f: n => "Sehr geehrte Frau " + n + ",", m: n => "Sehr geehrter Herr " + n + ",", x: n => "Guten Tag " + n + "," },
+    close: { formal: "Mit freundlichen Grüßen", modern: "Mit freundlichen Grüßen" },
+    co: "Ihrem Unternehmen",
+    intro: (o) => o.modern
+      ? `die Position als ${o.job} bei ${o.coDat} hat mich sofort angesprochen${o.source ? " – ich bin auf " + o.source + " darauf aufmerksam geworden" : ""}. Deshalb bewerbe ich mich bei Ihnen.`
+      : (o.source ? `mit großem Interesse habe ich Ihre Stellenausschreibung für die Position als ${o.job} auf ${o.source} gelesen. Hiermit bewerbe ich mich bei ${o.coDat}.` : `hiermit bewerbe ich mich bei ${o.coDat} um die Position als ${o.job}.`),
+    now: (r, c) => `Derzeit bin ich als ${r}${c ? " bei " + c : ""} tätig`, past: (r, c) => `Zuletzt war ich als ${r}${c ? " bei " + c : ""} tätig`,
+    years: n => ` und bringe insgesamt ${n} Jahre Berufserfahrung mit.`, dot: ".",
+    tasks: l => ` Zu meinen Aufgaben zählten: ${l.join("; ")}.`,
+    edu: (dg, sc) => `Meine Ausbildung (${dg}${sc ? ", " + sc : ""}) hat mir ein solides Fundament für diese Aufgabe gegeben.`,
+    skills: l => `Sicher bin ich im Umgang mit ${l}.`, strengths: s => `Zu meinen Stärken zählen ${s}.`,
+    motiv: () => "Besonders reizt mich die Möglichkeit, mein Wissen einzubringen und mich in Ihrem Team weiterzuentwickeln.",
+    avail: s => `Ich stehe Ihnen ${s} zur Verfügung.`, salary: s => `Meine Gehaltsvorstellung liegt bei ${s}.`,
+    end: m => m ? "Ich freue mich darauf, Sie in einem persönlichen Gespräch zu überzeugen." : "Über die Einladung zu einem persönlichen Gespräch freue ich mich sehr.",
+    mod: {
+      now: (r, c) => `Aktuell arbeite ich als ${r}${c ? " bei " + c : ""}`,
+      years: n => ` und habe dabei rund ${n} Jahre Erfahrung gesammelt.`, tasks: l => ` Mein Alltag dort: ${l.join("; ")}.`,
+      skills: l => `Im Alltag arbeite ich sicher mit ${l}.`, strengths: s => `Was mich ausmacht: ${s}.`,
+      motiv: () => "Ich möchte mein Wissen einbringen und gemeinsam mit Ihrem Team wachsen.",
+      avail: s => `Ich kann ${s} bei Ihnen starten.`, salary: s => `Mein Gehaltswunsch: ${s}.`
+    }
+  },
+  en: {
+    subject: j => "Application for the position of " + j, ref: r => " (ref. " + r + ")", attach: "Enclosures:", file: "Application", attn: "Attn: ",
+    greet: { none: "Dear Sir or Madam,", f: n => "Dear Ms " + n + ",", m: n => "Dear Mr " + n + ",", x: n => "Dear " + n + "," },
+    close: { formal: "Yours sincerely,", modern: "Kind regards," }, closeNone: { formal: "Yours faithfully,", modern: "Kind regards," },
+    co: "your company",
+    intro: (o) => o.modern
+      ? `The ${o.job} position at ${o.coDat} caught my attention straight away${o.source ? " – I came across it on " + o.source : ""}. I would therefore like to apply.`
+      : (o.source ? `I read your advertisement for the position of ${o.job} on ${o.source} with great interest and would like to apply to ${o.coDat}.` : `I am writing to apply for the position of ${o.job} at ${o.coDat}.`),
+    now: (r, c) => `I currently work as ${r}${c ? " at " + c : ""}`, past: (r, c) => `Most recently I worked as ${r}${c ? " at " + c : ""}`,
+    years: n => ` and bring ${n} years of professional experience.`, dot: ".",
+    tasks: l => ` Highlights of this role: ${l.join("; ")}.`,
+    edu: (dg, sc) => `My education (${dg}${sc ? ", " + sc : ""}) has given me a solid foundation for this role.`,
+    skills: l => `I am proficient in ${l}.`, strengths: s => `My strengths include ${s}.`,
+    motiv: () => "What appeals to me most is the opportunity to contribute my skills and keep developing within your team.",
+    avail: s => `I am available ${s}.`, salary: s => `My salary expectation is ${s}.`,
+    end: m => m ? "I look forward to convincing you in a personal interview." : "I would be delighted to discuss my application with you in a personal interview.",
+    mod: {
+      now: (r, c) => `I'm currently working as ${r}${c ? " at " + c : ""}`,
+      years: n => ` and have gained ${n} years of experience along the way.`, tasks: l => ` Day to day: ${l.join("; ")}.`,
+      skills: l => `I work confidently with ${l}.`, strengths: s => `What sets me apart: ${s}.`,
+      motiv: () => "I'd love to bring my skills to your team and grow with you.",
+      avail: s => `I can start ${s}.`, salary: s => `My salary expectation: ${s}.`
+    }
+  },
+  hu: {
+    subject: j => "Pályázat – " + j, ref: r => " (hivatkozási szám: " + r + ")", attach: "Mellékletek:", file: "Palyazat", attn: "Kapcsolattartó: ",
+    greet: { none: "Tisztelt Hölgyem/Uram!", f: n => "Tisztelt " + n + " Asszony!", m: n => "Tisztelt " + n + " Úr!", x: n => "Tisztelt " + n + "!" },
+    close: { formal: "Tisztelettel,", modern: "Üdvözlettel," },
+    co: "az Önök cégénél",
+    intro: (o) => o.modern
+      ? `A(z) ${o.job} pozíció ${o.coDat} azonnal felkeltette az érdeklődésemet${o.source ? " – a(z) " + o.source + " oldalon találtam rá" : ""}. Ezért jelentkezem.`
+      : (o.source ? `Nagy érdeklődéssel olvastam a(z) ${o.source} oldalon megjelent álláshirdetésüket a(z) ${o.job} pozícióra. Ezúton jelentkezem ${o.coDat}.` : `Ezúton jelentkezem a(z) ${o.job} pozícióra ${o.coDat}.`),
+    now: (r, c) => `Jelenleg ${r} munkakörben dolgozom${c ? " a(z) " + c + " cégnél" : ""}`, past: (r, c) => `Legutóbb ${r} munkakörben dolgoztam${c ? " a(z) " + c + " cégnél" : ""}`,
+    years: n => `, összesen ${n} év szakmai tapasztalattal rendelkezem.`, dot: ".",
+    tasks: l => ` Feladataim közé tartozott: ${l.join("; ")}.`,
+    edu: (dg, sc) => `Tanulmányaim (${dg}${sc ? ", " + sc : ""}) szilárd alapot adtak ehhez a feladathoz.`,
+    skills: l => `Magabiztosan használom a következőket: ${l}.`, strengths: s => `Erősségeim közé tartozik: ${s}.`,
+    motiv: () => "Különösen vonz a lehetőség, hogy tudásomat kamatoztathatom, és a csapatukban tovább fejlődhetek.",
+    avail: s => `${s.charAt(0).toUpperCase() + s.slice(1)} állok rendelkezésükre.`, salary: s => `Bérigényem: ${s}.`,
+    end: m => m ? "Szívesen megismerkednék Önökkel egy személyes beszélgetés keretében." : "Örülnék, ha személyes beszélgetésen mutatkozhatnék be.",
+    mod: {
+      years: n => `, és közben ${n} év tapasztalatot gyűjtöttem.`, tasks: l => ` A mindennapjaim: ${l.join("; ")}.`,
+      skills: l => `Magabiztosan dolgozom ezekkel: ${l}.`, strengths: s => `Ami engem jellemez: ${s}.`,
+      motiv: () => "Szeretném a tudásomat beépíteni a csapatukba, és együtt fejlődni Önökkel.",
+      avail: s => `${s.charAt(0).toUpperCase() + s.slice(1)} tudok kezdeni.`
+    }
+  }
+};
+const lcStrip = s => String(s || "").trim().replace(/[.;,!\s]+$/, "");
+function letterBody(d, lt) { // Brieftext (ohne Anrede/Gruß) aus Lebenslauf-Daten + Angaben
+  const lang = LETTER[d.lang] ? d.lang : "de", modern = lt.tone === "modern", T = modern ? Object.assign({}, LETTER[lang], LETTER[lang].mod) : LETTER[lang];
+  const job = (lt.job || "").trim() || (d.headline || "").trim() || "…", company = (lt.company || "").trim();
+  const coDat = lang === "hu" ? (company ? `a(z) ${company} cégnél` : T.co) : (company || T.co);
+  const source = (lt.source || "").trim();
+  const jobs = (d.jobs || []).filter(e => e && (e.role || e.company)), edu = (d.edu || []).filter(e => e && (e.degree || e.school));
+  const out = [];
+  out.push(T.intro({ job, coDat, source, modern }));
+  // Erfahrung
+  let p2 = "";
+  if (jobs.length) {
+    const lj = jobs[0], cur = !(lj.to || "").trim(), role = (lj.role || lj.company || "").trim(), comp = lj.role ? (lj.company || "").trim() : "";
+    p2 = (cur ? T.now : T.past)(role, comp);
+    const ys = jobs.map(e => parseInt(((e.from || "").match(/(\d{4})/) || [])[1], 10)).filter(Boolean), yrs = ys.length ? new Date().getFullYear() - Math.min.apply(null, ys) : 0;
+    p2 += yrs >= 2 ? T.years(yrs) : T.dot;
+    const tk = String(lj.details || "").split("\n").map(lcStrip).filter(Boolean).slice(0, 2);
+    if (tk.length) p2 += T.tasks(tk);
+  } else if (edu.length) { const e = edu[0]; p2 = T.edu((e.degree || "").trim() || (e.school || "").trim(), e.degree ? (e.school || "").trim() : ""); }
+  const its = []; String(d.it || "").split("\n").map(s => s.trim()).filter(Boolean).forEach(l => { const m = l.match(/^[^:]{1,40}:\s*(.+)$/); (m ? m[1].split(/\s*[,;]\s*/) : [l]).forEach(x => { x = x.trim(); if (x && its.indexOf(x) < 0) its.push(x); }); });
+  its.length = Math.min(its.length, 4);
+  if (its.length) p2 += (p2 ? " " : "") + T.skills(its.join(", "));
+  if (p2) out.push(p2);
+  // Stärken + Motivation
+  const st = lcStrip(lt.strengths), mo = String(lt.motivation || "").trim();
+  const p3 = [st ? T.strengths(st) : "", mo || T.motiv()].filter(Boolean).join(" ");
+  out.push(p3);
+  // Verfügbarkeit, Gehalt, Schluss
+  const start = lcStrip(lt.start), sal = lcStrip(lt.salary);
+  out.push([start ? T.avail(start) : "", sal ? T.salary(sal) : "", T.end(modern)].filter(Boolean).join(" "));
+  return out.join("\n\n");
+}
+const LETTER_LAYOUTS = [["klassisch", "Klassisch"], ["schlicht", "Schlicht"], ["band", "Farbband"], ["balken", "Balken links"], ["zentriert", "Zentriert"], ["zweispaltig", "Kopf zweispaltig"], ["spalte", "Seitenspalte"], ["box", "Namensbox"], ["elegant", "Elegant (Serif)"]];
+function buildLetterHtml(d, layoutIn, lt, forPrint, fit) {
+  applyLang(d && d.lang);
+  const lang = LETTER[d.lang] ? d.lang : "de", T = LETTER[lang];
+  const Ly = sanitizeLayout(layoutIn || DEFAULT_LAYOUT), a = safeColor(lt.accent || Ly.accent, "white"), fs = Ly.baseSize + 0.5;
+  const lay = LETTER_LAYOUTS.some(x => x[0] === lt.layout) ? lt.layout : "klassisch";
+  const font = lt.font || (lay === "elegant" ? "Georgia" : Ly.font);
+  const d2 = Object.assign({}, d, { signPlace: lt.place || d.city || "", signDate: lt.date || "" });
+  const X = prepare(d2, Ly), F = fit && fit < 1 ? fit : 1, C2 = (2 / F).toFixed(3) + "cm", M = forPrint ? C2 : (76 / F).toFixed(1) + "px";
+  const base = (size, color, extra) => `font-family:'${font}',Arial,sans-serif;font-size:${size || fs}pt;color:${color || "#222222"};${extra || ""}`;
+  const P = (style, inner) => `<p style="${style}">${inner}</p>`;
+  const nl = s => esc(s).replace(/\n/g, "<br>");
+  const onA = contrastHex(a, "#ffffff") < 3.2 ? "#111827" : "#ffffff";
+  const contactBits = [d.phone, d.email, d.web].map(s => (s || "").trim()).filter(Boolean);
+  const name = esc(X.fullName || ""), line1 = esc([X.addr].concat(contactBits).filter(Boolean).join("  ·  "));
+  const stack = [X.addr].concat(contactBits).filter(Boolean);
+  let head = "", side = "";
+  if (lay === "klassisch") head = P(base(fs + 6, a, "font-weight:bold;margin:0 0 3pt 0;"), name) + P(base(fs - 1, "#555555", "margin:0;"), line1) + `<div style="height:0;border-top:1.5pt solid ${a};margin:8pt 0 26pt 0;"></div>`;
+  else if (lay === "schlicht") head = P(base(fs + 5, "#111111", "font-weight:600;margin:0 0 3pt 0;"), name) + P(base(fs - 1, "#666666", "margin:0 0 28pt 0;"), line1);
+  else if (lay === "band") head = `<div style="background-color:${a};margin:-${M} -${M} 26pt -${M};padding:${M} ${M} 16pt ${M};">` + P(base(fs + 7, onA, "font-weight:bold;margin:0 0 4pt 0;"), name) + P(base(fs - 1, onA, "margin:0;"), line1) + `</div>`;
+  else if (lay === "balken") head = `<div style="border-left:4pt solid ${a};padding:1pt 0 1pt 10pt;margin:0 0 28pt 0;">` + P(base(fs + 6, a, "font-weight:bold;margin:0 0 3pt 0;"), name) + P(base(fs - 1, "#555555", "margin:0;"), line1) + `</div>`;
+  else if (lay === "zentriert") head = P(base(fs + 7, a, "font-weight:bold;margin:0 0 4pt 0;text-align:center;"), name) + P(base(fs - 1, "#555555", "margin:0;text-align:center;"), line1) + `<div style="height:0;border-top:1pt solid ${a};margin:10pt 30% 26pt 30%;"></div>`;
+  else if (lay === "zweispaltig") head = `<div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.5pt solid ${a};padding-bottom:8pt;margin:0 0 26pt 0;"><div style="font-family:'${font}',Arial,sans-serif;font-size:${fs + 8}pt;font-weight:bold;color:${a};line-height:1.15;">${name}</div><div style="${base(fs - 1, "#555555", "text-align:right;line-height:1.4;")}">${stack.map(esc).join("<br>")}</div></div>`;
+  else if (lay === "box") head = `<div style="background-color:${a};border-radius:6pt;padding:11pt 16pt;">` + P(base(fs + 6, onA, "font-weight:bold;margin:0;"), name) + `</div>` + P(base(fs - 1, "#555555", "margin:6pt 0 26pt 0;"), line1);
+  else if (lay === "elegant") head = P(base(fs + 4, "#222222", "margin:0 0 5pt 0;text-align:center;letter-spacing:3pt;text-transform:uppercase;"), name) + P(base(fs - 1, "#666666", "margin:0;text-align:center;"), line1) + `<div style="height:0;border-top:3px double ${a};margin:12pt 0 26pt 0;"></div>`;
+  else if (lay === "spalte") side = P(base(fs + 4, a, "font-weight:bold;margin:0 0 8pt 0;"), name) + stack.map(x => P(base(fs - 1.5, "#444444", "margin:0 0 5pt 0;overflow-wrap:anywhere;"), esc(x))).join("");
+  const company = (lt.company || "").trim(), contact = (lt.contact || "").trim();
+  const rec = [company, contact ? T.attn + contact : "", (lt.street || "").trim(), [lt.zip, lt.city].map(s => (s || "").trim()).filter(Boolean).join(" ")].filter(Boolean);
+  const recipient = rec.length ? P(base(fs, "#222222", "margin:0 0 22pt 0;"), rec.map(esc).join("<br>")) : "";
+  const dateLine = P(base(fs, "#222222", "margin:0 0 22pt 0;text-align:right;"), esc(X.signLine));
+  const job = (lt.job || "").trim() || (d.headline || "").trim();
+  const subj = P(base(fs + 0.5, "#111111", "font-weight:bold;margin:0 0 16pt 0;"), esc(T.subject(job || "…") + ((lt.ref || "").trim() ? T.ref(lt.ref.trim()) : "")));
+  const full = [d.first, d.last].map(s => (s || "").trim()).filter(Boolean).join(" ");
+  const gn = (lt.gender || "none");
+  const toks = contact.replace(/^(frau|herr|ms|mr|mrs)\.?\s+/i, "").split(/\s+/).filter(Boolean), sur = toks.pop() || "";
+  const cn = lang === "hu" ? toks.concat(sur).join(" ") : toks.filter(x => /^(dr|mag|di|dipl|ing|prof|univ|mba|msc|ba)\.?$/i.test(x)).concat(sur).join(" ");
+  let greet = T.greet.none;
+  if (contact && gn === "f") greet = T.greet.f(cn); else if (contact && gn === "m") greet = T.greet.m(cn); else if (contact && gn === "x") greet = T.greet.x(contact);
+  const named = greet !== T.greet.none, tone = lt.tone === "modern" ? "modern" : "formal";
+  const closeTxt = (!named && T.closeNone ? T.closeNone : T.close)[tone];
+  const body = String(lt.body || "").split(/\n\s*\n/).map(s => s.trim()).filter(Boolean).map(s => P(base(fs, "#222222", "margin:0 0 10pt 0;text-align:left;"), nl(s))).join("");
+  const att = String(lt.attach || "").split("\n").map(s => s.trim()).filter(Boolean);
+  const attach = att.length ? P(base(fs - 1, "#555555", "margin:26pt 0 0 0;"), "<b>" + esc(T.attach) + "</b> " + att.map(esc).join(", ")) : "";
+  const main = recipient + dateLine + subj + P(base(fs, "#222222", "margin:0 0 12pt 0;"), esc(greet)) + body +
+    P(base(fs, "#222222", "margin:16pt 0 0 0;"), esc(closeTxt)) + `<div style="height:42pt;"></div>` + P(base(fs, "#222222", "margin:0;font-weight:bold;"), name || esc(full)) + attach;
+  const inner = lay === "spalte"
+    ? `<div style="display:flex;align-items:stretch;gap:20pt;min-height:880px;"><div style="width:27%;flex:none;background-color:${tint(a, 0.9)};border-top:4pt solid ${a};padding:14pt 12pt;">${side}</div><div style="flex:1;min-width:0;padding-top:4pt;">${main}</div></div>`
+    : head + main;
+  return `<div style="zoom:${F};${forPrint ? "padding:" + C2 + ";box-sizing:border-box;" : ""}${base(fs)}line-height:1.45;">${inner}</div>`;
 }
 
 /* ===================================================================
@@ -1411,6 +1687,32 @@ const I18N_ROWS = [
   ["„{0}“ wurde gespeichert. (Der Text im PDF ist durchsuchbar und markierbar.)", "“{0}” has been saved. (The text in the PDF is searchable and selectable.)", "A(z) „{0}” elmentve. (A PDF szövege kereshető és kijelölhető.)"],
   ["Das PDF konnte nicht erstellt werden: {0}", "The PDF could not be created: {0}", "A PDF-et nem sikerült létrehozni: {0}"],
   ["Mein Lebenslauf", "My CV", "Önéletrajzom"],
+  ["Anschreiben", "Cover letter", "Motivációs levél"],
+  ["Hauptmenü", "Main menu", "Főmenü"], ["☰ Hauptmenü", "☰ Main menu", "☰ Főmenü"], ["← Hauptmenü", "← Main menu", "← Főmenü"],
+  ["Was möchtest du erstellen?", "What would you like to create?", "Mit szeretnél készíteni?"],
+  ["Vorlage wählen, Daten eingeben und als PDF speichern", "Choose a template, enter your details and save as PDF", "Válassz sablont, add meg az adataidat, és mentsd PDF-ként"],
+  ["Ein Anschreiben passend zu deinem Lebenslauf erzeugen", "Create a cover letter to match your CV", "Készíts az önéletrajzodhoz illő motivációs levelet"],
+  ["Verwalten", "Manage", "Kezelés"],
+  ["Layout", "Layout", "Elrendezés"], ["Wie Lebenslauf", "Like CV", "Mint az önéletrajz"], ["Farbband", "Colour band", "Színes sáv"], ["Kopf zweispaltig", "Two-column header", "Kétoszlopos fejléc"], ["Seitenspalte", "Side column", "Oldalsó oszlop"], ["Namensbox", "Name box", "Névdoboz"], ["Elegant (Serif)", "Elegant (serif)", "Elegáns (talpas)"],
+  ["Ton geändert – klicke auf „Text neu erzeugen“, um den Brieftext anzupassen (dein bearbeiteter Text bleibt sonst erhalten).", "Tone changed – click “Regenerate text” to update the letter (otherwise your edited text is kept).", "A hangnem megváltozott – kattints a „Szöveg újragenerálása” gombra a levél frissítéséhez (különben a szerkesztett szöveged megmarad)."],
+  ["Bewerbungsschreiben", "Cover letter", "Motivációs levél"],
+  ["Der Brieftext wird aus deinen Lebenslauf-Daten und den Angaben unten erzeugt – danach kannst du ihn frei bearbeiten. Absender ist dein Name aus Schritt 2.", "The letter text is generated from your CV details and the information below – afterwards you can edit it freely. The sender is your name from step 2.", "A levél szövege az önéletrajzi adataidból és az alábbi megadásokból készül – utána szabadon szerkesztheted. A feladó a 2. lépésben megadott neved."],
+  ["Empfänger", "Recipient", "Címzett"], ["Firma", "Company", "Cég"],
+  ["Ansprechperson", "Contact person", "Kapcsolattartó"], ["z. B. Anna Muster", "e.g. Anna Example", "pl. Minta Anna"],
+  ["Anrede", "Salutation", "Megszólítás"], ["Unbekannt (Damen und Herren)", "Unknown (Sir or Madam)", "Ismeretlen (Hölgyem/Uram)"], ["Frau", "Ms", "Asszony"], ["Herr", "Mr", "Úr"], ["Neutral (Vor- und Nachname)", "Neutral (first and last name)", "Semleges (teljes név)"],
+  ["Stelle", "Job", "Állás"], ["Stelle / Position", "Job / position", "Állás / pozíció"], ["Kennzahl", "Reference no.", "Hivatkozási szám"], ["(optional)", "(optional)", "(nem kötelező)"],
+  ["Gefunden auf", "Found on", "Hol találtad"], ["z. B. karriere.at", "e.g. LinkedIn", "pl. profession.hu"],
+  ["Verfügbar ab", "Available from", "Rendelkezésre állás"], ["z. B. ab sofort", "e.g. from 1 January", "pl. azonnal"],
+  ["Gehaltsvorstellung", "Salary expectation", "Bérigény"], ["z. B. EUR 3.000 brutto/Monat", "e.g. EUR 3,000 gross/month", "pl. bruttó 900 000 Ft/hó"],
+  ["Inhalt", "Content", "Tartalom"], ["Ton", "Tone", "Hangnem"], ["Förmlich", "Formal", "Hivatalos"], ["Modern & persönlich", "Modern & personal", "Modern és személyes"],
+  ["Meine Stärken", "My strengths", "Erősségeim"], ["z. B. Teamfähigkeit, Zuverlässigkeit, analytisches Denken", "e.g. teamwork, reliability, analytical thinking", "pl. csapatmunka, megbízhatóság, analitikus gondolkodás"],
+  ["Warum diese Firma?", "Why this company?", "Miért ez a cég?"], ["(eigene Worte)", "(in your own words)", "(saját szavaiddal)"],
+  ["z. B. Ich verfolge Ihre Projekte im Bereich … seit Jahren und möchte …", "e.g. I have followed your projects in … for years and would like to …", "pl. Évek óta követem a … területen végzett projektjeiket, és szeretnék …"],
+  ["Anlagen", "Enclosures", "Mellékletek"], ["Lebenslauf Zeugnisse", "CV\nReferences", "Önéletrajz\nBizonyítványok"],
+  ["Brieftext", "Letter text", "A levél szövege"],
+  ["Wird automatisch erzeugt, solange du ihn nicht selbst änderst. Eigene Änderungen bleiben erhalten.", "Generated automatically until you change it yourself. Your own changes are kept.", "Automatikusan készül, amíg te magad nem módosítod. A saját módosításaid megmaradnak."],
+  ["Text neu erzeugen", "Regenerate text", "Szöveg újragenerálása"],
+  ["Tipp: Lege für jede Bewerbung eine Kopie des Lebenslaufs an (Zahnrad oben rechts) – dann hat jede Bewerbung ihr eigenes Anschreiben.", "Tip: create a copy of your CV for each application (gear at the top right) – then every application has its own cover letter.", "Tipp: minden pályázathoz készíts másolatot az önéletrajzról (fogaskerék jobb felül) – így minden pályázatnak saját levele lesz."],
   ["Wirklich löschen?", "Really delete?", "Biztosan törlöd?"],
   ["Wirklich zurücksetzen? Alle Eingaben und eigenen Vorlagen werden gelöscht.", "Really reset? All entries and own templates will be deleted.", "Biztosan visszaállítod? Minden adat és saját sablon törlődik."]
 ];
@@ -1523,6 +1825,39 @@ function catOf(p) {
 }
 
 const state = { photo: "", photoSrc: "", photoCrop: null, layout: sanitizeLayout(PRESETS[0].layout), layoutId: "classic", custom: [], filter: "alle", step: 1, silhouette: "", pages: 1, onePage: false, fit: 1 };
+
+/* ---------- Dokument: Lebenslauf oder Anschreiben ---------- */
+let curDoc = "cv";
+const docLayout = () => curDoc === "letter" ? sanitizeLayout(Object.assign({}, state.layout, { page: "white", columns: "single", header: "plain", structure: "normal" })) : state.layout;
+function collectLetter() {
+  const o = {}; $$("[data-lt]").forEach(el => { o[el.dataset.lt] = el.value; });
+  o.edited = $("#ltBody").dataset.edited === "1"; return o;
+}
+function populateLetter(l) {
+  l = l || {};
+  $$("[data-lt]").forEach(el => { const v = l[el.dataset.lt]; el.value = v == null ? (el.tagName === "SELECT" && el.options[0] ? el.options[0].value : "") : v; });
+  $("#ltBody").dataset.edited = l.edited ? "1" : "";
+}
+function renderLetterGallery() {
+  const g = $("#ltGallery"); if (!g) return;
+  const lt = collectLetter(), cur = lt.layout || "klassisch", s = demoSample();
+  const d = Object.assign({}, s, { photo: "" }), lay = sanitizeLayout(Object.assign({}, state.layout, { page: "white", columns: "single", header: "plain", structure: "normal" }));
+  const dl = { company: "Muster GmbH", job: s.headline || "", tone: lt.tone, accent: lt.accent, font: lt.font, gender: "none", attach: "" };
+  dl.body = letterBody(d, dl);
+  g.innerHTML = ""; g.style.minHeight = "";
+  LETTER_LAYOUTS.forEach(x => {
+    const card = document.createElement("div"); card.className = "card" + (x[0] === cur ? " sel" : ""); card.dataset.lay = x[0]; card.tabIndex = 0; card.setAttribute("role", "button");
+    card.innerHTML = `<div class="thumb"></div><div class="cname"><span>${esc(t(x[1]))}</span></div>`; g.appendChild(card);
+    scaleInto($(".thumb", card), buildLetterHtml(d, lay, Object.assign({}, dl, { layout: x[0] }), false, 1), true, null);
+  });
+  $$("#ltSwatches button").forEach(b => b.classList.toggle("on", (b.dataset.color || "") === (lt.accent || "")));
+}
+function letterSync() { // Brieftext automatisch erzeugen, solange er nicht selbst bearbeitet wurde
+  const lt = collectLetter();
+  if (!lt.edited) { const b = letterBody(collect(), lt), ta = $("#ltBody"); if (ta.value !== b) ta.value = b; lt.body = b; }
+  return lt;
+}
+const docHtml = (d, layout, forPrint, fit) => curDoc === "letter" ? buildLetterHtml(d, layout, letterSync(), forPrint, fit) : buildHtml(d, layout, forPrint, fit);
 
 /* ---------- Meldungen ---------- */
 let statusTimer = null;
@@ -1743,10 +2078,10 @@ function renderPreview() {
   const wrap = $("#sheetWrap"), sheet = $("#sheet");
   const demo = state.step === 1;
   const data = demo ? Object.assign({}, demoSample(), { photo: state.silhouette, showSignature: true }) : collect();
-  const fr = state.onePage ? computeFit(data, state.layout) : { f: 1, ok: true };
+  const dl = docLayout(), fr = state.onePage ? computeFit(data, dl) : { f: 1, ok: true };
   state.fit = fr.f;
-  sheet.style.background = pageBackground(state.layout);
-  sheet.innerHTML = buildHtml(data, state.layout, false, fr.f);
+  sheet.style.background = pageBackground(dl);
+  sheet.innerHTML = docHtml(data, dl, false, fr.f);
   const k = wrap.clientWidth ? Math.min(1.25, wrap.clientWidth / PAGE_PX) : 1;
   sheet.style.transform = `scale(${k})`;
   wrap.style.height = Math.ceil(sheet.offsetHeight * k) + "px";
@@ -1931,15 +2266,39 @@ function importLayout() {
 
 /* ---------- Schritte ---------- */
 function showStep(n) {
-  state.step = n;
+  state.step = n; curDoc = n === 5 ? "letter" : "cv"; setDoc(curDoc);
+  const bd = document.body.dataset;
+  if (n === 5) { bd.mode = "letter"; } else if (n <= 3) { bd.mode = "cv"; state.cvStep = n; } else if (bd.mode === "home") bd.mode = "cv";
+  if (n !== 4) state.prev = n; const b4 = $("#back4"); if (b4) b4.dataset.go = String(state.prev || 1);
   $$(".step").forEach(s => s.classList.toggle("active", s.id === "step" + n));
   $$("#stepper button").forEach(b => b.classList.toggle("on", Number(b.dataset.go) === n));
   const cc = $("#curCv"); if (cc) cc.hidden = n === 4;
   if (n === 1) renderGallery();
   if (n === 4) renderCvList();
+  if (n === 5) renderLetterGallery();
   renderPreview();
   const top = $("#panel").getBoundingClientRect().top + window.scrollY - 60;
   if (window.innerWidth <= 900 || window.scrollY > top) window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+}
+function fillLetterOptions() {
+  $("#ltFont").innerHTML = `<option value="">${esc("Wie Lebenslauf")}</option>` + FONTS.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
+  $("#ltSwatches").innerHTML = `<button type="button" data-color="" class="txt">${esc("Wie Lebenslauf")}</button>` + SWATCHES.map(c => `<button type="button" data-color="${c}" style="background:${c}" title="${c}" aria-label="${c}"></button>`).join("");
+}
+function initLetterUi() {
+  const setHidden = (k, v) => { const el = $('[data-lt="' + k + '"]'); el.value = v; el.dispatchEvent(new Event("input", { bubbles: true })); };
+  $("#ltGallery").addEventListener("click", e => { const c = e.target.closest(".card"); if (!c) return; setHidden("layout", c.dataset.lay); $$("#ltGallery .card").forEach(x => x.classList.toggle("sel", x === c)); });
+  $("#ltGallery").addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("card")) { e.preventDefault(); e.target.click(); } });
+  $("#ltSwatches").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; setHidden("accent", b.dataset.color); renderLetterGallery(); });
+  $("#ltFont").addEventListener("change", renderLetterGallery);
+  $('[data-lt="tone"]').addEventListener("change", renderLetterGallery);
+}
+function showMode(m) { // Hauptmenü ↔ Lebenslauf ↔ Bewerbungsschreiben
+  if (m === "home") {
+    document.body.dataset.mode = "home"; curDoc = "cv"; setDoc("cv");
+    const e = cvEntry(), n = $("#homeCvName"); if (e && n) n.textContent = e.name;
+    window.scrollTo(0, 0); return;
+  }
+  showStep(m === "letter" ? 5 : (state.cvStep || 1));
 }
 function openAcc(id) {
   showStep(2);
@@ -1992,7 +2351,7 @@ function updateChecks() {
 function measureHeight(d, layout, f) {
   const h = document.createElement("div");
   h.style.cssText = `position:absolute;left:-10000px;top:0;width:${PAGE_PX}px;padding:${PAD_PX}px;box-sizing:border-box;`;
-  h.innerHTML = buildHtml(d, layout, false, f);
+  h.innerHTML = docHtml(d, layout, false, f);
   document.body.appendChild(h);
   const H = h.offsetHeight - 2 * PAD_PX; h.remove();
   return H;
@@ -2005,7 +2364,7 @@ function computeFit(d, layout) {
   for (let i = 0; i < 7; i++) { const mid = (lo + hi) / 2; if (measureHeight(d, layout, mid) <= LIM) lo = mid; else hi = mid; }
   return { f: Math.floor(lo * 100) / 100, ok: true };
 }
-const currentFit = (d) => state.onePage ? computeFit(d, state.layout).f : 1;
+const currentFit = (d) => state.onePage ? computeFit(d, docLayout()).f : 1;
 
 /* ---------- PDF direkt (ohne Druckdialog): Seiten als Bild in eine PDF-Datei ---------- */
 function buildPdf(pages) {
@@ -2071,8 +2430,8 @@ async function renderPdfBlob(d, layout, fit) {
   const holder = document.createElement("div");
   holder.style.cssText = `position:absolute;left:-10000px;top:0;width:${W}px;`;
   holder.innerHTML = bleed(layout)
-    ? `<div style="width:${W}px;">${buildHtml(d, layout, true, fit)}</div>`
-    : `<div style="width:${W}px;box-sizing:border-box;padding:${PAD_PX}px;background:${pb};">${buildHtml(d, layout, false, fit)}</div>`;
+    ? `<div style="width:${W}px;">${docHtml(d, layout, true, fit)}</div>`
+    : `<div style="width:${W}px;box-sizing:border-box;padding:${PAD_PX}px;background:${pb};">${docHtml(d, layout, false, fit)}</div>`;
   document.body.appendChild(holder);
   try {
     const node = holder.firstElementChild, box = node.getBoundingClientRect(), H = Math.ceil(box.height);
@@ -2121,7 +2480,7 @@ async function downloadPdfDirect() {
   const d = collect(), name = fileBase(d) + ".pdf";
   status("PDF wird erstellt …", "ok");
   try {
-    const blob = await renderPdfBlob(d, state.layout, currentFit(d));
+    const blob = await renderPdfBlob(d, docLayout(), currentFit(d));
     if (!(await saveBlob(blob, name))) { status("Speichern abgebrochen.", "err"); return; }
     status(t("„{0}“ wurde gespeichert. (Der Text im PDF ist durchsuchbar und markierbar.)", name), "ok");
   } catch (e) { status(t("Das PDF konnte nicht erstellt werden: {0}", e && e.message ? e.message : e), "err"); }
@@ -2135,12 +2494,12 @@ function printCv() {
   const fitV = currentFit(d), one = state.onePage;
   // „Alles auf einer Seite": harte Höhe, damit auch bei abweichender Schrift/Druckengine keine 2. Seite entsteht
   $("#printArea").innerHTML = one
-    ? `<div style="height:296mm;overflow:hidden;break-after:avoid;page-break-after:avoid;break-inside:avoid;">${buildHtml(d, state.layout, true, fitV)}</div>`
-    : buildHtml(d, state.layout, true, fitV);
+    ? `<div style="height:296mm;overflow:hidden;break-after:avoid;page-break-after:avoid;break-inside:avoid;">${docHtml(d, docLayout(), true, fitV)}</div>`
+    : docHtml(d, docLayout(), true, fitV);
   let pst = null;
   { // immer randlos (@page-Rand 0): so blendet der Browser Adresse/Datum/Seitenzahl nicht ein; Rand kommt aus dem Inhalt
     pst = document.createElement("style");
-    pst.textContent = `@page{size:A4;margin:0}@media print{html,body{background:${pageBackground(state.layout)} !important;}}`;
+    pst.textContent = `@page{size:A4;margin:0}@media print{html,body{background:${pageBackground(docLayout())} !important;}}`;
     document.head.appendChild(pst);
   }
   document.title = fileBase(d); // wird zum Standard-Dateinamen des PDFs
@@ -2177,7 +2536,7 @@ function backupLoad(file) {
       (p.eigene || []).forEach(c => { if (c && c.id && c.name && !state.custom.some(x => x.id === c.id)) state.custom.push({ id: String(c.id), name: String(c.name).slice(0, 40), layout: sanitizeLayout(c.layout) }); });
       lsSet(KEY_LAYOUTS, state.custom);
       if (Array.isArray(p.alle) && p.alle.length) { // Sicherung mit mehreren Lebensläufen
-        cvs.list = p.alle.filter(c => c && c.id && c.data).map(c => ({ id: String(c.id), name: String(c.name || "Lebenslauf").slice(0, 40), data: c.data, layoutId: c.layoutId || "", layout: sanitizeLayout(c.layout), updated: Date.now() }));
+        cvs.list = p.alle.filter(c => c && c.id && c.data).map(c => ({ id: String(c.id), name: String(c.name || "Lebenslauf").slice(0, 40), data: c.data, letter: c.letter || {}, layoutId: c.layoutId || "", layout: sanitizeLayout(c.layout), updated: Date.now() }));
         if (!cvs.list.length) throw new Error("leer");
         cvs.cur = cvs.list.some(c => c.id === p.aktuell) ? p.aktuell : cvs.list[0].id;
         lsSet(KEY_CVS, { cur: cvs.cur, list: cvs.list }); loadCv(cvEntry()); status(t("Daten geladen ({0} Lebensläufe).", cvs.list.length), "ok"); return;
@@ -2198,7 +2557,7 @@ const cvs = { cur: "", list: [] };
 const newCvId = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const cvEntry = () => cvs.list.filter(c => c.id === cvs.cur)[0];
 function saveCvs() {
-  const e = cvEntry(); if (e) { e.data = collect(); e.layoutId = state.layoutId; e.layout = state.layout; e.updated = Date.now(); }
+  const e = cvEntry(); if (e) { e.data = collect(); e.letter = collectLetter(); e.layoutId = state.layoutId; e.layout = state.layout; e.updated = Date.now(); }
   const ok = lsSet(KEY_CVS, { cur: cvs.cur, list: cvs.list });
   if (!ok) status("Speicher voll – bitte nicht benötigte Lebensläufe löschen oder Daten als Datei sichern.", "err");
   return ok;
@@ -2218,7 +2577,7 @@ function renderCvBar() {
   renderCvList();
 }
 function loadCv(e) {
-  populate(e.data || EMPTY);
+  populate(e.data || EMPTY); populateLetter(e.letter);
   state.layout = sanitizeLayout(e.layout || state.layout); state.layoutId = e.layoutId || "";
   if (state.layoutId && !allLayouts().some(x => x.id === state.layoutId)) state.layoutId = "";
   renderChips(); renderGallery(); syncControls(); updateLayoutLabel(); renderPreview(); renderCvBar();
@@ -2227,13 +2586,13 @@ function switchCv(id) { saveCvs(); const e = cvs.list.filter(c => c.id === id)[0
 function uniqueName(base) { let n = base, i = 2; while (cvs.list.some(c => c.name === n)) n = base + " " + i++; return n; }
 function newCv() {
   saveCvs();
-  const e = { id: newCvId(), name: uniqueName(t("Lebenslauf")), data: Object.assign(JSON.parse(JSON.stringify(EMPTY)), { lang: curLang() }), layoutId: state.layoutId, layout: state.layout, updated: Date.now() };
+  const e = { id: newCvId(), name: uniqueName(t("Lebenslauf")), data: Object.assign(JSON.parse(JSON.stringify(EMPTY)), { lang: curLang() }), letter: {}, layoutId: state.layoutId, layout: state.layout, updated: Date.now() };
   cvs.list.push(e); cvs.cur = e.id; lsSet(KEY_CVS, { cur: cvs.cur, list: cvs.list }); loadCv(e);
   status("Neuer, leerer Lebenslauf angelegt.", "ok"); showStep(2); $("#acc_personal").open = true;
 }
 function copyCv() {
   saveCvs(); const src = cvEntry();
-  const e = { id: newCvId(), name: uniqueName(src.name.replace(/ \(Kopie\)( \d+)?$/, "") + " (Kopie)"), data: JSON.parse(JSON.stringify(src.data)), layoutId: src.layoutId, layout: src.layout, updated: Date.now() };
+  const e = { id: newCvId(), name: uniqueName(src.name.replace(/ \(Kopie\)( \d+)?$/, "") + " (Kopie)"), data: JSON.parse(JSON.stringify(src.data)), letter: JSON.parse(JSON.stringify(src.letter || {})), layoutId: src.layoutId, layout: src.layout, updated: Date.now() };
   cvs.list.push(e); cvs.cur = e.id; lsSet(KEY_CVS, { cur: cvs.cur, list: cvs.list }); loadCv(e); status("Kopie angelegt – du arbeitest jetzt in der Kopie.", "ok");
 }
 // Zwei-Klick-Bestätigung (confirm() wird in eingebetteten Ansichten/Datei-Vorschauen oft blockiert)
@@ -2259,7 +2618,7 @@ function initCvs() {
   const e = cvEntry();
   state.layout = sanitizeLayout(e.layout || DEFAULT_LAYOUT); state.layoutId = e.layoutId || "";
   if (state.layoutId && !allLayouts().some(x => x.id === state.layoutId)) state.layoutId = "";
-  populate(e.data || EMPTY); renderCvBar();
+  populate(e.data || EMPTY); populateLetter(e.letter); renderCvBar();
   $("#cvList").addEventListener("click", ev => { const b = ev.target.closest("[data-cv]"); if (b && b.dataset.cv !== cvs.cur) switchCv(b.dataset.cv); });
   $("#cvName").addEventListener("input", ev => { const c = cvEntry(); if (!c) return; c.name = ev.target.value.slice(0, 40) || "Lebenslauf"; renderCvList(); });
   $("#cvNew").addEventListener("click", newCv); $("#cvCopy").addEventListener("click", copyCv); $("#cvDel").addEventListener("click", ev => confirmClick(ev.currentTarget, "Wirklich löschen?", "Löschen", delCv));
@@ -2269,13 +2628,15 @@ function initCvs() {
 function init() {
   state.silhouette = makeSilhouette();
   $("#sampleSelect").innerHTML = Object.keys(window.SAMPLES).map(k => `<option value="${k}">${esc(window.SAMPLES[k].label)}</option>`).join("");
-  buildLayoutControls();
+  buildLayoutControls(); fillLetterOptions();
   state.custom = (lsGet(KEY_LAYOUTS) || []).filter(c => c && c.id && c.name).map(c => ({ id: String(c.id), name: String(c.name).slice(0, 40), layout: sanitizeLayout(c.layout) }));
   initCvs();
   renderChips(); renderGallery(); syncControls(); updateLayoutLabel();
 
   // Schritte
   document.addEventListener("click", e => {
+    const mn = e.target.closest("[data-menu]"); if (mn) { showMode("home"); return; }
+    const op = e.target.closest("[data-open]"); if (op) { showMode(op.dataset.open); return; }
     const go = e.target.closest("[data-go]"); if (go) { showStep(Number(go.dataset.go)); return; }
     const acc = e.target.closest("[data-acc]"); if (acc) { openAcc(acc.dataset.acc); return; }
   });
@@ -2330,15 +2691,18 @@ function init() {
   $("#resetAll").addEventListener("click", ev => confirmClick(ev.currentTarget, "Wirklich zurücksetzen? Alle Eingaben und eigenen Vorlagen werden gelöscht.", "Alles zurücksetzen", () => {
     [KEY_DRAFT, KEY_LAYOUTS, KEY_CUR, KEY_CVS].forEach(lsDel); location.reload();
   }));
-  initPhrases();
-  $("#cvLang").addEventListener("change", () => { applySpell(); renderGallery(); renderPreview(); $$(".phr[open] .phrbox").forEach(fillPhrases); });
+  initPhrases(); initLetterUi();
+  $("#ltBody").addEventListener("input", () => { $("#ltBody").dataset.edited = "1"; });
+  $('[data-lt="tone"]').addEventListener("change", () => { if ($("#ltBody").dataset.edited === "1") status("Ton geändert – klicke auf „Text neu erzeugen“, um den Brieftext anzupassen (dein bearbeiteter Text bleibt sonst erhalten).", "ok"); });
+  $("#ltRegen").addEventListener("click", () => { $("#ltBody").dataset.edited = ""; renderPreview(); schedule(); });
+  $("#cvLang").addEventListener("change", () => { applySpell(); renderGallery(); if (curDoc === "letter") renderLetterGallery(); renderPreview(); $$(".phr[open] .phrbox").forEach(fillPhrases); });
   // Live-Vorschau + automatisches Speichern
   ["input", "change"].forEach(ev => document.addEventListener(ev, e => { if (e.target.closest("#panel")) schedule(); }));
   document.addEventListener("click", e => { if (e.target.closest("#jobs,#edu")) schedule(); });
   let rz = null;
   let lastW = window.innerWidth;
-  window.addEventListener("resize", () => { if (window.innerWidth === lastW) return; /* Handy: Adressleiste ein-/ausblenden löst nur eine Höhenänderung aus */ lastW = window.innerWidth; clearTimeout(rz); rz = setTimeout(() => { renderPreview(); if (state.step === 1) renderGallery(); }, 200); });
-  uiReady = true; uiRefresh(); renderPreview();
+  window.addEventListener("resize", () => { if (window.innerWidth === lastW) return; /* Handy: Adressleiste ein-/ausblenden löst nur eine Höhenänderung aus */ lastW = window.innerWidth; clearTimeout(rz); rz = setTimeout(() => { if (document.body.dataset.mode === "home") return; renderPreview(); if (state.step === 1) renderGallery(); }, 200); });
+  uiReady = true; uiRefresh(); renderPreview(); showMode("home");
 }
 
 window.CVMaker = { setUiLang, t, renderPdfBlob, computeFit, pageBackground, bleed, buildHtml, PRESETS, sanitizeLayout, collect, populate, state, fileBase, DEFAULT_LAYOUT };
