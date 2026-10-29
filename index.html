@@ -2313,7 +2313,8 @@ function loadLetterSample() {
   const lg = curLang(), d = collect();
   const cvEmpty = !(d.first || "").trim() && !(d.last || "").trim() && !d.jobs.some(e => e.role || e.company);
   if (cvEmpty) populate(Object.assign({}, window.SAMPLES[lg === "de" ? "dev" : lg].data, { lang: lg }));
-  const s = Object.assign({}, LETTER_SAMPLES[lg] || LETTER_SAMPLES.de, { layout: collectLetter().layout, accent: collectLetter().accent, font: collectLetter().font, edited: false });
+  const cv = collect(), fb = { de: ["Buchhalter", "Wien"], en: ["Accountant", "Vienna"], hu: ["Könyvelő", "Budapest"] }[lg] || ["Buchhalter", "Wien"];
+  const s = Object.assign({}, LETTER_SAMPLES[lg] || LETTER_SAMPLES.de, { job: (cv.headline || "").trim() || fb[0], place: (cv.city || "").trim() || fb[1], layout: collectLetter().layout, accent: collectLetter().accent, font: collectLetter().font, edited: false });
   populateLetter(s); renderPreview(); renderLetterGallery(); schedule();
   status(cvEmpty ? "Beispiel-Lebenslauf und Beispiel-Anschreiben geladen." : "Beispiel-Anschreiben geladen (dein Lebenslauf bleibt unverändert).", "ok");
 }
