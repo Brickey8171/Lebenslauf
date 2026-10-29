@@ -471,6 +471,14 @@ body:not([data-mode="cv"]) .brand p { display: none; }
     <h2>Bewerbungsschreiben</h2>
     <p class="lead">Der Brieftext wird aus deinen Lebenslauf-Daten und den Angaben unten erzeugt – danach kannst du ihn frei bearbeiten. Absender ist dein Name aus Schritt 2.</p>
 
+    <div class="box info">
+      <p>Zum Ausprobieren kannst du ein Beispiel-Anschreiben laden. Ist dein Lebenslauf noch leer, wird auch ein Beispiel-Lebenslauf geladen.</p>
+      <div class="inline">
+        <button type="button" id="ltSample">Beispiel laden</button>
+        <button type="button" id="ltClear">Formular leeren</button>
+      </div>
+    </div>
+
     <div class="box">
       <h3>Layout</h3>
       <input type="hidden" data-lt="layout"><input type="hidden" data-lt="accent">
@@ -1424,9 +1432,16 @@ function letterBody(d, lt) { // Brieftext (ohne Anrede/Gruß) aus Lebenslauf-Dat
     const tk = String(lj.details || "").split("\n").map(lcStrip).filter(Boolean).slice(0, 2);
     if (tk.length) p2 += T.tasks(tk);
   } else if (edu.length) { const e = edu[0]; p2 = T.edu((e.degree || "").trim() || (e.school || "").trim(), e.degree ? (e.school || "").trim() : ""); }
-  const its = []; String(d.it || "").split("\n").map(s => s.trim()).filter(Boolean).forEach(l => { const m = l.match(/^[^:]{1,40}:\s*(.+)$/); (m ? m[1].split(/\s*[,;]\s*/) : [l]).forEach(x => { x = x.trim(); if (x && its.indexOf(x) < 0) its.push(x); }); });
+  // „Thema: Niveau" (z. B. „MS Office: gute Kenntnisse") → das Thema; „Thema: A, B, C" → die genannten Punkte
+  const LEVEL = /(grund|gut|sehr|kenntnis|fortgeschritten|experte|expert|basis|anfänger|profi|erfahren|sicher|advanced|basic|good|fluent|proficient|intermediate|beginner|excellent|jó|kiváló|alap|haladó|közép|^[abc][12]\b|\d+\s*%|\d\s*\/\s*\d)/i;
+  const its = []; String(d.it || "").split("\n").map(s => s.trim()).filter(Boolean).forEach(l => {
+    const m = l.match(/^([^:]{1,40}):\s*(.+)$/);
+    const parts = m ? (LEVEL.test(m[2]) ? [m[1]] : m[2].split(/\s*[,;]\s*/)) : [l];
+    parts.forEach(x => { x = x.trim(); if (x && its.indexOf(x) < 0) its.push(x); });
+  });
   its.length = Math.min(its.length, 4);
-  if (its.length) p2 += (p2 ? " " : "") + T.skills(its.join(", "));
+  const joinList = a => a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " " + ({ de: "und", en: "and", hu: "és" }[lang]) + " " + a[a.length - 1];
+  if (its.length) p2 += (p2 ? " " : "") + T.skills(joinList(its));
   if (p2) out.push(p2);
   // Stärken + Motivation
   const st = lcStrip(lt.strengths), mo = String(lt.motivation || "").trim();
@@ -1693,6 +1708,11 @@ const I18N_ROWS = [
   ["Vorlage wählen, Daten eingeben und als PDF speichern", "Choose a template, enter your details and save as PDF", "Válassz sablont, add meg az adataidat, és mentsd PDF-ként"],
   ["Ein Anschreiben passend zu deinem Lebenslauf erzeugen", "Create a cover letter to match your CV", "Készíts az önéletrajzodhoz illő motivációs levelet"],
   ["Verwalten", "Manage", "Kezelés"],
+  ["Textgröße (pt):", "Text size (pt):", "Szövegméret (pt):"], ["Breite der Seitenleiste (%):", "Sidebar width (%):", "Oldalsáv szélessége (%):"], ["Namensgröße (pt):", "Name size (pt):", "Névméret (pt):"], ["Breite der Datumsspalte (%):", "Date column width (%):", "Dátumoszlop szélessége (%):"],
+  ["Formular geleert.", "Form cleared.", "Az űrlap törölve."],
+  ["Zum Ausprobieren kannst du ein Beispiel-Anschreiben laden. Ist dein Lebenslauf noch leer, wird auch ein Beispiel-Lebenslauf geladen.", "To try it out you can load a sample cover letter. If your CV is still empty, a sample CV is loaded too.", "Kipróbáláshoz betölthetsz egy minta motivációs levelet. Ha az önéletrajzod még üres, egy minta önéletrajz is betöltődik."],
+  ["Beispiel-Lebenslauf und Beispiel-Anschreiben geladen.", "Sample CV and sample cover letter loaded.", "Minta önéletrajz és minta motivációs levél betöltve."],
+  ["Beispiel-Anschreiben geladen (dein Lebenslauf bleibt unverändert).", "Sample cover letter loaded (your CV stays unchanged).", "Minta motivációs levél betöltve (az önéletrajzod változatlan marad)."],
   ["Layout", "Layout", "Elrendezés"], ["Wie Lebenslauf", "Like CV", "Mint az önéletrajz"], ["Farbband", "Colour band", "Színes sáv"], ["Kopf zweispaltig", "Two-column header", "Kétoszlopos fejléc"], ["Seitenspalte", "Side column", "Oldalsó oszlop"], ["Namensbox", "Name box", "Névdoboz"], ["Elegant (Serif)", "Elegant (serif)", "Elegáns (talpas)"],
   ["Ton geändert – klicke auf „Text neu erzeugen“, um den Brieftext anzupassen (dein bearbeiteter Text bleibt sonst erhalten).", "Tone changed – click “Regenerate text” to update the letter (otherwise your edited text is kept).", "A hangnem megváltozott – kattints a „Szöveg újragenerálása” gombra a levél frissítéséhez (különben a szerkesztett szöveged megmarad)."],
   ["Bewerbungsschreiben", "Cover letter", "Motivációs levél"],
@@ -2284,7 +2304,26 @@ function fillLetterOptions() {
   $("#ltFont").innerHTML = `<option value="">${esc("Wie Lebenslauf")}</option>` + FONTS.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
   $("#ltSwatches").innerHTML = `<button type="button" data-color="" class="txt">${esc("Wie Lebenslauf")}</button>` + SWATCHES.map(c => `<button type="button" data-color="${c}" style="background:${c}" title="${c}" aria-label="${c}"></button>`).join("");
 }
+const LETTER_SAMPLES = {
+  de: { company: "Beispiel Handels GmbH", contact: "Maria Huber", gender: "f", street: "Musterstraße 5", zip: "1010", city: "Wien", job: "", ref: "KW-4711", source: "karriere.at", start: "ab 01.01.2027", salary: "EUR 3.000 brutto/Monat", tone: "formal", strengths: "Teamfähigkeit, Zuverlässigkeit und eine strukturierte Arbeitsweise", motivation: "Ihr Unternehmen steht für Qualität und langfristige Kundenbeziehungen – genau in so einem Umfeld möchte ich arbeiten.", attach: "Lebenslauf\nZeugnisse", place: "", date: "" },
+  en: { company: "Example Trading Ltd", contact: "Maria Huber", gender: "f", street: "12 Sample Street", zip: "1010", city: "Vienna", job: "", ref: "KW-4711", source: "LinkedIn", start: "from 1 January 2027", salary: "EUR 3,000 gross/month", tone: "formal", strengths: "teamwork, reliability and a structured way of working", motivation: "Your company stands for quality and long-term customer relationships – exactly the environment I want to work in.", attach: "CV\nReferences", place: "", date: "" },
+  hu: { company: "Példa Kereskedelmi Kft.", contact: "Kovács Mária", gender: "f", street: "Minta utca 5.", zip: "1051", city: "Budapest", job: "", ref: "KW-4711", source: "profession.hu", start: "2027. január 1-jétől", salary: "bruttó 900 000 Ft/hó", tone: "formal", strengths: "csapatmunka, megbízhatóság és strukturált munkavégzés", motivation: "Cégük a minőségről és a hosszú távú ügyfélkapcsolatokról ismert – pontosan ilyen környezetben szeretnék dolgozni.", attach: "Önéletrajz\nBizonyítványok", place: "", date: "" }
+};
+function loadLetterSample() {
+  const lg = curLang(), d = collect();
+  const cvEmpty = !(d.first || "").trim() && !(d.last || "").trim() && !d.jobs.some(e => e.role || e.company);
+  if (cvEmpty) populate(Object.assign({}, window.SAMPLES[lg === "de" ? "dev" : lg].data, { lang: lg }));
+  const s = Object.assign({}, LETTER_SAMPLES[lg] || LETTER_SAMPLES.de, { layout: collectLetter().layout, accent: collectLetter().accent, font: collectLetter().font, edited: false });
+  populateLetter(s); renderPreview(); renderLetterGallery(); schedule();
+  status(cvEmpty ? "Beispiel-Lebenslauf und Beispiel-Anschreiben geladen." : "Beispiel-Anschreiben geladen (dein Lebenslauf bleibt unverändert).", "ok");
+}
+function clearLetter() {
+  const c = collectLetter();
+  populateLetter({ layout: c.layout, accent: c.accent, font: c.font });
+  renderPreview(); renderLetterGallery(); schedule(); status("Formular geleert.", "ok");
+}
 function initLetterUi() {
+  $("#ltSample").addEventListener("click", loadLetterSample); $("#ltClear").addEventListener("click", clearLetter);
   const setHidden = (k, v) => { const el = $('[data-lt="' + k + '"]'); el.value = v; el.dispatchEvent(new Event("input", { bubbles: true })); };
   $("#ltGallery").addEventListener("click", e => { const c = e.target.closest(".card"); if (!c) return; setHidden("layout", c.dataset.lay); $$("#ltGallery .card").forEach(x => x.classList.toggle("sel", x === c)); });
   $("#ltGallery").addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("card")) { e.preventDefault(); e.target.click(); } });
