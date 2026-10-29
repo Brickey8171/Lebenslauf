@@ -146,6 +146,9 @@ ol { margin: 4px 0 4px 18px; padding: 0; } ol li { margin: 4px 0; }
 #cropCanvas { width: 100%; max-width: 270px; aspect-ratio: 3 / 4; border: 1px solid #b9c2cd; border-radius: 4px; touch-action: none; cursor: grab; background: #eee; }
 #cropCanvas:active { cursor: grabbing; }
 .modal .inline .grow { flex: 1; }
+#sigCanvas { width: 100%; max-width: 640px; aspect-ratio: 640 / 260; border: 1px dashed #94a3b8; border-radius: 6px; background: #fff linear-gradient(transparent 78%, #cbd5e1 78%, #cbd5e1 79%, transparent 79%); touch-action: none; cursor: crosshair; }
+.sigrow { margin: 10px 0; }
+.sigThumb { max-width: 160px; max-height: 70px; background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 4px; }
 
 .cvbar { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 8px; align-items: center; background: #f4f7fb; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin-bottom: 14px; }
 .cvbar label { margin: 0; font-weight: 600; color: var(--fg); }
@@ -400,6 +403,15 @@ body:not([data-mode="cv"]) .brand p { display: none; }
       <summary>Ort, Datum &amp; Unterschrift</summary>
       <div class="inner">
         <label class="check"><input type="checkbox" data-k="showSignature"> Ort, Datum und Unterschriftszeile am Ende anfügen</label>
+        <div class="photo-row sigrow">
+          <img class="sigThumb" alt="" hidden>
+          <div>
+            <button type="button" class="sigDraw">Unterschrift zeichnen</button>
+            <button type="button" class="sigUpload">Bild hochladen</button>
+            <button type="button" class="sigRemove link" hidden>Unterschrift entfernen</button>
+            <p class="hint">Zeichne deine Unterschrift mit Finger oder Maus oder lade ein Foto davon hoch (der helle Hintergrund wird entfernt). Sie bleibt auf deinem Gerät und erscheint im Lebenslauf (wenn die Unterschriftszeile an ist) und im Anschreiben.</p>
+          </div>
+        </div>
         <div class="row2">
           <div><label>Ort</label><input type="text" data-k="signPlace" placeholder="Wien"></div>
           <div><label>Datum</label><input type="text" data-k="signDate" placeholder="leer = heutiges Datum"></div>
@@ -477,6 +489,19 @@ body:not([data-mode="cv"]) .brand p { display: none; }
         <button type="button" id="ltSample">Beispiel laden</button>
         <button type="button" id="ltClear">Formular leeren</button>
       </div>
+    </div>
+
+    <div class="box">
+      <h3>Unterschrift</h3>
+      <div class="photo-row sigrow">
+          <img class="sigThumb" alt="" hidden>
+          <div>
+            <button type="button" class="sigDraw">Unterschrift zeichnen</button>
+            <button type="button" class="sigUpload">Bild hochladen</button>
+            <button type="button" class="sigRemove link" hidden>Unterschrift entfernen</button>
+            <p class="hint">Zeichne deine Unterschrift mit Finger oder Maus oder lade ein Foto davon hoch (der helle Hintergrund wird entfernt). Sie bleibt auf deinem Gerät und erscheint im Lebenslauf (wenn die Unterschriftszeile an ist) und im Anschreiben.</p>
+          </div>
+        </div>
     </div>
 
     <div class="box">
@@ -572,6 +597,15 @@ body:not([data-mode="cv"]) .brand p { display: none; }
     <label class="check"><input type="checkbox" id="cropGray"> Schwarz-Weiß</label>
     <label class="check"><input type="checkbox" id="cropGuide" checked> Rundung als Hilfslinie zeigen</label>
     <div class="inline"><button type="button" id="cropReset">Zurücksetzen</button><span class="grow"></span><button type="button" id="cropCancel">Abbrechen</button><button type="button" id="cropOk" class="primary">Übernehmen</button></div>
+  </div>
+</div>
+<input type="file" id="sigFile" accept="image/*" hidden>
+<div id="sigPad" class="modal" hidden role="dialog" aria-modal="true" aria-label="Unterschrift zeichnen">
+  <div class="modal-box">
+    <h3>Unterschrift zeichnen</h3>
+    <p class="hint">Mit dem Finger oder der Maus in das Feld schreiben.</p>
+    <div class="crop-wrap"><canvas id="sigCanvas" width="640" height="260" aria-label="Unterschrift"></canvas></div>
+    <div class="inline"><button type="button" id="sigClear">Löschen</button><span class="grow"></span><button type="button" id="sigCancel">Abbrechen</button><button type="button" id="sigOk" class="primary">Übernehmen</button></div>
   </div>
 </div>
 <div id="printArea"></div>
@@ -1152,7 +1186,8 @@ function buildHtml(d, layoutIn, forPrint, fit) {
   const certs = lines(d.certs), certsC = certs.length ? bullets(certs) : "";
   let signHtml = "";
   if (d.showSignature) {
-    signHtml = P(base() + "margin:26pt 0 0 0;", esc(X.signLine)) + P(base() + "margin:26pt 0 0 0;", `______________________________<br>${esc(X.fullName)}`);
+    const sigImg = /^data:image\//.test(d.signature || "") ? `<div style="margin:8pt 0 -12pt 0;"><img src="${d.signature}" alt="" style="height:44px;width:auto;max-width:240px;"></div>` : "";
+    signHtml = P(base() + "margin:22pt 0 0 0;", esc(X.signLine)) + sigImg + P(base() + "margin:" + (sigImg ? "0" : "26pt") + " 0 0 0;", `______________________________<br>${esc(X.fullName)}`);
   }
   const mainSecs = () => [[L.profile, summaryC], [L.experience, jobsC], [L.education, eduC], [L.certs, certsC]].filter(x => x[1]);
   const normal = secs => secs.map(x => section(x[0]) + x[1]).join("");
@@ -1495,8 +1530,9 @@ function buildLetterHtml(d, layoutIn, lt, forPrint, fit) {
   const body = String(lt.body || "").split(/\n\s*\n/).map(s => s.trim()).filter(Boolean).map(s => P(base(fs, "#222222", "margin:0 0 10pt 0;text-align:left;"), nl(s))).join("");
   const att = String(lt.attach || "").split("\n").map(s => s.trim()).filter(Boolean);
   const attach = att.length ? P(base(fs - 1, "#555555", "margin:26pt 0 0 0;"), "<b>" + esc(T.attach) + "</b> " + att.map(esc).join(", ")) : "";
+  const sigBlock = /^data:image\//.test(d.signature || "") ? `<div style="height:48pt;margin:6pt 0 0 0;"><img src="${d.signature}" alt="" style="height:46pt;width:auto;max-width:240pt;"></div>` : `<div style="height:42pt;"></div>`;
   const main = recipient + dateLine + subj + P(base(fs, "#222222", "margin:0 0 12pt 0;"), esc(greet)) + body +
-    P(base(fs, "#222222", "margin:16pt 0 0 0;"), esc(closeTxt)) + `<div style="height:42pt;"></div>` + P(base(fs, "#222222", "margin:0;font-weight:bold;"), name || esc(full)) + attach;
+    P(base(fs, "#222222", "margin:16pt 0 0 0;"), esc(closeTxt)) + sigBlock + P(base(fs, "#222222", "margin:0;font-weight:bold;"), name || esc(full)) + attach;
   const inner = lay === "spalte"
     ? `<div style="display:flex;align-items:stretch;gap:20pt;min-height:880px;"><div style="width:27%;flex:none;background-color:${tint(a, 0.9)};border-top:4pt solid ${a};padding:14pt 12pt;">${side}</div><div style="flex:1;min-width:0;padding-top:4pt;">${main}</div></div>`
     : head + main;
@@ -1708,6 +1744,12 @@ const I18N_ROWS = [
   ["Vorlage wählen, Daten eingeben und als PDF speichern", "Choose a template, enter your details and save as PDF", "Válassz sablont, add meg az adataidat, és mentsd PDF-ként"],
   ["Ein Anschreiben passend zu deinem Lebenslauf erzeugen", "Create a cover letter to match your CV", "Készíts az önéletrajzodhoz illő motivációs levelet"],
   ["Verwalten", "Manage", "Kezelés"],
+  ["Unterschrift", "Signature", "Aláírás"], ["Unterschrift zeichnen", "Draw signature", "Aláírás rajzolása"], ["Neu zeichnen", "Draw again", "Újrarajzolás"], ["Bild hochladen", "Upload image", "Kép feltöltése"], ["Unterschrift entfernen", "Remove signature", "Aláírás eltávolítása"],
+  ["Zeichne deine Unterschrift mit Finger oder Maus oder lade ein Foto davon hoch (der helle Hintergrund wird entfernt). Sie bleibt auf deinem Gerät und erscheint im Lebenslauf (wenn die Unterschriftszeile an ist) und im Anschreiben.", "Draw your signature with your finger or mouse, or upload a photo of it (the light background is removed). It stays on your device and appears on the CV (if the signature line is on) and on the cover letter.", "Rajzold le az aláírásodat ujjal vagy egérrel, vagy tölts fel róla egy fényképet (a világos háttér eltűnik). Az eszközödön marad, és megjelenik az önéletrajzban (ha az aláírássor be van kapcsolva) és a motivációs levélben."],
+  ["Mit dem Finger oder der Maus in das Feld schreiben.", "Write in the box with your finger or mouse.", "Írj a mezőbe ujjal vagy egérrel."],
+  ["Keine Unterschrift erkannt – bitte im Feld schreiben.", "No signature detected – please write in the box.", "Nem található aláírás – kérlek, írj a mezőbe."],
+  ["Keine Unterschrift erkannt – bitte ein Foto mit dunkler Schrift auf hellem Papier wählen.", "No signature detected – please choose a photo with dark writing on light paper.", "Nem található aláírás – válassz egy fényképet sötét írással világos papíron."],
+  ["Unterschrift übernommen.", "Signature applied.", "Aláírás átvéve."],
   ["Textgröße (pt):", "Text size (pt):", "Szövegméret (pt):"], ["Breite der Seitenleiste (%):", "Sidebar width (%):", "Oldalsáv szélessége (%):"], ["Namensgröße (pt):", "Name size (pt):", "Névméret (pt):"], ["Breite der Datumsspalte (%):", "Date column width (%):", "Dátumoszlop szélessége (%):"],
   ["Formular geleert.", "Form cleared.", "Az űrlap törölve."],
   ["Zum Ausprobieren kannst du ein Beispiel-Anschreiben laden. Ist dein Lebenslauf noch leer, wird auch ein Beispiel-Lebenslauf geladen.", "To try it out you can load a sample cover letter. If your CV is still empty, a sample CV is loaded too.", "Kipróbáláshoz betölthetsz egy minta motivációs levelet. Ha az önéletrajzod még üres, egy minta önéletrajz is betöltődik."],
@@ -1818,7 +1860,7 @@ const lsDel = k => { try { localStorage.removeItem(k); } catch (e) { /* ignorier
 const EMPTY = {
   titleBefore: "", first: "", last: "", titleAfter: "", headline: "", street: "", zip: "", city: "", phone: "", email: "", web: "",
   birthDate: "", birthPlace: "", nationality: "", marital: "", summary: "", jobs: [{}], edu: [{}],
-  languages: "", it: "", licence: "", certs: "", interests: "", showSignature: true, signPlace: "", signDate: "", photo: "", photoSrc: "", photoCrop: null, lang: "de"
+  languages: "", it: "", licence: "", certs: "", interests: "", showSignature: true, signPlace: "", signDate: "", photo: "", photoSrc: "", photoCrop: null, signature: "", lang: "de"
 };
 const REPEATERS = {
   jobs: { label: "Position", fields: [
@@ -1844,7 +1886,7 @@ function catOf(p) {
   return "modern";
 }
 
-const state = { photo: "", photoSrc: "", photoCrop: null, layout: sanitizeLayout(PRESETS[0].layout), layoutId: "classic", custom: [], filter: "alle", step: 1, silhouette: "", pages: 1, onePage: false, fit: 1 };
+const state = { signature: "", photo: "", photoSrc: "", photoCrop: null, layout: sanitizeLayout(PRESETS[0].layout), layoutId: "classic", custom: [], filter: "alle", step: 1, silhouette: "", pages: 1, onePage: false, fit: 1 };
 
 /* ---------- Dokument: Lebenslauf oder Anschreiben ---------- */
 let curDoc = "cv";
@@ -1923,7 +1965,7 @@ function bindRepeater(key) {
 function collect() {
   const d = {};
   $$("[data-k]").forEach(el => { d[el.dataset.k] = el.type === "checkbox" ? el.checked : el.value; });
-  d.photo = state.photo; d.photoSrc = state.photoSrc; d.photoCrop = state.photoCrop;
+  d.signature = state.signature; d.photo = state.photo; d.photoSrc = state.photoSrc; d.photoCrop = state.photoCrop;
   Object.keys(REPEATERS).forEach(key => {
     d[key] = $$("#" + key + " .item").map(item => { const o = {}; $$("[data-f]", item).forEach(e => { o[e.dataset.f] = e.value; }); return o; });
   });
@@ -1935,7 +1977,7 @@ function populate(d) {
   applySpell();
   Object.keys(REPEATERS).forEach(key => fillRepeater(key, d[key]));
   state.photoSrc = d.photoSrc || ""; state.photoCrop = d.photoCrop || null;
-  setPhoto(d.photo || "");
+  setPhoto(d.photo || ""); setSignature(d.signature || "");
 }
 
 /* ---------- Foto ---------- */
@@ -1998,7 +2040,8 @@ function initPhotoEditor() {
   $("#cropReset").addEventListener("click", () => { if (!ed) return; ed.crop = Object.assign({}, CROP_DEF); $("#cropZoom").value = 100; $("#cropBright").value = 0; $("#cropGray").checked = false; paintCrop(); });
   $("#cropCancel").addEventListener("click", closePhotoEditor);
   $("#cropOk").addEventListener("click", applyPhotoEditor);
-  $("#photoEditor").addEventListener("click", e => { if (e.target.id === "photoEditor") closePhotoEditor(); });
+  let downBack = false; $("#photoEditor").addEventListener("pointerdown", e => { downBack = e.target.id === "photoEditor"; });
+  $("#photoEditor").addEventListener("click", e => { if (downBack && e.target.id === "photoEditor") closePhotoEditor(); downBack = false; });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#photoEditor").hidden) closePhotoEditor(); });
   let drag = null;
   cv.addEventListener("pointerdown", e => { if (!ed) return; drag = { x: e.clientX, y: e.clientY }; cv.setPointerCapture(e.pointerId); });
@@ -2042,6 +2085,66 @@ function makeSilhouette() {
 }
 
 
+/* ---------- Unterschrift (zeichnen oder Foto hochladen) ---------- */
+function setSignature(url) {
+  state.signature = /^data:image\//.test(url || "") ? url : "";
+  $$(".sigThumb").forEach(i => { i.hidden = !state.signature; if (state.signature) i.src = state.signature; });
+  $$(".sigRemove").forEach(b => { b.hidden = !state.signature; });
+  $$(".sigDraw").forEach(b => { b.textContent = t(state.signature ? "Neu zeichnen" : "Unterschrift zeichnen"); });
+}
+function trimToInk(src) { // transparentes PNG auf den beschriebenen Bereich zuschneiden; null = keine Tinte gefunden
+  const w = src.width, h = src.height, c = src.getContext("2d"), px = c.getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (px[(y * w + x) * 4 + 3] > 40) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 < 0 || (x1 - x0) < 8 || (y1 - y0) < 4) return null;
+  const pad = 6; x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(w - 1, x1 + pad); y1 = Math.min(h - 1, y1 + pad);
+  const k = Math.min(1, 500 / (x1 - x0 + 1)), out = document.createElement("canvas"); out.width = Math.max(1, Math.round((x1 - x0 + 1) * k)); out.height = Math.max(1, Math.round((y1 - y0 + 1) * k));
+  out.getContext("2d").drawImage(src, x0, y0, x1 - x0 + 1, y1 - y0 + 1, 0, 0, out.width, out.height);
+  return out.toDataURL("image/png");
+}
+function signatureFromPhoto(img) { // heller Hintergrund → transparent, dunkle Tinte bleibt
+  const k = Math.min(1, 900 / Math.max(img.width, img.height)), c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+  const g = c.getContext("2d"); g.drawImage(img, 0, 0, c.width, c.height);
+  const id = g.getImageData(0, 0, c.width, c.height), p = id.data;
+  for (let i = 0; i < p.length; i += 4) {
+    const lum = 0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2], a = Math.max(0, Math.min(1, (215 - lum) / 90));
+    p[i + 3] = Math.round(a * 255); p[i] = Math.round(p[i] * 0.5); p[i + 1] = Math.round(p[i + 1] * 0.5); p[i + 2] = Math.round(p[i + 2] * 0.55);
+  }
+  g.putImageData(id, 0, 0); return trimToInk(c);
+}
+function initSignature() {
+  const pad = $("#sigPad"), cv = $("#sigCanvas"), g = cv.getContext("2d");
+  let drawing = false, last = null;
+  const clear = () => { g.clearRect(0, 0, cv.width, cv.height); };
+  const open = () => { clear(); pad.hidden = false; document.body.style.overflow = "hidden"; };
+  const close = () => { pad.hidden = true; document.body.style.overflow = ""; };
+  const pos = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height }; };
+  cv.addEventListener("pointerdown", e => { drawing = true; last = pos(e); cv.setPointerCapture(e.pointerId); g.fillStyle = "#14213d"; g.beginPath(); g.arc(last.x, last.y, 2.2, 0, 7); g.fill(); });
+  cv.addEventListener("pointermove", e => {
+    if (!drawing) return; const p = pos(e);
+    g.strokeStyle = "#14213d"; g.lineWidth = 4.4; g.lineCap = "round"; g.lineJoin = "round";
+    g.beginPath(); g.moveTo(last.x, last.y); g.lineTo(p.x, p.y); g.stroke(); last = p;
+  });
+  ["pointerup", "pointercancel"].forEach(t2 => cv.addEventListener(t2, () => { drawing = false; }));
+  $$(".sigDraw").forEach(b => b.addEventListener("click", open));
+  $$(".sigUpload").forEach(b => b.addEventListener("click", () => $("#sigFile").click()));
+  $$(".sigRemove").forEach(b => b.addEventListener("click", () => { setSignature(""); schedule(); }));
+  $("#sigClear").addEventListener("click", clear); $("#sigCancel").addEventListener("click", close);
+  let downBack = false; pad.addEventListener("pointerdown", e => { downBack = e.target.id === "sigPad"; });
+  pad.addEventListener("click", e => { if (downBack && e.target.id === "sigPad") close(); downBack = false; });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !pad.hidden) close(); });
+  $("#sigOk").addEventListener("click", () => {
+    const url = trimToInk(cv); if (!url) { status("Keine Unterschrift erkannt – bitte im Feld schreiben.", "err"); return; }
+    setSignature(url); close(); schedule();
+  });
+  $("#sigFile").addEventListener("change", e => {
+    const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => { const img = new Image(); img.onload = () => { const url = signatureFromPhoto(img); if (!url) { status("Keine Unterschrift erkannt – bitte ein Foto mit dunkler Schrift auf hellem Papier wählen.", "err"); return; } setSignature(url); schedule(); status("Unterschrift übernommen.", "ok"); };
+      img.onerror = () => status("Dieses Bild konnte nicht gelesen werden. Bitte ein JPG oder PNG wählen.", "err"); img.src = r.result; };
+    r.readAsDataURL(f);
+  });
+}
 /* ---------- Formulierungshilfe ---------- */
 const PHRASES = {
   jobs: {
@@ -2731,7 +2834,7 @@ function init() {
   $("#resetAll").addEventListener("click", ev => confirmClick(ev.currentTarget, "Wirklich zurücksetzen? Alle Eingaben und eigenen Vorlagen werden gelöscht.", "Alles zurücksetzen", () => {
     [KEY_DRAFT, KEY_LAYOUTS, KEY_CUR, KEY_CVS].forEach(lsDel); location.reload();
   }));
-  initPhrases(); initLetterUi();
+  initPhrases(); initLetterUi(); initSignature();
   $("#ltBody").addEventListener("input", () => { $("#ltBody").dataset.edited = "1"; });
   $('[data-lt="tone"]').addEventListener("change", () => { if ($("#ltBody").dataset.edited === "1") status("Ton geändert – klicke auf „Text neu erzeugen“, um den Brieftext anzupassen (dein bearbeiteter Text bleibt sonst erhalten).", "ok"); });
   $("#ltRegen").addEventListener("click", () => { $("#ltBody").dataset.edited = ""; renderPreview(); schedule(); });
