@@ -74,6 +74,8 @@ button:disabled { opacity: .5; cursor: default; }
 .card.sel { border-color: var(--ui); box-shadow: 0 0 0 2px rgba(31,78,121,.25); }
 .card.sel .cname span::before { content: "✓ "; color: var(--ui); font-weight: 700; }
 .thumb { height: 190px; overflow: hidden; background: #fff; pointer-events: none; border-bottom: 1px solid var(--line); }
+.fav { position: absolute; top: 4px; right: 4px; z-index: 2; width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 1px solid #c3ccd6; background: rgba(255,255,255,.92); color: #6b7684; font-size: 17px; line-height: 1; display: grid; place-items: center; }
+.fav.on { color: #e11d48; border-color: #f3a6b8; }
 .cname { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; font-size: 13px; font-weight: 600; }
 .cname .link { font-size: 17px; line-height: 1; padding: 0 4px; }
 .swatches { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -145,6 +147,16 @@ ol { margin: 4px 0 4px 18px; padding: 0; } ol li { margin: 4px 0; }
 #cropCanvas:active { cursor: grabbing; }
 .modal .inline .grow { flex: 1; }
 
+.cvbar { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 8px; align-items: center; background: #f4f7fb; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin-bottom: 14px; }
+.cvbar label { margin: 0; font-weight: 600; color: var(--fg); }
+.cvbar #cvName, .cvbar .inline { grid-column: 1 / -1; margin-top: 0; }
+.cvbar .inline button { padding: 5px 12px; }
+
+details.phr { margin-top: 6px; }
+details.phr > summary { cursor: pointer; font-size: 13px; color: var(--ui); padding: 2px 0; }
+.phrbox { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 0 2px; }
+.chipbtn { padding: 4px 10px; font-size: 12.5px; border-radius: 999px; background: #fff; }
+
 /* Druck: nur der Lebenslauf */
 #printArea { display: none; }
 @page { size: A4; margin: 2cm; }
@@ -158,6 +170,21 @@ ol { margin: 4px 0 4px 18px; padding: 0; } ol li { margin: 4px 0; }
 .toolbar label.check.onep { margin: 0; font-size: 13px; white-space: nowrap; }
 label.check small { color: var(--muted); font-size: 12px; }
 
+.stepper button.tab4 { margin-left: 6px; width: 36px; height: 36px; padding: 0; justify-content: center; font-size: 18px; line-height: 1; background: rgba(255,255,255,.12); }
+.stepper button.tab4.on { background: #fff; color: var(--ui); }
+.curcv { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; background: #f4f7fb; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; margin-bottom: 12px; font-size: 13px; }
+.curcv[hidden] { display: none; }
+.curcv b { color: var(--fg); }
+.curcv .link { margin-left: auto; }
+.cvlist { display: grid; gap: 6px; margin: 8px 0 12px; }
+.cvrow { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; text-align: left; width: 100%; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font: inherit; cursor: pointer; color: var(--fg); }
+.cvrow:hover { border-color: var(--ui); }
+.cvrow.on { border-color: var(--ui); box-shadow: 0 0 0 2px rgba(37,99,235,.18); background: #f4f8ff; }
+.cvrow .cvn { font-weight: 700; flex: 1 1 140px; min-width: 0; overflow-wrap: anywhere; }
+.cvrow small { color: #64748b; flex: 1 1 100%; }
+.cvrow .tag { font-size: 12px; font-weight: 700; color: var(--ui); }
+@media (max-width: 900px) { .top-in { position: relative; } .stepper button.tab4 { position: absolute; top: 8px; right: 0; flex: none; width: 36px; padding: 0; } }
+
 </style>
 </head>
 <body>
@@ -165,18 +192,20 @@ label.check small { color: var(--muted); font-size: 12px; }
   <div class="top-in">
     <div class="brand">
       <h1>Lebenslauf-Ersteller</h1>
-      <p>Österreichischer Lebenslauf in 3 Schritten · alles bleibt auf deinem Gerät</p>
+      <p>Lebenslauf in 3 Schritten · alles bleibt auf deinem Gerät</p>
     </div>
     <nav class="stepper" id="stepper" aria-label="Schritte">
       <button type="button" data-go="1" class="on"><span>1</span> Vorlage</button>
       <button type="button" data-go="2"><span>2</span> Daten</button>
       <button type="button" data-go="3"><span>3</span> Fertig</button>
+      <button type="button" data-go="4" class="tab4" title="Lebensläufe &amp; Sprache" aria-label="Lebensläufe &amp; Sprache">⚙</button>
     </nav>
   </div>
 </header>
 
 <div class="app">
 <main id="panel">
+  <div class="curcv" id="curCv"><span>Aktueller Lebenslauf:</span> <b id="curCvName" class="cvn"></b> <button type="button" class="link" data-go="4">Wechseln</button></div>
 
   <!-- ============ SCHRITT 1 ============ -->
   <section class="step active" id="step1">
@@ -286,6 +315,7 @@ label.check small { color: var(--muted); font-size: 12px; }
       <div class="inner">
         <label>2–3 Sätze über dich</label>
         <textarea data-k="summary" rows="4" placeholder="z. B. Gewissenhafter Buchhalter mit 10 Jahren Erfahrung in ..."></textarea>
+        <details class="phr"><summary>Formulierungshilfe</summary><div class="phrbox" data-kind="summary"></div></details>
       </div>
     </details>
 
@@ -352,10 +382,10 @@ label.check small { color: var(--muted); font-size: 12px; }
       <summary>So klappt das PDF-Speichern</summary>
       <div class="inner">
         <ol>
-          <li>Klicke auf „Als PDF speichern“. Der Druckdialog deines Browsers öffnet sich.</li>
-          <li>Wähle als Drucker <b>„Als PDF speichern“</b> (Chrome/Edge) bzw. unten links <b>„PDF“ → „Als PDF sichern“</b> (Mac/Safari).</li>
-          <li>Papier: <b>A4</b>. Ränder: <b>Standard</b>. Hake <b>„Hintergrundgrafiken“</b> an, damit Farbflächen mitgedruckt werden.</li>
-          <li>Auf „Speichern“ klicken – fertig.</li>
+          <li data-rich="pdf1">Klicke auf „Als PDF speichern“. Der Druckdialog deines Browsers öffnet sich.</li>
+          <li data-rich="pdf2">Wähle als Drucker <b>„Als PDF speichern“</b> (Chrome/Edge) bzw. unten links <b>„PDF“ → „Als PDF sichern“</b> (Mac/Safari).</li>
+          <li data-rich="pdf3">Papier: <b>A4</b>. Ränder: <b>Standard</b>. Hake <b>„Hintergrundgrafiken“</b> an, damit Farbflächen mitgedruckt werden.</li>
+          <li data-rich="pdf4">Auf „Speichern“ klicken – fertig.</li>
         </ol>
       </div>
     </details>
@@ -371,6 +401,26 @@ label.check small { color: var(--muted); font-size: 12px; }
       <div class="inline"><button type="button" id="resetAll" class="danger">Alles zurücksetzen</button></div>
     </div>
 
+    <div class="nav"><button type="button" data-go="2">← Zurück zu den Daten</button><span></span></div>
+  </section>
+
+  <!-- ============ TAB 4: LEBENSLÄUFE & SPRACHE ============ -->
+  <section class="step" id="step4">
+    <h2>Lebensläufe &amp; Sprache</h2>
+    <div class="box">
+      <h3>Sprache</h3>
+      <label for="cvLang">Sprache des Lebenslaufs <small>(auch die Sprache dieser Oberfläche)</small></label>
+      <select id="cvLang" data-k="lang"><option value="de">Deutsch</option><option value="en">English</option><option value="hu">Magyar</option></select>
+      <p class="hint">Gilt für den ausgewählten Lebenslauf: Überschriften, Datumsformat, Rechtschreibprüfung und diese Oberfläche. Jeder Lebenslauf hat seine eigene Sprache.</p>
+    </div>
+    <div class="box">
+      <h3>Meine Lebensläufe</h3>
+      <p class="hint">Lege für jede Bewerbung einen eigenen Lebenslauf an. Alles wird automatisch gespeichert.</p>
+      <div id="cvList" class="cvlist"></div>
+      <label for="cvName">Name dieses Lebenslaufs</label>
+      <input type="text" id="cvName" maxlength="40" placeholder="Name">
+      <div class="inline"><button type="button" id="cvNew">Neu</button><button type="button" id="cvCopy">Kopie</button><button type="button" id="cvDel" class="danger">Löschen</button></div>
+    </div>
     <div class="nav"><button type="button" data-go="2">← Zurück zu den Daten</button><span></span></div>
   </section>
 </main>
@@ -432,7 +482,63 @@ window.SAMPLES = {
       licence: "Klasse B",
       certs: "Professional Scrum Master I (PSM I), 2022\nAWS Certified Developer – Associate, 2023",
       interests: "Klettern, Open-Source-Projekte, Reisen",
-      showSignature: true, signPlace: "Wien", signDate: ""
+      showSignature: true, signPlace: "Wien", signDate: "", lang: "de"
+    }
+  },
+
+  en: {
+    label: "Marketing Manager (English CV, Vienna)",
+    data: {
+      titleBefore: "", first: "Emma", last: "Clarke", titleAfter: "MSc",
+      headline: "Marketing Manager (B2B / Digital)",
+      birthDate: "", birthPlace: "", nationality: "Austria", marital: "",
+      street: "Example Street 5/3", zip: "1030", city: "Vienna",
+      phone: "+43 660 555 12 34", email: "emma.clarke@example.com", web: "linkedin.com/in/emma-clarke-example",
+      summary: "Marketing manager with 7 years of experience in B2B campaigns, content strategy and marketing analytics. Used to working in international teams and to turning data into clear decisions.",
+      jobs: [
+        { from: "02/2021", to: "", role: "Marketing Manager", company: "Danube Software GmbH", place: "Vienna",
+          details: "Planned and ran multi-channel campaigns with a yearly budget of EUR 400,000\nIncreased qualified leads by 38 % through a new content and SEO strategy\nManaged a team of 4 and coordinated external agencies\nIntroduced monthly performance reporting in Looker Studio" },
+        { from: "09/2017", to: "01/2021", role: "Marketing Specialist", company: "Alpine Retail Group", place: "Salzburg",
+          details: "Ran social media and newsletter campaigns\nOrganised trade fairs and customer events" }
+      ],
+      edu: [
+        { from: "10/2014", to: "06/2017", degree: "Master of Science, Marketing & Sales", school: "WU Vienna University of Economics and Business", place: "Vienna", details: "" },
+        { from: "10/2011", to: "06/2014", degree: "Bachelor of Business Administration", school: "University of Salzburg", place: "Salzburg", details: "" }
+      ],
+      languages: "German – native\nEnglish – C2 (proficient)\nSpanish – B1 (intermediate)",
+      it: "Marketing tools: HubSpot, Google Analytics, Looker Studio\nOffice: Microsoft 365, Google Workspace\nDesign: Canva, Figma (basics)",
+      licence: "Category B",
+      certs: "Google Analytics Certification, 2023\nHubSpot Inbound Marketing, 2022",
+      interests: "Running, photography, travelling",
+      showSignature: false, signPlace: "Vienna", signDate: "", lang: "en"
+    }
+  },
+
+  hu: {
+    label: "Értékesítési asszisztens (magyar önéletrajz, Bécs)",
+    data: {
+      titleBefore: "", first: "Anna", last: "Kovács", titleAfter: "",
+      headline: "Értékesítési asszisztens",
+      birthDate: "12.03.1995", birthPlace: "Győr", nationality: "magyar", marital: "hajadon",
+      street: "Példa utca 8.", zip: "9021", city: "Győr",
+      phone: "+36 30 123 4567", email: "kovacs.anna@example.hu", web: "",
+      summary: "Megbízható értékesítési asszisztens 6 év ügyfélszolgálati és adminisztrációs tapasztalattal. Pontos, rugalmas és jó kommunikációs készséggel rendelkezem, német és angol nyelven is.",
+      jobs: [
+        { from: "03/2020", to: "", role: "Értékesítési asszisztens", company: "Rába Kereskedelmi Kft.", place: "Győr",
+          details: "Ajánlatok és megrendelések előkészítése, nyomon követése\nÜgyfélkapcsolat német és magyar nyelven\nRaktárkészlet- és számlázási adatok kezelése SAP rendszerben" },
+        { from: "07/2017", to: "02/2020", role: "Ügyfélszolgálati munkatárs", company: "Duna Telekom Zrt.", place: "Budapest",
+          details: "Telefonos és írásbeli ügyfélszolgálat\nPanaszkezelés és szerződésmódosítások" }
+      ],
+      edu: [
+        { from: "09/2013", to: "06/2017", degree: "Gazdálkodási és menedzsment BSc", school: "Széchenyi István Egyetem", place: "Győr", details: "" },
+        { from: "09/2009", to: "06/2013", degree: "Érettségi", school: "Révai Miklós Gimnázium", place: "Győr", details: "" }
+      ],
+      languages: "Magyar – anyanyelv\nNémet – C1 (felsőfok)\nAngol – B2 (középfok)",
+      it: "Irodai programok: Microsoft Office, nagyon jó\nERP: SAP (alapfok)",
+      licence: "B kategória",
+      certs: "Német nyelvvizsga (C1), 2019",
+      interests: "Kerékpározás, olvasás, utazás",
+      showSignature: true, signPlace: "Győr", signDate: "", lang: "hu"
     }
   },
 
@@ -503,12 +609,23 @@ window.SAMPLES = {
 /* ===================================================================
    Lebenslauf-Ersteller – Layout-Engine (Vorschau und PDF als HTML)
    =================================================================== */
-const L = {
-  personal: "Persönliche Daten", profile: "Kurzprofil", experience: "Berufserfahrung", education: "Ausbildung",
-  skills: "Kenntnisse", languages: "Sprachen", it: "EDV / Fachkenntnisse", licence: "Führerschein", certs: "Zertifikate & Weiterbildung",
-  interests: "Interessen", address: "Adresse", phone: "Telefon", email: "E-Mail", web: "Web", birth: "Geboren",
-  nationality: "Staatsbürgerschaft", marital: "Familienstand", today: "heute", on: "am", cv: "Lebenslauf"
+const LANGS = {
+  de: { personal: "Persönliche Daten", profile: "Kurzprofil", experience: "Berufserfahrung", education: "Ausbildung",
+    skills: "Kenntnisse", languages: "Sprachen", it: "EDV / Fachkenntnisse", licence: "Führerschein", certs: "Zertifikate & Weiterbildung",
+    interests: "Interessen", address: "Adresse", phone: "Telefon", email: "E-Mail", web: "Web", birth: "Geboren",
+    nationality: "Staatsbürgerschaft", marital: "Familienstand", today: "heute", on: "am", cv: "Lebenslauf", fileCv: "Lebenslauf", locale: "de-AT", htmlLang: "de" },
+  en: { personal: "Personal details", profile: "Profile", experience: "Work experience", education: "Education",
+    skills: "Skills", languages: "Languages", it: "IT & technical skills", licence: "Driving licence", certs: "Certificates & training",
+    interests: "Interests", address: "Address", phone: "Phone", email: "Email", web: "Web", birth: "Born",
+    nationality: "Nationality", marital: "Marital status", today: "present", on: "", cv: "Curriculum Vitae", fileCv: "CV", locale: "en-GB", htmlLang: "en" },
+  hu: { personal: "Személyes adatok", profile: "Bemutatkozás", experience: "Munkatapasztalat", education: "Tanulmányok",
+    skills: "Készségek", languages: "Nyelvek", it: "Informatikai és szakmai ismeretek", licence: "Jogosítvány", certs: "Tanúsítványok és képzések",
+    interests: "Érdeklődési kör", address: "Cím", phone: "Telefon", email: "E-mail", web: "Web", birth: "Született",
+    nationality: "Állampolgárság", marital: "Családi állapot", today: "jelenleg", on: "", cv: "Önéletrajz", fileCv: "Önéletrajz", locale: "hu-HU", htmlLang: "hu" }
 };
+const L = Object.assign({}, LANGS.de);
+let LANG = "de";
+function applyLang(c) { LANG = LANGS[c] ? c : "de"; Object.assign(L, LANGS[LANG]); return LANG; }
 
 const FONTS = ["Calibri", "Arial", "Georgia", "Cambria", "Times New Roman", "Garamond", "Verdana", "Tahoma", "Trebuchet MS", "Segoe UI"];
 const SWATCHES = ["#1f4e79", "#2a6f97", "#00796b", "#2f5d3a", "#5a1f2b", "#b5532f", "#d35400", "#6a4c93", "#243447", "#444444"];
@@ -684,12 +801,12 @@ const ICONS = {
 };
 function levelOf(t) {
   t = String(t || "").toLowerCase();
-  if (/mutter|\bc2\b/.test(t)) return 1;
-  if (/\bc1\b|verhandlungs|sehr gut/.test(t)) return 0.9;
-  if (/\bb2\b|fließend|fliessend|gut/.test(t)) return 0.75;
-  if (/\bb1\b|fortgeschritten/.test(t)) return 0.55;
-  if (/\ba2\b|grund/.test(t)) return 0.35;
-  if (/\ba1\b|anfänger/.test(t)) return 0.2;
+  if (/mutter|native|mother|anyanyelv|\bc2\b/.test(t)) return 1;
+  if (/\bc1\b|verhandlungs|sehr gut|fluent|proficien|felsőfok|folyékony/.test(t)) return 0.9;
+  if (/\bb2\b|fließend|fliessend|gut|good|upper|középfok|jó/.test(t)) return 0.75;
+  if (/\bb1\b|fortgeschritten|intermediate|advanced|haladó/.test(t)) return 0.55;
+  if (/\ba2\b|grund|basic|alapfok|alap/.test(t)) return 0.35;
+  if (/\ba1\b|anfänger|beginner|kezdő/.test(t)) return 0.2;
   return 0.6;
 }
 const SPECIAL_HEADERS = ["vbar", "block", "corner", "title", "navyBlock", "photoCorner", "bandRound", "circleTitle", "gradient", "wave", "slant", "hero", "stripesDiag"];
@@ -754,8 +871,10 @@ const SP = { compact: { sec: 9, ent: 1 }, normal: { sec: 14, ent: 3 }, airy: { s
 // Gemeinsame Daten-Aufbereitung für die Vorschau und das PDF
 function prepare(d, Ly) {
   const nm = { pre: (d.titleBefore || "").trim(), f: (d.first || "").trim(), l: (d.last || "").trim(), post: (d.titleAfter || "").trim() };
-  const lead = [nm.pre, nm.f].filter(Boolean).join(" ");
-  const trail = nm.l + (nm.post ? (nm.l ? ", " : "") + nm.post : "");
+  const hu = LANG === "hu"; // ungarische Namensreihenfolge: Familienname zuerst
+  const lead = hu ? [nm.pre, nm.l].filter(Boolean).join(" ") : [nm.pre, nm.f].filter(Boolean).join(" ");
+  const tr0 = hu ? nm.f : nm.l;
+  const trail = tr0 + (nm.post ? (tr0 ? ", " : "") + nm.post : "");
   const fullName = [lead, trail].filter(Boolean).join(" ");
   const up = s => Ly.nameUpper ? s.toUpperCase() : s;
   const addr = [d.street, [d.zip, d.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
@@ -775,13 +894,14 @@ function prepare(d, Ly) {
     if (!from) return to;
     return from + " – " + (to || L.today);
   };
-  const signDate = (d.signDate || "").trim() || new Date().toLocaleDateString("de-AT", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const signDate = (d.signDate || "").trim() || new Date().toLocaleDateString(L.locale, { day: "2-digit", month: "2-digit", year: "numeric" });
   const signPlace = (d.signPlace || d.city || "").trim();
-  return { lead, trail, fullName, up, addr, pItems, items, dateText, signLine: signPlace ? signPlace + ", " + L.on + " " + signDate : signDate };
+  return { lead, trail, fullName, up, addr, pItems, items, dateText, signLine: signPlace ? signPlace + ", " + (L.on ? L.on + " " : "") + signDate : signDate };
 }
 
 /* ------------------------------ HTML (Vorschau + PDF) ------------------------------ */
 function buildHtml(d, layoutIn, forPrint, fit) {
+  applyLang(d && d.lang);
   const Ly = sanitizeLayout(layoutIn || DEFAULT_LAYOUT), a = safeColor(Ly.accent, Ly.page), fs = Ly.baseSize;
   const X = prepare(d, Ly), sp = SP[Ly.spacing], KVW = Math.max(Ly.dateWidth, 28);
   const fontCss = `font-family:'${Ly.font}',Arial,sans-serif;`;
@@ -1089,7 +1209,277 @@ function buildHtml(d, layoutIn, forPrint, fit) {
 
 function fileBase(d) {
   const who = [d.first, d.last].map(s => (s || "").trim()).filter(Boolean).join("_");
-  return ("Lebenslauf" + (who ? "_" + who : "")).replace(/\s+/g, "_").replace(/[^\wÀ-ſ.-]+/g, "_").slice(0, 80);
+  applyLang(d && d.lang); return (L.fileCv + (who ? "_" + who : "")).replace(/\s+/g, "_").replace(/[^\wÀ-ſ.-]+/g, "_").slice(0, 80);
+}
+
+/* ===================================================================
+   Oberflächensprache (Deutsch / English / Magyar)
+   Schlüssel = deutscher Originaltext. Die Sprache folgt der Sprache des Lebenslaufs.
+   =================================================================== */
+const I18N_ROWS = [
+  // Kopf
+  ["Lebenslauf-Ersteller", "CV Maker", "Önéletrajz-készítő"],
+  ["Lebenslauf in 3 Schritten · alles bleibt auf deinem Gerät", "CV in 3 steps · everything stays on your device", "Önéletrajz 3 lépésben · minden az eszközödön marad"],
+  ["Schritte", "Steps", "Lépések"],
+  ["Vorlage", "Template", "Sablon"],
+  ["Daten", "Details", "Adatok"],
+  ["Fertig", "Finish", "Kész"],
+  ["Lebensläufe & Sprache", "CVs & language", "Önéletrajzok és nyelv"],
+  ["Aktueller Lebenslauf:", "Current CV:", "Aktuális önéletrajz:"],
+  ["Wechseln", "Switch", "Váltás"],
+  // Schritt 1
+  ["Vorlage wählen", "Choose a template", "Sablon választása"],
+  ["Klicke auf eine Vorlage. Die Vorschau rechts zeigt die Vorlage mit Beispieldaten. In Schritt 2 siehst du dann deine eigenen Daten.", "Click a template. The preview on the right shows it with sample data. In step 2 you will see your own details.", "Kattints egy sablonra. A jobb oldali előnézet mintaadatokkal mutatja. A 2. lépésben már a saját adataidat látod."],
+  ["Vorlage anpassen", "Customise template", "Sablon testreszabása"],
+  ["Alles auf einer Seite", "Everything on one page", "Minden egy oldalon"],
+  ["(verkleinert automatisch)", "(shrinks automatically)", "(automatikusan kicsinyít)"],
+  ["Farbe", "Colour", "Szín"],
+  ["Zweite Farbe", "Second colour", "Második szín"],
+  ["(für Farbverläufe & mehrfarbige Vorlagen)", "(for gradients & multi-colour templates)", "(színátmenetekhez és többszínű sablonokhoz)"],
+  ["Schrift", "Font", "Betűtípus"],
+  ["Foto-Form", "Photo shape", "Fotó alakja"],
+  ["Textgröße", "Text size", "Szövegméret"],
+  ["Abstände", "Spacing", "Térközök"],
+  ["Alle Einstellungen", "All settings", "Összes beállítás"],
+  ["Eigene Vorlage speichern oder teilen", "Save or share your own template", "Saját sablon mentése vagy megosztása"],
+  ["Name deiner Vorlage", "Template name", "A sablon neve"],
+  ["z. B. Meine blaue Vorlage", "e.g. My blue template", "pl. Kék sablonom"],
+  ["Speichern", "Save", "Mentés"],
+  ["Gespeicherte Vorlagen erscheinen oben unter „Meine“ und sind bei jedem neuen Lebenslauf wieder da.", "Saved templates appear above under “Mine” and are available for every new CV.", "A mentett sablonok fent a „Saját” alatt jelennek meg, és minden új önéletrajznál elérhetők."],
+  ["Vorlagen-Code (zum Sichern oder Weitergeben)", "Template code (to back up or share)", "Sablonkód (mentéshez vagy megosztáshoz)"],
+  ["Code hier einfügen oder erzeugen", "Paste or generate a code here", "Illeszd be vagy hozd létre a kódot itt"],
+  ["Code erzeugen", "Generate code", "Kód létrehozása"],
+  ["Code importieren", "Import code", "Kód importálása"],
+  ["Weiter: Daten eingeben →", "Next: enter your details →", "Tovább: adatok megadása →"],
+  ["Rechteck", "Rectangle", "Téglalap"], ["Rund", "Round", "Kerek"],
+  ["Klein", "Small", "Kicsi"], ["Normal", "Normal", "Normál"], ["Groß", "Large", "Nagy"],
+  ["Kompakt", "Compact", "Tömör"], ["Luftig", "Airy", "Légies"],
+  ["Alle", "All", "Mind"], ["♥ Favoriten", "♥ Favourites", "♥ Kedvencek"], ["Klassisch", "Classic", "Klasszikus"], ["Modern", "Modern", "Modern"],
+  ["Seitenleiste & Spalten", "Sidebar & columns", "Oldalsáv és oszlopok"], ["Kreativ & Auffällig", "Creative & bold", "Kreatív és feltűnő"], ["Meine", "Mine", "Saját"],
+  ["· angepasst (noch nicht gespeichert)", "· customised (not saved yet)", "· módosítva (még nincs mentve)"],
+  ["Eigene Farbe", "Custom colour", "Egyéni szín"], ["Eigene Farbe wählen", "Choose a custom colour", "Egyéni szín választása"],
+  ["Eigene zweite Farbe", "Custom second colour", "Egyéni második szín"], ["Eigene zweite Farbe wählen", "Choose a custom second colour", "Egyéni második szín választása"],
+  ["Farbe {0}", "Colour {0}", "Szín: {0}"], ["Zweite Farbe {0}", "Second colour {0}", "Második szín: {0}"],
+  ["Vorlage {0}", "Template {0}", "Sablon: {0}"],
+  ["Favorit", "Favourite", "Kedvenc"], ["Als Favorit markieren", "Mark as favourite", "Megjelölés kedvencként"],
+  ["Vorlage löschen", "Delete template", "Sablon törlése"],
+  // Layout-Einstellungen
+  ["Schriftart", "Typeface", "Betűtípus"], ["Textgröße (pt)", "Text size (pt)", "Szövegméret (pt)"], ["Akzentfarbe", "Accent colour", "Kiemelő szín"],
+  ["Zweite Farbe (für Verläufe)", "Second colour (for gradients)", "Második szín (színátmenetekhez)"],
+  ["Seitenhintergrund", "Page background", "Oldal háttere"], ["Weiß", "White", "Fehér"], ["Creme", "Cream", "Krém"], ["Dunkel", "Dark", "Sötét"], ["Pastell-Verlauf", "Pastel gradient", "Pasztell színátmenet"], ["Seitenleiste bis zum Rand", "Sidebar to the edge", "Oldalsáv a szélig"],
+  ["Spalten", "Columns", "Oszlopok"], ["Eine Spalte", "One column", "Egy oszlop"], ["Seitenleiste links", "Sidebar left", "Oldalsáv balra"], ["Seitenleiste rechts", "Sidebar right", "Oldalsáv jobbra"], ["Zweispaltig, Spalte rechts", "Two columns, column on the right", "Két oszlop, jobb oldali oszlop"], ["Zweispaltig, Spalte links", "Two columns, column on the left", "Két oszlop, bal oldali oszlop"],
+  ["Breite der Seitenleiste (%)", "Sidebar width (%)", "Oldalsáv szélessége (%)"], ["Seitenleiste in Akzentfarbe (dunkel)", "Sidebar in accent colour (dark)", "Oldalsáv kiemelő színnel (sötét)"], ["Name in der Seitenleiste", "Name in the sidebar", "Név az oldalsávban"],
+  ["Kopfbereich (eine Spalte)", "Header area (one column)", "Fejléc (egy oszlop)"], ["Schlicht", "Plain", "Egyszerű"], ["Farbiges Band", "Colour band", "Színes sáv"], ["Helle Tönung", "Light tint", "Világos árnyalat"], ["Farbbalken oben", "Colour bar on top", "Színsáv felül"], ["Zentriert", "Centred", "Középre igazított"], ["Akzentlinie links", "Accent line on the left", "Kiemelő vonal balra"], ["Farbstreifen oben", "Colour stripes on top", "Színes csíkok felül"], ["Name im Rahmen", "Name in a frame", "Név keretben"], ["Balken + Symbole", "Bar + icons", "Sáv + ikonok"], ["Grauer Block", "Grey block", "Szürke blokk"], ["Ecke mit Rundfoto", "Corner with round photo", "Sarok kerek fotóval"], ["Großer Titel", "Large title", "Nagy cím"], ["Dunkler Fotoblock", "Dark photo block", "Sötét fotóblokk"], ["Foto links mit Fläche", "Photo left with panel", "Fotó balra panellel"], ["Band mit Rundfoto", "Band with round photo", "Sáv kerek fotóval"], ["Titel mit Kreis", "Title with circle", "Cím körrel"], ["Farbverlauf-Banner", "Gradient banner", "Színátmenetes szalag"], ["Banner mit Welle", "Banner with wave", "Szalag hullámmal"], ["Schräges Banner", "Slanted banner", "Ferde szalag"], ["Foto-Hero", "Photo hero", "Fotós főcím"], ["Diagonale Streifen", "Diagonal stripes", "Átlós csíkok"],
+  ["Namensgröße (pt)", "Name size (pt)", "Névméret (pt)"], ["Vor- und Nachname untereinander", "First and last name stacked", "Keresztnév és vezetéknév egymás alatt"], ["Name in Großbuchstaben", "Name in capitals", "Név nagybetűvel"], ["Vorname dünn, Nachname fett", "First name light, last name bold", "Keresztnév vékony, vezetéknév félkövér"],
+  ["Foto-Position (eine Spalte)", "Photo position (one column)", "Fotó helye (egy oszlop)"], ["Rechts", "Right", "Jobbra"], ["Links", "Left", "Balra"], ["Rechteck (Hochformat)", "Rectangle (portrait)", "Téglalap (álló)"],
+  ["Überschriften", "Headings", "Címsorok"], ["Unterstrichen", "Underlined", "Aláhúzott"], ["Nur Farbe", "Colour only", "Csak szín"], ["Farbbalken", "Colour bar", "Színsáv"], ["Balken links", "Bar on the left", "Sáv balra"], ["Gepunktete Linie", "Dotted line", "Pontozott vonal"], ["Zentriert mit Linien", "Centred with lines", "Középre, vonalakkal"], ["Doppelte Linie", "Double line", "Dupla vonal"], ["Rahmen", "Frame", "Keret"], ["Gesperrte Schrift", "Letter-spaced", "Szétszedett betűk"], ["Grauer Balken", "Grey bar", "Szürke sáv"], ["Symbol + Linie", "Icon + line", "Ikon + vonal"],
+  ["Überschriften in Großbuchstaben", "Headings in capitals", "Címsorok nagybetűvel"],
+  ["Datumsangaben", "Dates", "Dátumok"], ["Linke Spalte", "Left column", "Bal oszlop"], ["Über dem Eintrag", "Above the entry", "A bejegyzés felett"], ["Rechte Spalte", "Right column", "Jobb oszlop"], ["Zeitstrahl", "Timeline", "Idővonal"], ["Zeitstrahl mit Punkten", "Timeline with dots", "Idővonal pontokkal"],
+  ["Breite der Datumsspalte (%)", "Date column width (%)", "Dátumoszlop szélessége (%)"],
+  ["Aufzählungszeichen", "Bullet style", "Felsorolásjel"], ["Hohl", "Hollow", "Üres"], ["Eckig", "Square", "Szögletes"],
+  ["Kontaktdaten (nicht bei Seitenleiste)", "Contact details (not for sidebar layouts)", "Elérhetőségek (oldalsávnál nem)"], ["Tabelle mit Beschriftung", "Table with labels", "Táblázat felirattal"], ["Kompakte Zeilen", "Compact lines", "Tömör sorok"], ["Zeilen mit Symbolen", "Lines with icons", "Sorok ikonokkal"], ["Farbige Leiste", "Colour strip", "Színes sáv"], ["Symbole im Raster", "Icons in a grid", "Ikonok rácsban"], ["Symbole mit Beschriftung", "Icons with labels", "Ikonok felirattal"],
+  ["Aufbau der Abschnitte (eine Spalte)", "Section layout (one column)", "Szakaszok felépítése (egy oszlop)"], ["Überschrift über dem Inhalt", "Heading above the content", "Címsor a tartalom felett"], ["Überschrift links daneben", "Heading on the left", "Címsor balra mellette"], ["Abschnitte als Karten", "Sections as cards", "Szakaszok kártyaként"], ["Karten mit Schatten", "Cards with shadow", "Kártyák árnyékkal"],
+  ["Überschriften nummerieren (01, 02 …)", "Number headings (01, 02 …)", "Címsorok számozása (01, 02 …)"],
+  ["Sprachen & Kenntnisse", "Languages & skills", "Nyelvek és ismeretek"], ["Als Text", "As text", "Szövegként"], ["Mit Balken", "With bars", "Sávokkal"], ["Mit Punkten", "With dots", "Pontokkal"], ["Als Etiketten", "As tags", "Címkékként"], ["Als Ringe", "As rings", "Gyűrűkként"],
+  ["Linien zwischen Einträgen", "Lines between entries", "Vonalak a bejegyzések között"], ["Abwechselnd graue Zeilen", "Alternating grey rows", "Váltakozó szürke sorok"], ["Name im Rahmen (Seitenleiste)", "Name in a frame (sidebar)", "Név keretben (oldalsáv)"], ["Seitenspalte zentriert", "Sidebar centred", "Oldalsáv középre igazítva"], ["Kenntnisse im Hauptteil statt Seitenleiste", "Skills in the main part instead of sidebar", "Ismeretek a főrészben az oldalsáv helyett"],
+  // Schritt 2
+  ["Deine Daten", "Your details", "Az adataid"],
+  ["Das Formular ist leer – trage deine Angaben ein, die Vorschau rechts aktualisiert sich sofort. Zum Ausprobieren kannst du ein Beispiel laden.", "The form is empty – enter your details and the preview on the right updates instantly. To try it out, load a sample.", "Az űrlap üres – add meg az adataidat, a jobb oldali előnézet azonnal frissül. Kipróbáláshoz tölts be egy mintát."],
+  ["Beispiel auswählen", "Choose a sample", "Minta kiválasztása"], ["Beispiel laden", "Load sample", "Minta betöltése"], ["Formular leeren", "Clear form", "Űrlap törlése"],
+  ["Softwareentwicklerin (Wien, TU Wien)", "Software developer (Vienna, TU Wien)", "Szoftverfejlesztő (Bécs, TU Wien)"],
+  ["Marketing Manager (English CV, Vienna)", "Marketing Manager (English CV, Vienna)", "Marketing Manager (angol önéletrajz, Bécs)"],
+  ["Értékesítési asszisztens (magyar önéletrajz, Bécs)", "Sales assistant (Hungarian CV, Vienna)", "Értékesítési asszisztens (magyar önéletrajz, Bécs)"],
+  ["Buchhalter (Graz, HAK, Zivildienst)", "Accountant (Graz, business school, civil service)", "Könyvelő (Graz, HAK, polgári szolgálat)"],
+  ["Einzelhandelskauffrau (Linz, Lehre, Berufseinsteigerin)", "Retail clerk (Linz, apprenticeship, career starter)", "Kereskedelmi eladó (Linz, tanonc, pályakezdő)"],
+  ["Persönliche Daten", "Personal details", "Személyes adatok"],
+  ["Foto hinzufügen", "Add photo", "Fotó hozzáadása"], ["Anderes Foto wählen", "Choose another photo", "Másik fotó választása"], ["Foto zuschneiden", "Crop photo", "Fotó körbevágása"], ["Foto entfernen", "Remove photo", "Fotó eltávolítása"],
+  ["Ein Foto ist in Österreich üblich, aber freiwillig. Es wird passend zugeschnitten und bleibt auf deinem Gerät.", "A photo is common in Austria but optional. It is cropped to fit and stays on your device.", "Ausztriában a fotó szokás, de nem kötelező. Megfelelően körbevágjuk, és az eszközödön marad."],
+  ["Titel (vor dem Namen)", "Title (before the name)", "Titulus (a név előtt)"], ["Mag., DI, Dr.", "Dr., Prof.", "Dr., Prof."],
+  ["Titel (nach dem Namen)", "Title (after the name)", "Titulus (a név után)"], ["BA, MSc, MBA", "BA, MSc, MBA", "BA, MSc, MBA"],
+  ["Vorname", "First name", "Keresztnév"], ["Nachname", "Last name", "Vezetéknév"],
+  ["Berufsbezeichnung / angestrebte Stelle", "Job title / desired position", "Beosztás / megpályázott állás"],
+  ["z. B. Buchhalter", "e.g. Accountant", "pl. Könyvelő"],
+  ["Straße und Hausnummer", "Street and house number", "Utca és házszám"], ["PLZ", "Postcode", "Irányítószám"], ["Ort", "City", "Település"],
+  ["Telefon", "Phone", "Telefon"], ["E-Mail", "Email", "E-mail"], ["Website / LinkedIn", "Website / LinkedIn", "Weboldal / LinkedIn"],
+  ["Weitere Angaben", "Further details", "További adatok"], ["(freiwillig – leere Felder werden nicht angezeigt)", "(optional – empty fields are not shown)", "(nem kötelező – az üres mezők nem jelennek meg)"],
+  ["Geburtsdatum", "Date of birth", "Születési dátum"], ["TT.MM.JJJJ", "DD.MM.YYYY", "NN.HH.ÉÉÉÉ"], ["Geburtsort", "Place of birth", "Születési hely"],
+  ["Staatsbürgerschaft", "Nationality", "Állampolgárság"], ["Österreich", "Austrian", "magyar"], ["Familienstand", "Marital status", "Családi állapot"], ["ledig, verheiratet, ...", "single, married, ...", "egyedülálló, házas, ..."],
+  ["Kurzprofil", "Profile", "Bemutatkozás"], ["(freiwillig)", "(optional)", "(nem kötelező)"], ["2–3 Sätze über dich", "2–3 sentences about you", "2–3 mondat rólad"],
+  ["z. B. Gewissenhafter Buchhalter mit 10 Jahren Erfahrung in ...", "e.g. Conscientious accountant with 10 years of experience in ...", "pl. Lelkiismeretes könyvelő 10 év tapasztalattal ..."],
+  ["Formulierungshilfe", "Phrase helper", "Megfogalmazási segéd"],
+  ["Berufserfahrung", "Work experience", "Munkatapasztalat"],
+  ["Die neueste Stelle zuerst. Datum als MM/JJJJ. „Bis“ leer lassen = bis heute.", "Most recent job first. Dates as MM/YYYY. Leave “To” empty = until today.", "A legújabb állás elöl. Dátum HH/ÉÉÉÉ formában. Az „Eddig” üresen = a mai napig."],
+  ["+ Position hinzufügen", "+ Add position", "+ Pozíció hozzáadása"],
+  ["Ausbildung", "Education", "Tanulmányok"],
+  ["Matura, Lehre, Berufsschule, FH, Universität, Zivildienst, WIFI/BFI-Kurse …", "School-leaving exam, apprenticeship, vocational school, university, civil service, courses …", "Érettségi, tanonciskola, szakképzés, főiskola, egyetem, polgári szolgálat, tanfolyamok …"],
+  ["+ Ausbildung hinzufügen", "+ Add education", "+ Tanulmány hozzáadása"],
+  ["Kenntnisse & Sonstiges", "Skills & other", "Ismeretek és egyéb"],
+  ["Sprachen", "Languages", "Nyelvek"], ["(eine pro Zeile, Niveau A1–C2)", "(one per line, level A1–C2)", "(soronként egy, szint A1–C2)"],
+  ["Deutsch – Muttersprache Englisch – C1", "German – native\nEnglish – C1", "Német – anyanyelv\nAngol – C1"],
+  ["EDV / Fachkenntnisse", "IT / technical skills", "Informatikai / szakmai ismeretek"], ["(eine pro Zeile, „Thema: Kenntnisse“)", "(one per line, “Topic: skills”)", "(soronként egy, „Téma: ismeretek”)"],
+  ["MS Office: sehr gut BMD: gut", "MS Office: very good\nSAP: good", "MS Office: nagyon jó\nSAP: jó"],
+  ["Führerschein", "Driving licence", "Jogosítvány"], ["Klasse B", "Category B", "B kategória"],
+  ["Zertifikate & Weiterbildung", "Certificates & further training", "Tanúsítványok és továbbképzés"], ["(eine pro Zeile)", "(one per line)", "(soronként egy)"],
+  ["Interessen", "Interests", "Érdeklődési kör"], ["z. B. Klettern, Lesen", "e.g. climbing, reading", "pl. hegymászás, olvasás"],
+  ["Ort, Datum & Unterschrift", "Place, date & signature", "Hely, dátum és aláírás"], ["Ort, Datum und Unterschriftszeile am Ende anfügen", "Add place, date and signature line at the end", "Hely, dátum és aláírássor hozzáadása a végén"],
+  ["Datum", "Date", "Dátum"], ["Wien", "Vienna", "Bécs"], ["leer = heutiges Datum", "empty = today's date", "üres = mai dátum"],
+  ["← Zurück", "← Back", "← Vissza"], ["Weiter: Fertig →", "Next: finish →", "Tovább: kész →"],
+  ["Position", "Position", "Pozíció"], ["Von", "From", "Ettől"], ["Bis", "To", "Eddig"], ["MM/JJJJ", "MM/YYYY", "HH/ÉÉÉÉ"], ["leer = bis heute", "empty = until today", "üres = a mai napig"],
+  ["Berufsbezeichnung", "Job title", "Beosztás"], ["Firma", "Company", "Cég"], ["z. B. Muster GmbH", "e.g. Example Ltd", "pl. Minta Kft."], ["z. B. Wien", "e.g. Vienna", "pl. Bécs"],
+  ["Aufgaben (eine pro Zeile)", "Duties (one per line)", "Feladatok (soronként egy)"],
+  ["Abschluss / Ausbildung", "Qualification / education", "Végzettség / képzés"], ["z. B. Matura, Lehre, Bachelor", "e.g. school-leaving exam, apprenticeship, bachelor", "pl. érettségi, tanonc, BSc"],
+  ["Schule / Hochschule", "School / university", "Iskola / egyetem"], ["z. B. HAK Graz", "e.g. HAK Graz", "pl. HAK Graz"], ["z. B. Graz", "e.g. Graz", "pl. Graz"],
+  ["Details (eine pro Zeile)", "Details (one per line)", "Részletek (soronként egy)"],
+  ["Nach oben", "Move up", "Fel"], ["Nach unten", "Move down", "Le"], ["Entfernen", "Remove", "Eltávolítás"],
+  // Schritt 3
+  ["Fertig – jetzt speichern", "Done – save it now", "Kész – mentsd el"],
+  ["Als PDF speichern", "Save as PDF", "Mentés PDF-ként"], ["Öffnet den Druckdialog des Browsers", "Opens the browser's print dialogue", "Megnyitja a böngésző nyomtatási ablakát"],
+  ["PDF direkt herunterladen", "Download PDF directly", "PDF közvetlen letöltése"], ["Ohne Druckdialog · funktioniert überall, auch am Handy · Text durchsuchbar", "No print dialogue · works everywhere, also on phones · searchable text", "Nyomtatási ablak nélkül · mindenhol működik, telefonon is · kereshető szöveg"],
+  ["So klappt das PDF-Speichern", "How to save the PDF", "Így mentheted el a PDF-et"],
+  ["Daten sichern", "Back up your data", "Adatok mentése"],
+  ["Deine Eingaben werden automatisch in diesem Browser gespeichert. Für einen Gerätewechsel kannst du sie als Datei sichern.", "Your entries are saved automatically in this browser. To switch devices you can save them as a file.", "A beírt adataid automatikusan mentődnek ebben a böngészőben. Eszközváltáshoz fájlba is elmentheted őket."],
+  ["Daten sichern (Datei)", "Save data (file)", "Adatok mentése (fájl)"], ["Daten laden", "Load data", "Adatok betöltése"], ["Alles zurücksetzen", "Reset everything", "Minden visszaállítása"],
+  ["← Zurück zu den Daten", "← Back to the details", "← Vissza az adatokhoz"],
+  // Vorschau / Leiste
+  ["Vorschau", "Preview", "Előnézet"], ["PDF speichern", "Save PDF", "PDF mentése"], ["PDF direkt", "PDF direct", "PDF közvetlen"], ["1 Seite", "1 page", "1 oldal"],
+  ["✓ automatisch gespeichert", "✓ saved automatically", "✓ automatikusan mentve"],
+  ["Die Vorschau ist eine Annäherung. Zeilen- und Seitenumbrüche können im PDF minimal abweichen.", "The preview is an approximation. Line and page breaks may differ slightly in the PDF.", "Az előnézet közelítés. A sor- és oldaltörések a PDF-ben kissé eltérhetnek."],
+  ["1 Seite (A4)", "1 page (A4)", "1 oldal (A4)"],
+  ["· auf {0} % verkleinert", "· scaled down to {0} %", "· {0} %-ra kicsinyítve"],
+  ["– sehr klein, besser kürzen", "– very small, better shorten", "– nagyon kicsi, inkább rövidíts"],
+  ["Passt nicht auf 1 Seite – bitte Inhalte kürzen", "Does not fit on 1 page – please shorten the content", "Nem fér el 1 oldalon – kérlek rövidíts"],
+  ["ca. {0} Seite (A4)", "approx. {0} page (A4)", "kb. {0} oldal (A4)"], ["ca. {0} Seiten (A4)", "approx. {0} pages (A4)", "kb. {0} oldal (A4)"],
+  // Foto-Editor
+  ["Bild mit dem Finger oder der Maus verschieben, mit dem Regler vergrößern.", "Drag the image with your finger or the mouse, zoom with the slider.", "Told el a képet ujjal vagy egérrel, nagyítsd a csúszkával."],
+  ["Zuschnitt", "Crop", "Körbevágás"], ["Vergrößerung", "Zoom", "Nagyítás"], ["Helligkeit", "Brightness", "Fényerő"], ["Schwarz-Weiß", "Black and white", "Fekete-fehér"],
+  ["Rundung als Hilfslinie zeigen", "Show the rounding as a guide", "Kerekítés mutatása segédvonalként"],
+  ["Zurücksetzen", "Reset", "Visszaállítás"], ["Abbrechen", "Cancel", "Mégse"], ["Übernehmen", "Apply", "Alkalmaz"],
+  // Schritt 4
+  ["Sprache", "Language", "Nyelv"],
+  ["Sprache des Lebenslaufs", "CV language", "Az önéletrajz nyelve"],
+  ["(auch die Sprache dieser Oberfläche)", "(also the language of this interface)", "(egyben a felület nyelve is)"],
+  ["Gilt für den ausgewählten Lebenslauf: Überschriften, Datumsformat, Rechtschreibprüfung und diese Oberfläche. Jeder Lebenslauf hat seine eigene Sprache.", "Applies to the selected CV: headings, date format, spellcheck and this interface. Each CV has its own language.", "A kiválasztott önéletrajzra vonatkozik: címsorok, dátumformátum, helyesírás-ellenőrzés és ez a felület. Minden önéletrajznak saját nyelve van."],
+  ["Meine Lebensläufe", "My CVs", "Önéletrajzaim"],
+  ["Lege für jede Bewerbung einen eigenen Lebenslauf an. Alles wird automatisch gespeichert.", "Create a separate CV for each application. Everything is saved automatically.", "Hozz létre külön önéletrajzot minden pályázathoz. Minden automatikusan mentődik."],
+  ["Lebenslauf", "CV", "Önéletrajz"], ["Name dieses Lebenslaufs", "Name of this CV", "Az önéletrajz neve"], ["Name", "Name", "Név"],
+  ["Neu", "New", "Új"], ["Kopie", "Copy", "Másolat"], ["Löschen", "Delete", "Törlés"],
+  ["Aktiv", "Active", "Aktív"], ["Öffnen", "Open", "Megnyitás"], ["zuletzt geändert", "last changed", "utoljára módosítva"],
+  ["Lebenslauf auswählen", "Choose a CV", "Önéletrajz kiválasztása"],
+  // Hinweise
+  ["Die E-Mail-Adresse sieht nicht korrekt aus.", "The email address does not look correct.", "Az e-mail-cím nem tűnik helyesnek."],
+  ["Die Telefonnummer wirkt zu kurz.", "The phone number seems too short.", "A telefonszám túl rövidnek tűnik."],
+  ["Die Datumsangaben sind nicht einheitlich ({0}). Nimm überall dasselbe Format, z. B. MM/JJJJ.", "The dates are not consistent ({0}). Use the same format everywhere, e.g. MM/YYYY.", "A dátumok nem egységesek ({0}). Használj mindenhol azonos formátumot, pl. HH/ÉÉÉÉ."],
+  ["und", "and", "és"], ["JJJJ", "YYYY", "ÉÉÉÉ"], ["MM.JJJJ", "MM.YYYY", "HH.ÉÉÉÉ"], ["anderes", "other", "egyéb"],
+  ["Bei „{0}“ liegt das Ende vor dem Beginn.", "For “{0}” the end date is before the start date.", "A(z) „{0}” esetében a befejezés a kezdés előtt van."],
+  ["Bei „{0}“ fehlt das Startdatum.", "“{0}” has no start date.", "A(z) „{0}” esetében hiányzik a kezdő dátum."],
+  ["Zwischen „{0}“ und „{1}“ liegt eine Lücke von etwa {2} Monaten – kurz erklären (z. B. Weiterbildung, Elternzeit)?", "There is a gap of about {2} months between “{0}” and “{1}” – explain it briefly (e.g. further training, parental leave)?", "„{0}” és „{1}” között kb. {2} hónap kihagyás van – magyarázd meg röviden (pl. továbbképzés, gyermekgondozás)?"],
+  ["Manche Stichpunkte sind sehr lang (über 160 Zeichen). Kürzer lässt sich leichter lesen.", "Some bullet points are very long (over 160 characters). Shorter ones are easier to read.", "Néhány felsorolás nagyon hosszú (160 karakter felett). Rövidebben könnyebb olvasni."],
+  ["Stichpunkte enden mal mit Punkt, mal ohne – entscheide dich für eine Variante.", "Some bullet points end with a full stop, others don't – pick one style.", "Egyes felsorolások ponttal végződnek, mások anélkül – válassz egy módot."],
+  ["Bei „{0}“ fehlen die Aufgaben.", "“{0}” has no duties listed.", "A(z) „{0}” esetében hiányoznak a feladatok."],
+  ["Das Kurzprofil ist lang. 2–3 Sätze (unter 400 Zeichen) wirken stärker.", "The profile is long. 2–3 sentences (under 400 characters) work better.", "A bemutatkozás hosszú. 2–3 mondat (400 karakter alatt) hatásosabb."],
+  ["Doppeltes Wort gefunden: „{0}“.", "Repeated word found: “{0}”.", "Duplázott szó: „{0}”."],
+  ["Dein Name fehlt.", "Your name is missing.", "Hiányzik a neved."],
+  ["Telefon oder E-Mail fehlt – so können dich Firmen erreichen.", "Phone or email is missing – that is how companies reach you.", "Hiányzik a telefonszám vagy az e-mail – így érhetnek el a cégek."],
+  ["Berufserfahrung oder Ausbildung fehlt noch.", "Work experience or education is still missing.", "Még hiányzik a munkatapasztalat vagy a tanulmány."],
+  ["Dein Lebenslauf ist ca. {0} Seiten lang. 1–2 Seiten sind üblich – kürze ältere Stationen, probiere die Vorlage „Kompakt“ oder aktiviere „Alles auf einer Seite“.", "Your CV is about {0} pages long. 1–2 pages are usual – shorten older entries, try the “Compact” template or enable “Everything on one page”.", "Az önéletrajzod kb. {0} oldal hosszú. Az 1–2 oldal a szokásos – rövidítsd a régebbi állomásokat, próbáld a „Tömör” sablont, vagy kapcsold be a „Minden egy oldalon” opciót."],
+  ["Vorlage ändern", "Change template", "Sablon módosítása"], ["Ergänzen", "Complete", "Kiegészítés"],
+  ["Alles bereit – dein Lebenslauf sieht vollständig aus. Prüfe ihn noch einmal in der Vorschau.", "All set – your CV looks complete. Check it once more in the preview.", "Minden kész – az önéletrajzod teljesnek tűnik. Nézd át még egyszer az előnézetben."],
+  // Meldungen
+  ["Dieses Bild konnte nicht gelesen werden.", "This image could not be read.", "Ezt a képet nem sikerült beolvasni."],
+  ["Dieses Bild konnte nicht gelesen werden. Bitte ein JPG oder PNG wählen.", "This image could not be read. Please choose a JPG or PNG.", "Ezt a képet nem sikerült beolvasni. Kérlek, válassz JPG vagy PNG fájlt."],
+  ["Vorlage „{0}“ gespeichert. Du findest sie oben unter „Meine“.", "Template “{0}” saved. You will find it above under “Mine”.", "A(z) „{0}” sablon mentve. Fent a „Saját” alatt találod."],
+  ["Nur für diese Sitzung gespeichert (Browser-Speicher nicht verfügbar). Nutze den Vorlagen-Code zum Sichern.", "Saved for this session only (browser storage not available). Use the template code to back it up.", "Csak erre a munkamenetre mentve (a böngészőtár nem elérhető). Használd a sablonkódot a mentéshez."],
+  ["Vorlage gelöscht.", "Template deleted.", "Sablon törölve."],
+  ["Code erzeugt. Kopiere ihn und bewahre ihn auf – oder gib ihn weiter.", "Code generated. Copy it and keep it – or share it.", "A kód elkészült. Másold ki és őrizd meg – vagy add tovább."],
+  ["Vorlage „{0}“ importiert.", "Template “{0}” imported.", "A(z) „{0}” sablon importálva."],
+  ["Dieser Vorlagen-Code ist ungültig.", "This template code is invalid.", "Ez a sablonkód érvénytelen."],
+  ["Im Druckdialog „Als PDF speichern“ wählen · Papier A4 · „Hintergrundgrafiken“ aktivieren. Kein Dialog? Dann „PDF direkt herunterladen“ nutzen.", "In the print dialogue choose “Save as PDF” · paper A4 · enable “Background graphics”. No dialogue? Then use “Download PDF directly”.", "A nyomtatási ablakban válaszd a „Mentés PDF-ként” opciót · A4 papír · kapcsold be a „Háttérgrafika” opciót. Nincs ablak? Használd a „PDF közvetlen letöltése” gombot."],
+  ["Datensicherung gespeichert: lebenslauf-daten.json", "Backup saved: lebenslauf-daten.json", "Az adatmentés elkészült: lebenslauf-daten.json"],
+  ["Daten geladen ({0} Lebensläufe).", "Data loaded ({0} CVs).", "Adatok betöltve ({0} önéletrajz)."],
+  ["Daten geladen.", "Data loaded.", "Adatok betöltve."],
+  ["Diese Datei konnte nicht gelesen werden. Bitte eine zuvor gesicherte „lebenslauf-daten.json“ wählen.", "This file could not be read. Please choose a previously saved “lebenslauf-daten.json”.", "Ezt a fájlt nem sikerült beolvasni. Válassz egy korábban mentett „lebenslauf-daten.json” fájlt."],
+  ["Speicher voll – bitte nicht benötigte Lebensläufe löschen oder Daten als Datei sichern.", "Storage full – please delete CVs you no longer need or save your data as a file.", "A tár megtelt – töröld a nem használt önéletrajzokat, vagy mentsd az adatokat fájlba."],
+  ["Neuer, leerer Lebenslauf angelegt.", "New, empty CV created.", "Új, üres önéletrajz létrehozva."],
+  ["Kopie angelegt – du arbeitest jetzt in der Kopie.", "Copy created – you are now working in the copy.", "Másolat létrehozva – most a másolaton dolgozol."],
+  ["„{0}“ wirklich löschen?", "Really delete “{0}”?", "Biztosan törlöd: „{0}”?"],
+  ["Lebenslauf gelöscht.", "CV deleted.", "Önéletrajz törölve."],
+  ["Beispiel geladen.", "Sample loaded.", "Minta betöltve."],
+  ["Formular geleert – trage jetzt deine Daten ein.", "Form cleared – now enter your details.", "Az űrlap törölve – add meg az adataidat."],
+  ["Wirklich alles zurücksetzen? Deine Eingaben und eigenen Vorlagen in diesem Browser werden gelöscht.", "Really reset everything? Your entries and your own templates in this browser will be deleted.", "Biztosan visszaállítasz mindent? A beírt adataid és a saját sablonjaid törlődnek ebben a böngészőben."],
+  ["PDF wird erstellt …", "Creating PDF …", "PDF készül …"],
+  ["Speichern abgebrochen.", "Saving cancelled.", "A mentés megszakítva."],
+  ["„{0}“ wurde gespeichert. (Der Text im PDF ist durchsuchbar und markierbar.)", "“{0}” has been saved. (The text in the PDF is searchable and selectable.)", "A(z) „{0}” elmentve. (A PDF szövege kereshető és kijelölhető.)"],
+  ["Das PDF konnte nicht erstellt werden: {0}", "The PDF could not be created: {0}", "A PDF-et nem sikerült létrehozni: {0}"],
+  ["Mein Lebenslauf", "My CV", "Önéletrajzom"],
+  ["Wirklich löschen?", "Really delete?", "Biztosan törlöd?"],
+  ["Wirklich zurücksetzen? Alle Eingaben und eigenen Vorlagen werden gelöscht.", "Really reset? All entries and own templates will be deleted.", "Biztosan visszaállítod? Minden adat és saját sablon törlődik."]
+];
+const RICH = {
+  pdf1: { en: "Click “Save as PDF”. Your browser's print dialogue opens.", hu: "Kattints a „Mentés PDF-ként” gombra. Megnyílik a böngésző nyomtatási ablaka." },
+  pdf2: { en: "As printer choose <b>“Save as PDF”</b> (Chrome/Edge) or, at the bottom left, <b>“PDF” → “Save as PDF”</b> (Mac/Safari).", hu: "Nyomtatónak válaszd a <b>„Mentés PDF-ként”</b> opciót (Chrome/Edge), illetve bal alul a <b>„PDF” → „Mentés PDF-ként”</b> menüpontot (Mac/Safari)." },
+  pdf3: { en: "Paper: <b>A4</b>. Margins: <b>Default</b>. Tick <b>“Background graphics”</b> so colour areas are printed too.", hu: "Papír: <b>A4</b>. Margók: <b>Alapértelmezett</b>. Pipáld be a <b>„Háttérgrafika”</b> opciót, hogy a színes felületek is kinyomtatódjanak." },
+  pdf4: { en: "Click “Save” – done.", hu: "Kattints a „Mentés” gombra – kész." }
+};
+const TR = { en: {}, hu: {} };
+I18N_ROWS.forEach(r => { TR.en[r[0].replace(/\s+/g, " ").trim()] = r[1]; TR.hu[r[0].replace(/\s+/g, " ").trim()] = r[2]; });
+const UI_LOCALE = { de: "de-AT", en: "en-GB", hu: "hu-HU" };
+let uiLang = "de";
+const nrm = s => String(s).replace(/\s+/g, " ").trim();
+function t(s, ...a) {
+  let r = s;
+  if (uiLang !== "de") { const m = TR[uiLang][nrm(s)]; if (m != null) r = m; }
+  return a.length ? r.replace(/\{(\d)\}/g, (_, i) => a[i]) : r;
+}
+const I18N_SKIP = "#sheet,#printArea,.thumb,.cname,#cvName,.cvn,script,style,svg,canvas,.phrbox";
+const trOrig = new WeakMap(), trOut = new WeakMap(), trAttr = new WeakMap(), trRich = new WeakMap();
+const TR_ATTRS = ["placeholder", "title", "aria-label"];
+function trTextNode(n) {
+  const p = n.parentElement; if (!p || p.closest(I18N_SKIP) || p.closest("[data-rich]") || p.tagName === "TEXTAREA") return;
+  let o = trOrig.get(n);
+  if (o == null || n.nodeValue !== trOut.get(n)) { o = n.nodeValue; trOrig.set(n, o); }
+  const key = nrm(o); if (!key) return;
+  const m = uiLang === "de" ? null : TR[uiLang][key];
+  const lead = o.match(/^\s*/)[0], trail = o.match(/\s*$/)[0];
+  const out = m != null ? lead + m + trail : o;
+  if (n.nodeValue !== out) n.nodeValue = out;
+  trOut.set(n, out);
+}
+function trElement(el) {
+  if (el.nodeType !== 1 || el.matches(I18N_SKIP)) return;
+  TR_ATTRS.forEach(a => {
+    if (!el.hasAttribute(a)) return;
+    let rec = trAttr.get(el); if (!rec) { rec = {}; trAttr.set(el, rec); }
+    const cur = el.getAttribute(a);
+    if (rec[a] == null || cur !== rec[a].out) rec[a] = { orig: cur, out: cur };
+    const m = uiLang === "de" ? null : TR[uiLang][nrm(rec[a].orig)];
+    const out = m != null ? m : rec[a].orig;
+    if (cur !== out) el.setAttribute(a, out);
+    rec[a].out = out;
+  });
+  if (el.hasAttribute("data-rich")) {
+    const id = el.getAttribute("data-rich");
+    if (!trRich.has(el)) trRich.set(el, el.innerHTML);
+    const m = uiLang === "de" ? null : (RICH[id] || {})[uiLang];
+    el.innerHTML = m != null ? m : trRich.get(el);
+    return;
+  }
+  if (el.tagName === "TEXTAREA") return;
+  el.childNodes.forEach(c => { if (c.nodeType === 3) trTextNode(c); else if (c.nodeType === 1) trElement(c); });
+}
+function trNode(n) { if (n.nodeType === 3) trTextNode(n); else if (n.nodeType === 1 && !(n.parentElement && n.parentElement.closest(I18N_SKIP))) trElement(n); }
+let trBusy = false;
+const trObserver = new MutationObserver(recs => {
+  if (trBusy) return; trBusy = true;
+  try { recs.forEach(r => { if (r.type === "characterData") trTextNode(r.target); else r.addedNodes.forEach(trNode); }); }
+  finally { trBusy = false; trObserver.takeRecords(); }
+});
+trObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+function setUiLang(lang) {
+  if (lang !== "en" && lang !== "hu") lang = "de";
+  if (lang === uiLang) return false;
+  uiLang = lang; document.documentElement.lang = lang;
+  trBusy = true; try { trElement(document.body); document.title = t("Lebenslauf-Ersteller"); } finally { trBusy = false; trObserver.takeRecords(); }
+  return true;
 }
 
 /* ===================================================================
@@ -1098,7 +1488,7 @@ function fileBase(d) {
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const PAGE_W = 640, PAGE_PX = 794, PAD_PX = 76, PAGE_CONTENT_PX = 971; // A4 bei 96 dpi, 2 cm Rand
-const KEY_FIT = "lebenslauf.einseitig.v1", KEY_DRAFT = "lebenslauf.daten.v4", KEY_LAYOUTS = "lebenslauf.vorlagen.v1", KEY_CUR = "lebenslauf.vorlage.aktuell.v1";
+const KEY_FIT = "lebenslauf.einseitig.v1", KEY_DRAFT = "lebenslauf.daten.v4", KEY_LAYOUTS = "lebenslauf.vorlagen.v1", KEY_CUR = "lebenslauf.vorlage.aktuell.v1", KEY_CVS = "lebenslauf.lebenslaeufe.v1", KEY_FAV = "lebenslauf.favoriten.v1";
 const lsGet = k => { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch (e) { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
 const lsDel = k => { try { localStorage.removeItem(k); } catch (e) { /* ignorieren */ } };
@@ -1106,7 +1496,7 @@ const lsDel = k => { try { localStorage.removeItem(k); } catch (e) { /* ignorier
 const EMPTY = {
   titleBefore: "", first: "", last: "", titleAfter: "", headline: "", street: "", zip: "", city: "", phone: "", email: "", web: "",
   birthDate: "", birthPlace: "", nationality: "", marital: "", summary: "", jobs: [{}], edu: [{}],
-  languages: "", it: "", licence: "", certs: "", interests: "", showSignature: true, signPlace: "", signDate: "", photo: "", photoSrc: "", photoCrop: null
+  languages: "", it: "", licence: "", certs: "", interests: "", showSignature: true, signPlace: "", signDate: "", photo: "", photoSrc: "", photoCrop: null, lang: "de"
 };
 const REPEATERS = {
   jobs: { label: "Position", fields: [
@@ -1121,7 +1511,7 @@ const QUICK_SEG = {
   baseSize: [[9.5, "Klein"], [10.5, "Normal"], [11.5, "Groß"]],
   spacing: [["compact", "Kompakt"], ["normal", "Normal"], ["airy", "Luftig"]]
 };
-const CATS = [["alle", "Alle"], ["klassisch", "Klassisch"], ["modern", "Modern"], ["spalten", "Seitenleiste & Spalten"], ["kreativ", "Kreativ & Auffällig"]];
+const CATS = [["alle", "Alle"], ["fav", "♥ Favoriten"], ["klassisch", "Klassisch"], ["modern", "Modern"], ["spalten", "Seitenleiste & Spalten"], ["kreativ", "Kreativ & Auffällig"]];
 // Kategorie aus den Eigenschaften der Vorlage ableiten (statt feste Listen)
 function catOf(p) {
   const l = sanitizeLayout(p.layout);
@@ -1138,14 +1528,14 @@ const state = { photo: "", photoSrc: "", photoCrop: null, layout: sanitizeLayout
 let statusTimer = null;
 function status(msg, kind, sticky) {
   const el = $("#status"); if (!el) return;
-  el.textContent = msg || ""; el.className = kind || "";
+  el.textContent = msg ? t(msg) : ""; el.className = kind || "";
   clearTimeout(statusTimer);
   if (msg && !sticky) statusTimer = setTimeout(() => { el.textContent = ""; el.className = ""; }, 14000);
 }
 
 /* ---------- Formular <-> Daten ---------- */
 function renumber(key) {
-  $$("#" + key + " .item").forEach((it, i) => { $(".num", it).textContent = REPEATERS[key].label + " " + (i + 1); });
+  $$("#" + key + " .item").forEach((it, i) => { $(".num", it).textContent = t(REPEATERS[key].label) + " " + (i + 1); });
 }
 function buildItem(key, values) {
   const f = REPEATERS[key].fields, div = document.createElement("div");
@@ -1156,7 +1546,8 @@ function buildItem(key, values) {
     : `<label>${esc(x[1])}</label><input type="text" data-f="${x[0]}" placeholder="${esc(x[2] || "")}" value="${esc(val(x[0]))}">`;
   div.innerHTML = `<div class="top"><span class="num"></span><span class="tools"><button type="button" data-act="up" title="Nach oben" aria-label="Nach oben">↑</button> ` +
     `<button type="button" data-act="down" title="Nach unten" aria-label="Nach unten">↓</button> <button type="button" class="link" data-act="del">Entfernen</button></span></div>` +
-    `<div class="row2"><div>${field(f[0])}</div><div>${field(f[1])}</div></div>${field(f[2])}${field(f[3])}${field(f[4])}${field(f[5])}`;
+    `<div class="row2"><div>${field(f[0])}</div><div>${field(f[1])}</div></div>${field(f[2])}${field(f[3])}${field(f[4])}${field(f[5])}` +
+    (key === "jobs" ? `<details class="phr"><summary>Formulierungshilfe</summary><div class="phrbox" data-kind="jobs"></div></details>` : "");
   return div;
 }
 function fillRepeater(key, items) {
@@ -1186,6 +1577,7 @@ function collect() {
 function populate(d) {
   d = Object.assign({}, EMPTY, d || {});
   $$("[data-k]").forEach(el => { const v = d[el.dataset.k]; if (el.type === "checkbox") el.checked = !!v; else el.value = v == null ? "" : v; });
+  applySpell();
   Object.keys(REPEATERS).forEach(key => fillRepeater(key, d[key]));
   state.photoSrc = d.photoSrc || ""; state.photoCrop = d.photoCrop || null;
   setPhoto(d.photo || "");
@@ -1294,7 +1686,50 @@ function makeSilhouette() {
   } catch (e) { return ""; }
 }
 
+
+/* ---------- Formulierungshilfe ---------- */
+const PHRASES = {
+  jobs: {
+    de: ["Verantwortlich für …", "Leitung von …", "Entwicklung und Umsetzung von …", "Erstellung von …", "Koordination von …", "Beratung und Betreuung von …", "Optimierung von … (z. B. um 20 %)", "Einführung von …", "Zusammenarbeit mit …", "Schulung von …", "Planung und Organisation von …", "Analyse von …", "Reduzierung von … um …", "Steigerung von … um …"],
+    en: ["Responsible for …", "Led …", "Developed and implemented …", "Created …", "Coordinated …", "Advised and supported …", "Optimised … (e.g. by 20 %)", "Introduced …", "Collaborated with …", "Trained …", "Planned and organised …", "Analysed …", "Reduced … by …", "Increased … by …"],
+    hu: ["Felelős voltam …", "Vezettem …", "Fejlesztettem és bevezettem …", "Elkészítettem …", "Koordináltam …", "Ügyfeleket tanácsoltam és támogattam …", "Optimalizáltam … (pl. 20 %-kal)", "Bevezettem …", "Együttműködtem …", "Betanítottam …", "Terveztem és szerveztem …", "Elemeztem …", "Csökkentettem … -t … -kal", "Növeltem … -t … -kal"]
+  },
+  summary: {
+    de: ["Engagierte/r … mit … Jahren Erfahrung in …", "Schwerpunkte: …", "Teamorientiert, lösungsorientiert und zuverlässig.", "Sicherer Umgang mit …", "Auf der Suche nach einer Position als … in …"],
+    en: ["Motivated … with … years of experience in …", "Key strengths: …", "Team-oriented, solution-focused and reliable.", "Proficient in …", "Looking for a role as … in …"],
+    hu: ["Elkötelezett … … év tapasztalattal …", "Fő erősségeim: …", "Csapatorientált, megoldásközpontú és megbízható.", "Biztos ismeretek: …", "… pozíciót keresek … területen."]
+  }
+};
+function fillPhrases(box) {
+  const kind = box.dataset.kind, list = (PHRASES[kind] || {})[curLang()] || PHRASES[kind].de;
+  box.innerHTML = list.map(t => `<button type="button" class="chipbtn" data-phrase="${esc(t)}">${esc(t)}</button>`).join("");
+  box.dataset.lang = curLang();
+}
+function initPhrases() {
+  document.addEventListener("toggle", e => { const d = e.target; if (d.classList && d.classList.contains("phr") && d.open) { const box = $(".phrbox", d); if (box.dataset.lang !== curLang()) fillPhrases(box); } }, true);
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-phrase]"); if (!b) return;
+    const wrap = b.closest(".item") || b.closest(".inner"), ta = $('textarea[data-f="details"], textarea[data-k="summary"]', wrap); if (!ta) return;
+    const t = b.dataset.phrase, isSummary = ta.dataset.k === "summary";
+    ta.value = ta.value.replace(/\s+$/, "") + (ta.value.trim() ? (isSummary ? " " : "\n") : "") + t;
+    ta.focus(); const p = ta.value.indexOf("…", Math.max(0, ta.value.length - t.length)); if (p >= 0 && ta.setSelectionRange) ta.setSelectionRange(p, p + 1);
+    ta.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
 /* ---------- Vorschau ---------- */
+const curLang = () => { const el = $("#cvLang"); return el && el.value ? el.value : "de"; };
+const demoSample = () => window.SAMPLES[curLang() === "de" ? "dev" : curLang()].data;
+let uiReady = false;
+function uiRefresh() { // dynamisch erzeugte Texte in der neuen Oberflächensprache neu aufbauen
+  renumber("jobs"); renumber("edu"); updateLayoutLabel(); renderCvList(); renderChips();
+  const s = $("#status"); if (s) { s.textContent = ""; s.className = ""; }
+}
+function applySpell() { // Rechtschreibprüfung des Browsers in der Sprache des Lebenslaufs + Oberflächensprache
+  const lg = curLang();
+  if (setUiLang(lg) && uiReady) uiRefresh();
+  $$("#panel input[type=text], #panel textarea").forEach(el => { el.lang = lg; el.spellcheck = true; });
+}
 function scaleInto(box, html, crop, layout) {
   box.innerHTML = "";
   const inner = document.createElement("div");
@@ -1307,7 +1742,7 @@ function scaleInto(box, html, crop, layout) {
 function renderPreview() {
   const wrap = $("#sheetWrap"), sheet = $("#sheet");
   const demo = state.step === 1;
-  const data = demo ? Object.assign({}, window.SAMPLES.dev.data, { photo: state.silhouette, showSignature: true }) : collect();
+  const data = demo ? Object.assign({}, demoSample(), { photo: state.silhouette, showSignature: true }) : collect();
   const fr = state.onePage ? computeFit(data, state.layout) : { f: 1, ok: true };
   state.fit = fr.f;
   sheet.style.background = pageBackground(state.layout);
@@ -1318,8 +1753,8 @@ function renderPreview() {
   state.pages = state.onePage && fr.ok ? 1 : Math.max(1, Math.ceil((sheet.offsetHeight - 2 * PAD_PX) / PAGE_CONTENT_PX));
   const info = $("#pageInfo");
   info.textContent = state.onePage
-    ? (fr.ok ? "1 Seite (A4)" + (fr.f < 1 ? " · auf " + Math.round(fr.f * 100) + " % verkleinert" + (fr.f < 0.7 ? " – sehr klein, besser kürzen" : "") : "") : "Passt nicht auf 1 Seite – bitte Inhalte kürzen")
-    : "ca. " + state.pages + (state.pages === 1 ? " Seite" : " Seiten") + " (A4)";
+    ? (fr.ok ? t("1 Seite (A4)") + (fr.f < 1 ? " " + t("· auf {0} % verkleinert", Math.round(fr.f * 100)) + (fr.f < 0.7 ? " " + t("– sehr klein, besser kürzen") : "") : "") : t("Passt nicht auf 1 Seite – bitte Inhalte kürzen"))
+    : t(state.pages === 1 ? "ca. {0} Seite (A4)" : "ca. {0} Seiten (A4)", state.pages);
   info.className = (state.onePage ? (!fr.ok || fr.f < 0.7) : state.pages > 2) ? "warn" : "";
   updateChecks();
 }
@@ -1327,7 +1762,7 @@ let previewTimer = null, saveTimer = null, savedTimer = null;
 function schedule() {
   clearTimeout(previewTimer); previewTimer = setTimeout(renderPreview, 120);
   clearTimeout(saveTimer); saveTimer = setTimeout(() => {
-    if (lsSet(KEY_DRAFT, collect())) {
+    if (saveCvs()) {
       const s = $("#saved"); s.textContent = "✓ automatisch gespeichert"; s.classList.add("show");
       clearTimeout(savedTimer); savedTimer = setTimeout(() => s.classList.remove("show"), 1800);
     }
@@ -1368,6 +1803,9 @@ function layoutDist(a, b) {
   d += dh * 2.5 * Math.min(1, Math.min(x.s, y.s) * 1.5) + Math.abs(x.l - y.l) * 1.2;
   return d;
 }
+let favs = (lsGet(KEY_FAV) || []).filter(x => typeof x === "string");
+const isFav = id => favs.indexOf(id) >= 0;
+const inFilter = (it, f) => f === "alle" || (f === "fav" ? isFav(it.id) : it.cat === f);
 let simOrder = null;
 function similarityOrder() { // Kette: immer die ähnlichste noch nicht gezeigte Vorlage als Nächste
   if (simOrder) return simOrder;
@@ -1380,22 +1818,28 @@ function similarityOrder() { // Kette: immer die ähnlichste noch nicht gezeigte
   }
   simOrder = out.map(i => i.id); return simOrder;
 }
+function toggleFav(id, btn) {
+  const i = favs.indexOf(id); if (i >= 0) favs.splice(i, 1); else favs.push(id);
+  lsSet(KEY_FAV, favs);
+  if (btn) { btn.classList.toggle("on", isFav(id)); btn.textContent = isFav(id) ? "♥" : "♡"; btn.setAttribute("aria-pressed", isFav(id)); }
+  renderChips(); if (state.filter === "fav") renderGallery();
+}
 function renderChips() {
   const cats = CATS.concat(state.custom.length ? [["meine", "Meine"]] : []);
   if (!cats.some(c => c[0] === state.filter)) state.filter = "alle";
   const all = allLayouts();
-  $("#chips").innerHTML = cats.map(c => `<button type="button" data-cat="${c[0]}" class="${c[0] === state.filter ? "on" : ""}">${c[1]} <small>${all.filter(x => c[0] === "alle" || x.cat === c[0]).length}</small></button>`).join("");
+  $("#chips").innerHTML = cats.map(c => `<button type="button" data-cat="${c[0]}" class="${c[0] === state.filter ? "on" : ""}">${c[1]} <small>${all.filter(x => inFilter(x, c[0])).length}</small></button>`).join("");
 }
 function renderGallery() {
   const g = $("#gallery"); g.style.minHeight = g.offsetHeight + "px"; g.innerHTML = "";
-  const s = window.SAMPLES.dev.data;
+  const s = demoSample();
   const data = Object.assign({}, s, { photo: state.silhouette, showSignature: false, jobs: s.jobs.slice(0, 2), edu: s.edu.slice(0, 2) });
   const rank = id => { const i = similarityOrder().indexOf(id); return i < 0 ? 9999 : i; };
-  allLayouts().filter(it => state.filter === "alle" || it.cat === state.filter).sort((x, y) => rank(x.id) - rank(y.id)).forEach(it => {
+  allLayouts().filter(it => inFilter(it, state.filter)).sort((x, y) => rank(x.id) - rank(y.id)).forEach(it => {
     const card = document.createElement("div");
     card.className = "card" + (it.id === state.layoutId ? " sel" : "");
-    card.dataset.id = it.id; card.tabIndex = 0; card.setAttribute("role", "button"); card.setAttribute("aria-label", "Vorlage " + it.name);
-    card.innerHTML = `<div class="thumb"></div><div class="cname"><span>${esc(it.name)}</span>${it.custom ? '<button type="button" class="link" data-del title="Vorlage löschen" aria-label="Vorlage löschen">×</button>' : ""}</div>`;
+    card.dataset.id = it.id; card.tabIndex = 0; card.setAttribute("role", "button"); card.setAttribute("aria-label", t("Vorlage {0}", it.name));
+    card.innerHTML = `<button type="button" class="fav${isFav(it.id) ? " on" : ""}" data-fav title="Favorit" aria-label="Als Favorit markieren" aria-pressed="${isFav(it.id)}">${isFav(it.id) ? "♥" : "♡"}</button><div class="thumb"></div><div class="cname"><span>${esc(it.name)}</span>${it.custom ? '<button type="button" class="link" data-del title="Vorlage löschen" aria-label="Vorlage löschen">×</button>' : ""}</div>`;
     g.appendChild(card);
     scaleInto($(".thumb", card), buildHtml(data, it.layout), true, it.layout);
   });
@@ -1404,15 +1848,15 @@ function renderGallery() {
 function highlightGallery() { $$("#gallery .card").forEach(c => c.classList.toggle("sel", c.dataset.id === state.layoutId)); }
 function updateLayoutLabel() {
   const it = allLayouts().filter(x => x.id === state.layoutId)[0];
-  $("#layoutCurrent").textContent = it ? "· " + it.name : "· angepasst (noch nicht gespeichert)";
+  $("#layoutCurrent").textContent = it ? "· " + it.name : t("· angepasst (noch nicht gespeichert)");
 }
-const persistCurrent = () => lsSet(KEY_CUR, { id: state.layoutId, layout: state.layout });
+const persistCurrent = () => saveCvs();
 
 function buildLayoutControls() {
   $("#q_font").innerHTML = FONTS.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
-  $("#swatches").innerHTML = SWATCHES.map(c => `<button type="button" data-color="${c}" style="background:${c}" title="${c}" aria-label="Farbe ${c}"></button>`).join("") +
+  $("#swatches").innerHTML = SWATCHES.map(c => `<button type="button" data-color="${c}" style="background:${c}" title="${c}" aria-label="${c}"></button>`).join("") +
     `<input type="color" id="q_color" aria-label="Eigene Farbe" title="Eigene Farbe wählen">`;
-  $("#swatches2").innerHTML = SWATCHES.map(c => `<button type="button" data-color="${c}" style="background:${c}" title="${c}" aria-label="Zweite Farbe ${c}"></button>`).join("") +
+  $("#swatches2").innerHTML = SWATCHES.map(c => `<button type="button" data-color="${c}" style="background:${c}" title="${c}" aria-label="${c}"></button>`).join("") +
     `<input type="color" id="q_color2" aria-label="Eigene zweite Farbe" title="Eigene zweite Farbe wählen">`;
   $$("[data-seg]").forEach(box => {
     box.innerHTML = QUICK_SEG[box.dataset.seg].map(o => `<button type="button" data-v="${o[0]}">${o[1]}</button>`).join("");
@@ -1461,7 +1905,7 @@ function saveLayout() {
   const ok = lsSet(KEY_LAYOUTS, state.custom);
   state.layoutId = ex.id; state.filter = "meine";
   renderChips(); renderGallery(); updateLayoutLabel(); persistCurrent();
-  status(ok ? `Vorlage „${name}“ gespeichert. Du findest sie oben unter „Meine“.` : "Nur für diese Sitzung gespeichert (Browser-Speicher nicht verfügbar). Nutze den Vorlagen-Code zum Sichern.", ok ? "ok" : "err");
+  status(ok ? t("Vorlage „{0}“ gespeichert. Du findest sie oben unter „Meine“.", name) : "Nur für diese Sitzung gespeichert (Browser-Speicher nicht verfügbar). Nutze den Vorlagen-Code zum Sichern.", ok ? "ok" : "err");
 }
 function deleteCustom(id) {
   state.custom = state.custom.filter(c => c.id !== id);
@@ -1481,7 +1925,7 @@ function importLayout() {
     const ex = { id: "u" + Date.now(), name: String(obj.n || "Importierte Vorlage").slice(0, 40), layout: sanitizeLayout(obj.l) };
     state.custom.push(ex); lsSet(KEY_LAYOUTS, state.custom);
     state.filter = "meine"; renderChips(); renderGallery(); selectLayout(ex.id);
-    status(`Vorlage „${ex.name}“ importiert.`, "ok");
+    status(t("Vorlage „{0}“ importiert.", ex.name), "ok");
   } catch (e) { status("Dieser Vorlagen-Code ist ungültig.", "err"); }
 }
 
@@ -1490,7 +1934,9 @@ function showStep(n) {
   state.step = n;
   $$(".step").forEach(s => s.classList.toggle("active", s.id === "step" + n));
   $$("#stepper button").forEach(b => b.classList.toggle("on", Number(b.dataset.go) === n));
+  const cc = $("#curCv"); if (cc) cc.hidden = n === 4;
   if (n === 1) renderGallery();
+  if (n === 4) renderCvList();
   renderPreview();
   const top = $("#panel").getBoundingClientRect().top + window.scrollY - 60;
   if (window.innerWidth <= 900 || window.scrollY > top) window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
@@ -1501,15 +1947,43 @@ function openAcc(id) {
 }
 
 /* ---------- Hinweise (Schritt 3) ---------- */
+
+function textChecks(d) {
+  const w = [], jobs = d.jobs.filter(e => e.role || e.company), edu = d.edu.filter(e => e.degree || e.school);
+  const email = (d.email || "").trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) w.push(["Die E-Mail-Adresse sieht nicht korrekt aus.", "acc_personal"]);
+  const ph = (d.phone || "").trim(); if (ph && ph.replace(/\D/g, "").length < 6) w.push(["Die Telefonnummer wirkt zu kurz.", "acc_personal"]);
+  // Datumsformate
+  const kind = s => { s = (s || "").trim(); return !s ? "" : /^\d{1,2}\/\d{4}$/.test(s) ? "MM/JJJJ" : /^\d{4}$/.test(s) ? "JJJJ" : /^\d{1,2}\.\d{4}$/.test(s) ? "MM.JJJJ" : "anderes"; };
+  const kinds = {}; jobs.concat(edu).forEach(e => [e.from, e.to].forEach(s => { const k = kind(s); if (k) kinds[k] = 1; }));
+  if (Object.keys(kinds).length > 1) w.push([t("Die Datumsangaben sind nicht einheitlich ({0}). Nimm überall dasselbe Format, z. B. MM/JJJJ.", Object.keys(kinds).map(k => t(k)).join(" " + t("und") + " ")), "acc_jobs"]);
+  const mi = s => { const m = (s || "").trim().match(/^(\d{1,2})\/(\d{4})$/); return m ? Number(m[2]) * 12 + Number(m[1]) : null; };
+  jobs.forEach(e => { const a = mi(e.from), b = mi(e.to); if (a != null && b != null && b < a) w.push([t("Bei „{0}“ liegt das Ende vor dem Beginn.", e.role || e.company), "acc_jobs"]); });
+  jobs.forEach(e => { if (!(e.from || "").trim()) w.push([t("Bei „{0}“ fehlt das Startdatum.", e.role || e.company), "acc_jobs"]); });
+  // Lücken (> 6 Monate)
+  const rs = jobs.map(e => ({ n: e.role || e.company, a: mi(e.from), b: (e.to || "").trim() ? mi(e.to) : new Date().getFullYear() * 12 + new Date().getMonth() + 1 })).filter(r => r.a != null && r.b != null).sort((x, y) => x.a - y.a);
+  for (let i = 1; i < rs.length; i++) { const gap = rs[i].a - rs[i - 1].b - 1; if (gap > 6) { w.push([t("Zwischen „{0}“ und „{1}“ liegt eine Lücke von etwa {2} Monaten – kurz erklären (z. B. Weiterbildung, Elternzeit)?", rs[i - 1].n, rs[i].n, gap), "acc_jobs"]); break; } }
+  // Stichpunkte
+  const bl = jobs.concat(edu).reduce((a, e) => a.concat(String(e.details || "").split("\n").map(s => s.trim()).filter(Boolean)), []);
+  if (bl.some(s => s.length > 160)) w.push(["Manche Stichpunkte sind sehr lang (über 160 Zeichen). Kürzer lässt sich leichter lesen.", "acc_jobs"]);
+  const dots = bl.filter(s => /[.!]$/.test(s)).length; if (dots && dots < bl.length) w.push(["Stichpunkte enden mal mit Punkt, mal ohne – entscheide dich für eine Variante.", "acc_jobs"]);
+  jobs.forEach(e => { if (!(e.details || "").trim() && jobs.indexOf(e) < 2) w.push([t("Bei „{0}“ fehlen die Aufgaben.", e.role || e.company), "acc_jobs"]); });
+  const sm = (d.summary || "").trim(); if (sm.length > 600) w.push(["Das Kurzprofil ist lang. 2–3 Sätze (unter 400 Zeichen) wirken stärker.", "acc_profile"]);
+  // doppelte Wörter
+  const all = [d.summary, d.interests, d.certs, d.it].concat(jobs.concat(edu).map(e => e.details)).join("\n");
+  const dm = all.match(/(?:^|[\s,.;:(])([A-Za-zÄÖÜäöüßÁÉÍÓÚáéíóúŐőŰű]{3,})\s+\1(?=[\s,.;:)]|$)/i); if (dm) w.push([t("Doppeltes Wort gefunden: „{0}“.", dm[1] + " " + dm[1]), null]);
+  return w;
+}
 function updateChecks() {
   const box = $("#checks"); if (!box) return;
   const d = collect(), w = [];
   if (!(d.first || "").trim() && !(d.last || "").trim()) w.push(["Dein Name fehlt.", "acc_personal"]);
   if (!(d.email || "").trim() && !(d.phone || "").trim()) w.push(["Telefon oder E-Mail fehlt – so können dich Firmen erreichen.", "acc_personal"]);
   if (!d.jobs.some(e => e.role || e.company) && !d.edu.some(e => e.degree || e.school)) w.push(["Berufserfahrung oder Ausbildung fehlt noch.", "acc_jobs"]);
-  if (state.pages > 2) w.push([`Dein Lebenslauf ist ca. ${state.pages} Seiten lang. 1–2 Seiten sind üblich – kürze ältere Stationen, probiere die Vorlage „Kompakt“ oder aktiviere „Alles auf einer Seite“.`, null]);
+  textChecks(d).forEach(x => w.push(x));
+  if (state.pages > 2) w.push([t("Dein Lebenslauf ist ca. {0} Seiten lang. 1–2 Seiten sind üblich – kürze ältere Stationen, probiere die Vorlage „Kompakt“ oder aktiviere „Alles auf einer Seite“.", state.pages), "go1"]);
   box.innerHTML = w.length
-    ? w.map(x => `<div class="check-item warn"><span class="ic">!</span><span>${esc(x[0])}</span>${x[1] ? `<button type="button" data-acc="${x[1]}">Ergänzen</button>` : `<button type="button" data-go="1">Vorlage ändern</button>`}</div>`).join("")
+    ? w.map(x => `<div class="check-item warn"><span class="ic">!</span><span>${esc(x[0])}</span>${x[1] === "go1" ? `<button type="button" data-go="1">Vorlage ändern</button>` : x[1] ? `<button type="button" data-acc="${x[1]}">Ergänzen</button>` : ""}</div>`).join("")
     : `<div class="check-item ok"><span class="ic">✓</span><span>Alles bereit – dein Lebenslauf sieht vollständig aus. Prüfe ihn noch einmal in der Vorschau.</span></div>`;
 }
 
@@ -1649,8 +2123,8 @@ async function downloadPdfDirect() {
   try {
     const blob = await renderPdfBlob(d, state.layout, currentFit(d));
     if (!(await saveBlob(blob, name))) { status("Speichern abgebrochen.", "err"); return; }
-    status(`„${name}“ wurde gespeichert. (Der Text im PDF ist durchsuchbar und markierbar.)`, "ok");
-  } catch (e) { status("Das PDF konnte nicht erstellt werden: " + (e && e.message ? e.message : e), "err"); }
+    status(t("„{0}“ wurde gespeichert. (Der Text im PDF ist durchsuchbar und markierbar.)", name), "ok");
+  } catch (e) { status(t("Das PDF konnte nicht erstellt werden: {0}", e && e.message ? e.message : e), "err"); }
 }
 
 function printCv() {
@@ -1688,7 +2162,8 @@ async function saveBlob(blob, name) {
   setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 5000);
 }
 async function backupSave() {
-  const payload = { app: "lebenslauf-ersteller", v: 3, daten: collect(), vorlage: { id: state.layoutId, layout: state.layout }, eigene: state.custom };
+  saveCvs();
+  const payload = { app: "lebenslauf-ersteller", v: 4, alle: cvs.list, aktuell: cvs.cur, daten: collect(), vorlage: { id: state.layoutId, layout: state.layout }, eigene: state.custom };
   if (!(await saveBlob(new Blob([JSON.stringify(payload)], { type: "application/json" }), "lebenslauf-daten.json"))) return;
   status("Datensicherung gespeichert: lebenslauf-daten.json", "ok");
 }
@@ -1699,9 +2174,15 @@ function backupLoad(file) {
     try {
       const p = JSON.parse(r.result);
       if (p.app !== "lebenslauf-ersteller" || !p.daten) throw new Error("falsches Format");
-      populate(p.daten);
       (p.eigene || []).forEach(c => { if (c && c.id && c.name && !state.custom.some(x => x.id === c.id)) state.custom.push({ id: String(c.id), name: String(c.name).slice(0, 40), layout: sanitizeLayout(c.layout) }); });
       lsSet(KEY_LAYOUTS, state.custom);
+      if (Array.isArray(p.alle) && p.alle.length) { // Sicherung mit mehreren Lebensläufen
+        cvs.list = p.alle.filter(c => c && c.id && c.data).map(c => ({ id: String(c.id), name: String(c.name || "Lebenslauf").slice(0, 40), data: c.data, layoutId: c.layoutId || "", layout: sanitizeLayout(c.layout), updated: Date.now() }));
+        if (!cvs.list.length) throw new Error("leer");
+        cvs.cur = cvs.list.some(c => c.id === p.aktuell) ? p.aktuell : cvs.list[0].id;
+        lsSet(KEY_CVS, { cur: cvs.cur, list: cvs.list }); loadCv(cvEntry()); status(t("Daten geladen ({0} Lebensläufe).", cvs.list.length), "ok"); return;
+      }
+      populate(p.daten);
       state.layout = sanitizeLayout((p.vorlage || {}).layout); state.layoutId = (p.vorlage || {}).id || "";
       if (state.layoutId && !allLayouts().some(x => x.id === state.layoutId)) state.layoutId = "";
       renderChips(); renderGallery(); afterLayoutChange(); renderPreview();
@@ -1711,16 +2192,86 @@ function backupLoad(file) {
   r.readAsText(file);
 }
 
+
+/* ---------- Mehrere Lebensläufe ---------- */
+const cvs = { cur: "", list: [] };
+const newCvId = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const cvEntry = () => cvs.list.filter(c => c.id === cvs.cur)[0];
+function saveCvs() {
+  const e = cvEntry(); if (e) { e.data = collect(); e.layoutId = state.layoutId; e.layout = state.layout; e.updated = Date.now(); }
+  const ok = lsSet(KEY_CVS, { cur: cvs.cur, list: cvs.list });
+  if (!ok) status("Speicher voll – bitte nicht benötigte Lebensläufe löschen oder Daten als Datei sichern.", "err");
+  return ok;
+}
+const LANG_NAMES = { de: "Deutsch", en: "English", hu: "Magyar" };
+function renderCvList() {
+  const box = $("#cvList"); if (!box) return;
+  box.innerHTML = cvs.list.map(c => {
+    const act = c.id === cvs.cur, lg = act ? curLang() : ((c.data && c.data.lang) || "de");
+    const dt = c.updated ? new Date(c.updated).toLocaleDateString(UI_LOCALE[uiLang]) : "";
+    return `<button type="button" class="cvrow${act ? " on" : ""}" data-cv="${esc(c.id)}" aria-pressed="${act}"><span class="cvn">${esc(c.name)}</span><span class="tag">${esc(t(act ? "Aktiv" : "Öffnen"))}</span><small>${esc(LANG_NAMES[lg] || "Deutsch")} · ${esc(t("zuletzt geändert"))} ${esc(dt)}</small></button>`;
+  }).join("");
+  const e = cvEntry(), nm = $("#curCvName"); if (e && nm) nm.textContent = e.name;
+}
+function renderCvBar() {
+  const e = cvEntry(); if (e) $("#cvName").value = e.name;
+  renderCvList();
+}
+function loadCv(e) {
+  populate(e.data || EMPTY);
+  state.layout = sanitizeLayout(e.layout || state.layout); state.layoutId = e.layoutId || "";
+  if (state.layoutId && !allLayouts().some(x => x.id === state.layoutId)) state.layoutId = "";
+  renderChips(); renderGallery(); syncControls(); updateLayoutLabel(); renderPreview(); renderCvBar();
+}
+function switchCv(id) { saveCvs(); const e = cvs.list.filter(c => c.id === id)[0]; if (!e) return; cvs.cur = id; lsSet(KEY_CVS, { cur: cvs.cur, list: cvs.list }); loadCv(e); }
+function uniqueName(base) { let n = base, i = 2; while (cvs.list.some(c => c.name === n)) n = base + " " + i++; return n; }
+function newCv() {
+  saveCvs();
+  const e = { id: newCvId(), name: uniqueName(t("Lebenslauf")), data: Object.assign(JSON.parse(JSON.stringify(EMPTY)), { lang: curLang() }), layoutId: state.layoutId, layout: state.layout, updated: Date.now() };
+  cvs.list.push(e); cvs.cur = e.id; lsSet(KEY_CVS, { cur: cvs.cur, list: cvs.list }); loadCv(e);
+  status("Neuer, leerer Lebenslauf angelegt.", "ok"); showStep(2); $("#acc_personal").open = true;
+}
+function copyCv() {
+  saveCvs(); const src = cvEntry();
+  const e = { id: newCvId(), name: uniqueName(src.name.replace(/ \(Kopie\)( \d+)?$/, "") + " (Kopie)"), data: JSON.parse(JSON.stringify(src.data)), layoutId: src.layoutId, layout: src.layout, updated: Date.now() };
+  cvs.list.push(e); cvs.cur = e.id; lsSet(KEY_CVS, { cur: cvs.cur, list: cvs.list }); loadCv(e); status("Kopie angelegt – du arbeitest jetzt in der Kopie.", "ok");
+}
+// Zwei-Klick-Bestätigung (confirm() wird in eingebetteten Ansichten/Datei-Vorschauen oft blockiert)
+function confirmClick(btn, label, key, fn) {
+  if (btn.dataset.armed) { clearTimeout(btn._t); delete btn.dataset.armed; btn.textContent = key; fn(); return; }
+  btn.dataset.armed = "1"; btn.textContent = t(label);
+  btn._t = setTimeout(() => { delete btn.dataset.armed; btn.textContent = key; }, 4000);
+}
+function delCv() {
+  const e = cvEntry(); if (!e) return;
+  cvs.list = cvs.list.filter(c => c !== e);
+  if (!cvs.list.length) { const f = { id: newCvId(), name: t("Lebenslauf"), data: Object.assign(JSON.parse(JSON.stringify(EMPTY)), { lang: curLang() }), layoutId: state.layoutId, layout: state.layout, updated: Date.now() }; cvs.list.push(f); }
+  cvs.cur = cvs.list[0].id; lsSet(KEY_CVS, { cur: cvs.cur, list: cvs.list }); loadCv(cvs.list[0]); status("Lebenslauf gelöscht.", "ok");
+}
+function initCvs() {
+  const st = lsGet(KEY_CVS);
+  if (st && Array.isArray(st.list) && st.list.length) { cvs.list = st.list.filter(c => c && c.id); cvs.cur = st.cur; }
+  if (!cvs.list.length) { // Übernahme der bisherigen Einzel-Daten
+    const cur = lsGet(KEY_CUR) || {};
+    cvs.list = [{ id: newCvId(), name: "Mein Lebenslauf", data: lsGet(KEY_DRAFT) || JSON.parse(JSON.stringify(EMPTY)), layoutId: cur.id || "classic", layout: cur.layout || DEFAULT_LAYOUT, updated: Date.now() }];
+  }
+  if (!cvEntry()) cvs.cur = cvs.list[0].id;
+  const e = cvEntry();
+  state.layout = sanitizeLayout(e.layout || DEFAULT_LAYOUT); state.layoutId = e.layoutId || "";
+  if (state.layoutId && !allLayouts().some(x => x.id === state.layoutId)) state.layoutId = "";
+  populate(e.data || EMPTY); renderCvBar();
+  $("#cvList").addEventListener("click", ev => { const b = ev.target.closest("[data-cv]"); if (b && b.dataset.cv !== cvs.cur) switchCv(b.dataset.cv); });
+  $("#cvName").addEventListener("input", ev => { const c = cvEntry(); if (!c) return; c.name = ev.target.value.slice(0, 40) || "Lebenslauf"; renderCvList(); });
+  $("#cvNew").addEventListener("click", newCv); $("#cvCopy").addEventListener("click", copyCv); $("#cvDel").addEventListener("click", ev => confirmClick(ev.currentTarget, "Wirklich löschen?", "Löschen", delCv));
+}
+
 /* ---------- Start ---------- */
 function init() {
   state.silhouette = makeSilhouette();
   $("#sampleSelect").innerHTML = Object.keys(window.SAMPLES).map(k => `<option value="${k}">${esc(window.SAMPLES[k].label)}</option>`).join("");
   buildLayoutControls();
   state.custom = (lsGet(KEY_LAYOUTS) || []).filter(c => c && c.id && c.name).map(c => ({ id: String(c.id), name: String(c.name).slice(0, 40), layout: sanitizeLayout(c.layout) }));
-  const cur = lsGet(KEY_CUR);
-  if (cur && cur.layout) { state.layout = sanitizeLayout(cur.layout); state.layoutId = cur.id || ""; }
-  if (state.layoutId && !allLayouts().some(x => x.id === state.layoutId)) state.layoutId = "";
-  populate(lsGet(KEY_DRAFT) || EMPTY);
+  initCvs();
   renderChips(); renderGallery(); syncControls(); updateLayoutLabel();
 
   // Schritte
@@ -1733,9 +2284,10 @@ function init() {
   g.addEventListener("click", e => {
     const card = e.target.closest(".card"); if (!card) return;
     if (e.target.closest("[data-del]")) { deleteCustom(card.dataset.id); return; }
+    if (e.target.closest("[data-fav]")) { toggleFav(card.dataset.id, e.target.closest("[data-fav]")); return; }
     selectLayout(card.dataset.id);
   });
-  g.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("card")) { e.preventDefault(); selectLayout(e.target.dataset.id); } });
+  g.addEventListener("keydown", e => { if (e.target.closest("[data-fav]")) return; if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("card")) { e.preventDefault(); selectLayout(e.target.dataset.id); } });
   $("#chips").addEventListener("click", e => { const b = e.target.closest("[data-cat]"); if (!b) return; state.filter = b.dataset.cat; renderChips(); renderGallery(); });
   // Anpassen
   $("#swatches2").addEventListener("click", e => { const b = e.target.closest("[data-color]"); if (b) setLayoutValue("accent2", b.dataset.color); });
@@ -1775,20 +2327,21 @@ function init() {
   $("#backupSave").addEventListener("click", backupSave);
   $("#backupLoad").addEventListener("click", () => $("#backupFile").click());
   $("#backupFile").addEventListener("change", e => { backupLoad(e.target.files[0]); e.target.value = ""; });
-  $("#resetAll").addEventListener("click", () => {
-    if (!confirm("Wirklich alles zurücksetzen? Deine Eingaben und eigenen Vorlagen in diesem Browser werden gelöscht.")) return;
-    [KEY_DRAFT, KEY_LAYOUTS, KEY_CUR].forEach(lsDel); location.reload();
-  });
+  $("#resetAll").addEventListener("click", ev => confirmClick(ev.currentTarget, "Wirklich zurücksetzen? Alle Eingaben und eigenen Vorlagen werden gelöscht.", "Alles zurücksetzen", () => {
+    [KEY_DRAFT, KEY_LAYOUTS, KEY_CUR, KEY_CVS].forEach(lsDel); location.reload();
+  }));
+  initPhrases();
+  $("#cvLang").addEventListener("change", () => { applySpell(); renderGallery(); renderPreview(); $$(".phr[open] .phrbox").forEach(fillPhrases); });
   // Live-Vorschau + automatisches Speichern
   ["input", "change"].forEach(ev => document.addEventListener(ev, e => { if (e.target.closest("#panel")) schedule(); }));
   document.addEventListener("click", e => { if (e.target.closest("#jobs,#edu")) schedule(); });
   let rz = null;
   let lastW = window.innerWidth;
   window.addEventListener("resize", () => { if (window.innerWidth === lastW) return; /* Handy: Adressleiste ein-/ausblenden löst nur eine Höhenänderung aus */ lastW = window.innerWidth; clearTimeout(rz); rz = setTimeout(() => { renderPreview(); if (state.step === 1) renderGallery(); }, 200); });
-  renderPreview();
+  uiReady = true; uiRefresh(); renderPreview();
 }
 
-window.CVMaker = { renderPdfBlob, computeFit, pageBackground, bleed, buildHtml, PRESETS, sanitizeLayout, collect, populate, state, fileBase, DEFAULT_LAYOUT };
+window.CVMaker = { setUiLang, t, renderPdfBlob, computeFit, pageBackground, bleed, buildHtml, PRESETS, sanitizeLayout, collect, populate, state, fileBase, DEFAULT_LAYOUT };
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 
 })();
