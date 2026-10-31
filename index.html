@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lebenslauf-Ersteller</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTIwIiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCI+CiAgPHJlY3Qgd2lkdGg9IjEyMCIgaGVpZ2h0PSIxMjAiIHJ4PSIyOCIgZmlsbD0iIzFmNGU3OSIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDMwIDIwKSI+CiAgICA8cGF0aCBkPSJNNCAwaDM4bDE2IDE2djY4YTQgNCAwIDAgMS00IDRINGE0IDQgMCAwIDEtNC00VjRhNCA0IDAgMCAxIDQtNHoiIGZpbGw9IiNmZmYiLz4KICAgIDxwYXRoIGQ9Ik00MiAwbDE2IDE2SDQ2YTQgNCAwIDAgMS00LTR6IiBmaWxsPSIjYjlkM2VhIi8+CiAgICA8Y2lyY2xlIGN4PSIxOSIgY3k9IjI3IiByPSI4IiBmaWxsPSIjMWY0ZTc5Ii8+CiAgICA8cGF0aCBkPSJNNiA0N2MxLTggNi0xMiAxMy0xMnMxMiA0IDEzIDEyeiIgZmlsbD0iIzFmNGU3OSIvPgogICAgPHJlY3QgeD0iMzgiIHk9IjI2IiB3aWR0aD0iMTQiIGhlaWdodD0iNCIgcng9IjIiIGZpbGw9IiNiOWQzZWEiLz4KICAgIDxyZWN0IHg9IjYiIHk9IjU2IiB3aWR0aD0iNDYiIGhlaWdodD0iNCIgcng9IjIiIGZpbGw9IiNiOWQzZWEiLz4KICAgIDxyZWN0IHg9IjYiIHk9IjY2IiB3aWR0aD0iNDYiIGhlaWdodD0iNCIgcng9IjIiIGZpbGw9IiNiOWQzZWEiLz4KICAgIDxyZWN0IHg9IjYiIHk9Ijc2IiB3aWR0aD0iMjgiIGhlaWdodD0iNCIgcng9IjIiIGZpbGw9IiNmMmE5M2IiLz4KICA8L2c+Cjwvc3ZnPg==">
 <style>
 :root { --ui: #1f4e79; --ui-dark: #163a5a; --bg: #eef1f5; --card: #fff; --line: #d7dde5; --fg: #1f2933; --muted: #6b7684; --ok: #1b7a34; --warn: #b45309; --err: #b00020; }
 * { box-sizing: border-box; }
@@ -221,14 +222,59 @@ body:not([data-mode="cv"]) .brand p { display: none; }
 #ltSwatches button.txt { width: auto; border-radius: 999px; padding: 0 12px; background: #fff; border: 1px solid var(--line); font: inherit; font-size: 13px; color: var(--fg); }
 #ltSwatches button.txt.on { border-color: var(--ui); box-shadow: 0 0 0 2px rgba(31,78,121,.25); }
 
+/* Direkt in der Vorschau bearbeiten */
+#editHover { position: fixed; z-index: 40; pointer-events: none; border: 1.5px dashed var(--ui); background: rgba(31,78,121,.08); border-radius: 3px; }
+#stage.editable #sheet img[alt="Foto"] { cursor: pointer; }
+#editPop { position: fixed; z-index: 60; width: 340px; max-width: calc(100vw - 16px); background: #fff; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 34px rgba(0,0,0,.28); padding: 10px 12px 12px; }
+#editPop[hidden], #editHover[hidden] { display: none; }
+#editPop .ep-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+#editPop .ep-title { font-size: 13px; color: var(--muted); font-weight: 600; text-transform: none; }
+#editPop .ep-x { border: 0; background: none; font-size: 22px; line-height: 1; padding: 0 4px; color: var(--muted); cursor: pointer; }
+#editPop label { display: block; font-size: 12.5px; color: var(--muted); margin: 8px 0 2px; }
+#editPop input, #editPop textarea { width: 100%; font: inherit; font-size: 15px; padding: 8px 9px; border: 1px solid #b9c3cf; border-radius: 6px; background: #fff; color: var(--fg); }
+#editPop input:focus, #editPop textarea:focus { outline: 2px solid var(--ui); outline-offset: 0; border-color: var(--ui); }
+#editPop .ep-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; gap: 8px; }
+#editPop .link2 { border: 0; background: none; color: var(--ui); padding: 4px 2px; cursor: pointer; font: inherit; font-size: 13px; text-decoration: underline; }
+@media (max-width: 900px) { #editPop { left: 8px; right: 8px; bottom: 8px; top: auto; width: auto; max-width: none; } }
+
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand .logo { flex: none; display: block; line-height: 0; }
+.brand .logo svg { width: 40px; height: 40px; display: block; border-radius: 10px; box-shadow: 0 0 0 1.5px rgba(255,255,255,.55); }
+@media (max-width: 600px) { .brand .logo svg { width: 34px; height: 34px; } }
+
+/* Kopfzeile */
+.top { background: linear-gradient(135deg, #24598a 0%, #1b4469 100%); box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 8px rgba(0,0,0,.18); }
+.top-in { padding: 10px 18px; }
+.brand { gap: 12px; }
+.brand .logo svg { width: 42px; height: 42px; border-radius: 11px; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+.brand h1 { font-size: 20px; letter-spacing: .1px; line-height: 1.15; }
+.brand p { font-size: 12.5px; opacity: .78; margin-top: 1px; }
+@media (min-width: 901px) {
+  .stepper { background: rgba(0,0,0,.22); padding: 4px; border-radius: 999px; gap: 2px; align-items: center; }
+  .stepper button { background: transparent; }
+  .stepper button:hover { background: rgba(255,255,255,.14); }
+  .stepper button.on { background: #fff; color: var(--ui); box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+  .stepper button.tab4 { margin-left: 2px; background: transparent; width: 34px; height: 34px; }
+  .stepper button.tab4:hover { background: rgba(255,255,255,.14); }
+  .stepper button.tab4.on { background: #fff; }
+}
+@media (max-width: 600px) { .brand .logo svg { width: 36px; height: 36px; border-radius: 9px; } .brand { gap: 10px; } .brand h1 { font-size: 18px; } }
+
+.brand[data-menu] { cursor: pointer; border-radius: 12px; outline-offset: 4px; transition: opacity .15s; }
+.brand[data-menu]:hover { opacity: .9; }
+.brand[data-menu]:hover .logo svg { transform: scale(1.05); }
+.brand .logo svg { transition: transform .15s; }
+.brand[data-menu]:focus-visible { outline: 2px solid #fff; }
+
 </style>
 </head>
 <body data-mode="home">
 <header class="top">
   <div class="top-in">
-    <div class="brand">
-      <h1>Lebenslauf-Ersteller</h1>
-      <p>Lebenslauf in 3 Schritten · alles bleibt auf deinem Gerät</p>
+    <div class="brand" data-menu role="button" tabindex="0" title="Hauptmenü" aria-label="Hauptmenü">
+      <span class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="42" height="42" aria-hidden="true"><rect width="120" height="120" rx="30" fill="#ffffff"/><g transform="translate(31 21)"><path d="M4 0h36l16 16v66a4 4 0 0 1-4 4H4a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4z" fill="#1f4e79"/><path d="M40 0l16 16H44a4 4 0 0 1-4-4z" fill="#8fb4d6"/><circle cx="18" cy="28" r="7.5" fill="#fff"/><path d="M6 46c1-7.500 6-11 12-11s11 3.500 12 11z" fill="#fff"/><rect x="36" y="26" width="14" height="4" rx="2" fill="#8fb4d6"/><rect x="6" y="56" width="44" height="4" rx="2" fill="#8fb4d6"/><rect x="6" y="66" width="44" height="4" rx="2" fill="#8fb4d6"/><rect x="6" y="76" width="26" height="4" rx="2" fill="#f2a93b"/></g></svg></span>
+      <div class="bt"><h1>Lebenslauf-Ersteller</h1>
+      <p>Lebenslauf in 3 Schritten · alles bleibt auf deinem Gerät</p></div>
     </div>
     <nav class="stepper" id="stepper" aria-label="Schritte">
       <button type="button" data-menu class="tabmenu">☰ Hauptmenü</button>
@@ -580,6 +626,7 @@ body:not([data-mode="cv"]) .brand p { display: none; }
     <label class="check onep"><input type="checkbox" class="onePage"> 1 Seite</label>
     <span class="grow"><span id="pageInfo"></span> <span id="saved" class="saved"></span></span>
   </div>
+  <p class="hint" id="editHint" hidden>💡 Tipp: Klicke in der Vorschau auf einen Text, um ihn direkt zu ändern.</p>
   <div id="sheetWrap"><div id="sheet"></div></div>
   <div id="status" role="status" aria-live="polite"></div>
   <p class="hint">Die Vorschau ist eine Annäherung. Zeilen- und Seitenumbrüche können im PDF minimal abweichen.</p>
@@ -610,6 +657,13 @@ body:not([data-mode="cv"]) .brand p { display: none; }
   </div>
 </div>
 <div id="printArea"></div>
+
+<div id="editHover" hidden></div>
+<div id="editPop" role="dialog" aria-label="Text bearbeiten" hidden>
+  <div class="ep-head"><b class="ep-title"></b><button type="button" class="ep-x" aria-label="Schließen">×</button></div>
+  <div class="ep-body"></div>
+  <div class="ep-foot"><button type="button" class="ep-show link2">Im Formular zeigen</button><button type="button" class="ep-ok primary">Fertig</button></div>
+</div>
 
 <script>
 // Beispiel-Lebensläufe (alle Daten sind erfunden): Matura, Lehre, Zivildienst, FH/TU, Sprachniveau nach GER
@@ -1546,6 +1600,10 @@ function buildLetterHtml(d, layoutIn, lt, forPrint, fit) {
    Schlüssel = deutscher Originaltext. Die Sprache folgt der Sprache des Lebenslaufs.
    =================================================================== */
 const I18N_ROWS = [
+  ["💡 Tipp: Klicke in der Vorschau auf einen Text, um ihn direkt zu ändern.", "💡 Tip: click a text in the preview to change it directly.", "💡 Tipp: kattints az előnézetben egy szövegre, hogy közvetlenül módosítsd."],
+  ["Im Formular zeigen", "Show in form", "Megmutatás az űrlapon"],
+  ["Schließen", "Close", "Bezárás"],
+  ["Text bearbeiten", "Edit text", "Szöveg szerkesztése"],
   // Kopf
   ["Lebenslauf-Ersteller", "CV Maker", "Önéletrajz-készítő"],
   ["Lebenslauf in 3 Schritten · alles bleibt auf deinem Gerät", "CV in 3 steps · everything stays on your device", "Önéletrajz 3 lépésben · minden az eszközödön marad"],
@@ -2220,6 +2278,7 @@ function renderPreview() {
   state.fit = fr.f;
   sheet.style.background = pageBackground(dl);
   sheet.innerHTML = docHtml(data, dl, false, fr.f);
+  { const ed = state.step === 2 && curDoc === "cv"; $("#stage").classList.toggle("editable", ed); const eh = $("#editHint"); if (eh) eh.hidden = !ed; if (typeof window.peClose === "function" && !ed) window.peClose(); const hv = $("#editHover"); if (hv) hv.hidden = true; }
   const k = wrap.clientWidth ? Math.min(1.25, wrap.clientWidth / PAGE_PX) : 1;
   sheet.style.transform = `scale(${k})`;
   wrap.style.height = Math.ceil(sheet.offsetHeight * k) + "px";
@@ -2404,6 +2463,7 @@ function importLayout() {
 
 /* ---------- Schritte ---------- */
 function showStep(n) {
+  if (typeof window.peClose === "function") window.peClose();
   state.step = n; curDoc = n === 5 ? "letter" : "cv"; setDoc(curDoc);
   const bd = document.body.dataset;
   if (n === 5) { bd.mode = "letter"; } else if (n <= 3) { bd.mode = "cv"; state.cvStep = n; } else if (bd.mode === "home") bd.mode = "cv";
@@ -2783,6 +2843,151 @@ function initCvs() {
 }
 
 /* ---------- Start ---------- */
+/* ---------- Direkt in der Vorschau bearbeiten (Schritt „Daten") ---------- */
+const peNorm = s => String(s == null ? "" : s).replace(/\s+/g, " ").trim().toLowerCase();
+const peField = k => document.querySelector('#step2 [data-k="' + k + '"]');
+const peItemField = (key, i, f) => { const it = $$("#" + key + " .item")[i]; return it ? $('[data-f="' + f + '"]', it) : null; };
+const peLabel = el => { const p = el && el.previousElementSibling; if (!p || p.tagName !== "LABEL") return ""; const s = p.textContent.trim(); return el.tagName === "TEXTAREA" ? s.replace(/\s*\(.*\)\s*$/, "") : s; };
+const peAccTitle = id => { const s = $("#" + id + " > summary"); if (!s) return ""; const n = [...s.childNodes].find(c => c.nodeType === 3 && c.textContent.trim()); return n ? n.textContent.trim() : s.textContent.trim(); };
+const peGroup = (acc, els) => ({ acc, fields: els.filter(Boolean).map(el => ({ el })) });
+// Zeile in einem mehrzeiligen Feld (Sprachen, Aufgaben, …) – nur diese Zeile wird bearbeitet
+function peLineHit(acc, el, T) {
+  if (!el) return null;
+  const raw = el.value.split("\n"), T2 = T.replace(/^[·•]\s*/, "");
+  for (let i = 0; i < raw.length; i++) {
+    const ln = raw[i].trim(); if (!ln) continue;
+    const m = ln.match(KV), c = [peNorm(ln)];
+    if (m) c.push(peNorm(m[1]), peNorm(m[2]), peNorm(m[1] + " · " + m[2]));
+    if (c.indexOf(T) >= 0 || c.indexOf(T2) >= 0) return { acc, fields: [{ el, line: i }] };
+  }
+  return null;
+}
+// Welches Formularfeld gehört zu diesem Text der Vorschau?
+function peResolve(text) {
+  const T = peNorm(text); if (!T) return null;
+  const d = collect(); applyLang(d.lang);
+  const X = prepare(d, { nameUpper: false });
+  const V = k => peNorm(d[k]);
+  // Name
+  if ([X.fullName, X.lead, X.trail].some(v => v && peNorm(v) === T) || (!X.fullName && T === peNorm(L.cv)))
+    return peGroup("acc_personal", (d.lang === "hu" ? ["titleBefore", "last", "first", "titleAfter"] : ["titleBefore", "first", "last", "titleAfter"]).map(peField));
+  if (V("headline") && T === V("headline")) return peGroup("acc_personal", [peField("headline")]);
+  if (V("summary") && T === V("summary")) return peGroup("acc_profile", [peField("summary")]);
+  // Berufserfahrung / Ausbildung
+  const spec = { jobs: ["role", "company", "acc_jobs"], edu: ["degree", "school", "acc_edu"] };
+  for (const key of Object.keys(spec)) {
+    const tk = spec[key][0], ok = spec[key][1], acc = spec[key][2], list = d[key] || [];
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i], f = n => peItemField(key, i, n);
+      if (peNorm(X.dateText(e.from, e.to)) === T && T) return peGroup(acc, [f("from"), f("to")]);
+      if (peNorm(e[tk]) === T) return peGroup(acc, [f(tk)]);
+      if (peNorm([e[ok], e.place].filter(Boolean).join(", ")) === T) return peGroup(acc, [f(ok), f("place")]);
+      const h = peLineHit(acc, f("details"), T); if (h) return h;
+    }
+  }
+  // Kenntnisse
+  for (const k of ["languages", "it", "certs"]) { const h = peLineHit("acc_skills", peField(k), T); if (h) return h; }
+  if (V("licence") && (T === V("licence") || T === peNorm(L.licence) || T === peNorm(L.licence) + ":")) return peGroup("acc_skills", [peField("licence")]);
+  if (V("interests") && T === V("interests")) return peGroup("acc_skills", [peField("interests")]);
+  // Ort, Datum
+  if (d.showSignature && T === peNorm(X.signLine)) return peGroup("acc_end", [peField("signPlace"), peField("signDate")]);
+  // Beschriftungen der Kontaktdaten
+  const LAB = [[L.address, ["street", "zip", "city"]], [L.phone, ["phone"]], [L.email, ["email"]], [L.web, ["web"]], [L.birth, ["birthDate", "birthPlace"]], [L.nationality, ["nationality"]], [L.marital, ["marital"]]];
+  for (const l of LAB) if (T === peNorm(l[0]) || T === peNorm(l[0]) + ":") return peGroup("acc_personal", l[1].map(peField));
+  // Kontaktzeilen: bestehen nur aus Kontaktwerten, Trennzeichen und Beschriftungen
+  const cf = ["street", "zip", "city", "phone", "email", "web", "birthDate", "birthPlace", "nationality", "marital"].filter(k => V(k) && T.indexOf(V(k)) >= 0);
+  // gleicher Wert bei Wohnort und Geburtsort (z. B. „Wien"): Geburtszeile → Geburtsort, sonst Wohnort
+  if (cf.indexOf("city") >= 0 && cf.indexOf("birthPlace") >= 0 && V("city") === V("birthPlace")) cf.splice(cf.indexOf(cf.indexOf("birthDate") >= 0 ? "city" : "birthPlace"), 1);
+  if (cf.length) {
+    let rem = T; cf.map(V).sort((a, b) => b.length - a.length).forEach(v => { rem = rem.split(v).join(" "); });
+    LAB.map(l => peNorm(l[0])).sort((a, b) => b.length - a.length).forEach(l => { rem = rem.split(l).join(" "); });
+    if (!rem.replace(/[\s,·•⌂☎✉↗:;|\/\-–]+/g, "")) {
+      // „1070 Wien" gehört zu PLZ und Ort – fehlt eines davon in der Zeile, bleibt es trotzdem im Formular erreichbar
+      return peGroup("acc_personal", cf.map(peField));
+    }
+  }
+  // Abschnittsüberschriften → Formularbereich öffnen
+  const H = T.replace(/^\d+\s+/, "");
+  const SEC = [[L.profile, "acc_profile"], [L.experience, "acc_jobs"], [L.education, "acc_edu"], [L.skills, "acc_skills"], [L.languages, "acc_skills"], [L.it, "acc_skills"], [L.certs, "acc_skills"], [L.interests, "acc_skills"], [L.personal, "acc_personal"]];
+  for (const s of SEC) if (H === peNorm(s[0])) return { acc: s[1], fields: [], open: true };
+  return null;
+}
+function initPreviewEdit() {
+  const sheet = $("#sheet"), pop = $("#editPop"), hov = $("#editHover"), body = $(".ep-body", pop);
+  let cur = null;
+  const active = () => state.step === 2 && curDoc === "cv" && document.body.dataset.mode === "cv";
+  const hideHover = () => { hov.hidden = true; sheet.style.cursor = ""; };
+  window.peClose = () => { pop.hidden = true; cur = null; hideHover(); };
+  const textAt = (x, y) => {
+    let n = null;
+    if (document.caretPositionFromPoint) { const p = document.caretPositionFromPoint(x, y); if (p) n = p.offsetNode; }
+    else if (document.caretRangeFromPoint) { const c = document.caretRangeFromPoint(x, y); if (c) n = c.startContainer; }
+    if (!n || n.nodeType !== 3 || !sheet.contains(n) || n.parentElement.closest("svg")) return null;
+    const rg = document.createRange(); rg.selectNodeContents(n);
+    const rs = [...rg.getClientRects()].filter(q => q.width > 0 && q.height > 0);
+    if (!rs.some(q => x >= q.left - 3 && x <= q.right + 3 && y >= q.top - 3 && y <= q.bottom + 3)) return null;
+    const box = { left: Math.min(...rs.map(q => q.left)), top: Math.min(...rs.map(q => q.top)), right: Math.max(...rs.map(q => q.right)), bottom: Math.max(...rs.map(q => q.bottom)) };
+    return { node: n, box };
+  };
+  const hit = (x, y) => { const t = textAt(x, y); if (!t) return null; const r = peResolve(t.node.textContent); return r ? Object.assign({ box: t.box }, r) : null; };
+  const showHover = box => {
+    Object.assign(hov.style, { left: box.left - 3 + "px", top: box.top - 2 + "px", width: box.right - box.left + 6 + "px", height: box.bottom - box.top + 4 + "px" });
+    hov.hidden = false;
+  };
+  const place = box => {
+    if (window.innerWidth <= 900) { pop.style.left = pop.style.top = ""; return; }
+    const w = pop.offsetWidth, h = pop.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
+    let top = box.bottom + 10; if (top + h > vh - 8) top = box.top - h - 10; if (top < 8) top = Math.max(8, vh - h - 8);
+    pop.style.left = Math.max(8, Math.min(box.left, vw - w - 8)) + "px"; pop.style.top = top + "px";
+  };
+  const setVal = (f, v) => { if (f.el.value === v) return; f.el.value = v; f.el.dispatchEvent(new Event("input", { bubbles: true })); };
+  function openPop(r) {
+    cur = r; body.innerHTML = "";
+    $(".ep-title", pop).textContent = peAccTitle(r.acc);
+    r.fields.forEach((f, i) => {
+      const multi = f.el.tagName === "TEXTAREA" && f.line == null;
+      const lab = document.createElement("label"); lab.textContent = peLabel(f.el) || ""; lab.hidden = !lab.textContent;
+      const inp = document.createElement(multi ? "textarea" : "input"); if (multi) inp.rows = 4; else inp.type = "text";
+      inp.placeholder = f.el.placeholder || ""; inp.spellcheck = true; inp.lang = f.el.lang || document.documentElement.lang || "de";
+      if (f.line != null) inp.value = f.el.value.split("\n")[f.line].trim();
+      else inp.value = f.el.value;
+      inp.addEventListener("input", () => {
+        if (f.line == null) { setVal(f, inp.value); return; }
+        const arr = f.el.value.split("\n"); arr[f.line] = inp.value.replace(/\n/g, " "); setVal(f, arr.join("\n"));
+      });
+      inp.addEventListener("keydown", e => { if (e.key === "Enter" && !multi) { e.preventDefault(); window.peClose(); } });
+      const wrap = document.createElement("div"); wrap.append(lab, inp); body.append(wrap);
+      if (i === 0) setTimeout(() => { inp.focus(); inp.select && inp.select(); }, 0);
+    });
+    pop.hidden = false; place(r.box);
+  }
+  sheet.addEventListener("mousemove", e => {
+    if (!active()) { hideHover(); return; }
+    const h = hit(e.clientX, e.clientY);
+    if (h) { showHover(h.box); sheet.style.cursor = h.open ? "pointer" : "text"; } else hideHover();
+  });
+  sheet.addEventListener("mouseleave", hideHover);
+  sheet.addEventListener("click", e => {
+    if (!active()) return;
+    if (e.target.tagName === "IMG" && e.target.getAttribute("alt") === "Foto") { const b = $("#photoEdit"); if (b && !b.hidden) b.click(); return; }
+    const sel = window.getSelection(); if (sel && !sel.isCollapsed) return;
+    const h = hit(e.clientX, e.clientY); if (!h) { window.peClose(); return; }
+    if (h.open) { window.peClose(); const el = $("#" + h.acc); if (el) { el.open = true; el.scrollIntoView({ behavior: "smooth", block: "start" }); } return; }
+    openPop(h);
+  });
+  pop.addEventListener("click", e => {
+    if (e.target.closest(".ep-ok,.ep-x")) { window.peClose(); return; }
+    if (e.target.closest(".ep-show")) {
+      const r = cur; window.peClose(); if (!r) return;
+      const acc = $("#" + r.acc); if (acc) acc.open = true;
+      const f = r.fields[0] && r.fields[0].el; if (f) setTimeout(() => { f.scrollIntoView({ behavior: "smooth", block: "center" }); f.focus(); }, 60);
+    }
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !pop.hidden) window.peClose(); });
+  document.addEventListener("click", e => { if (!pop.hidden && !pop.contains(e.target) && !e.target.closest("#sheet")) window.peClose(); });
+  window.addEventListener("resize", () => { if (!pop.hidden && cur) place(cur.box); });
+}
+
 function init() {
   state.silhouette = makeSilhouette();
   $("#sampleSelect").innerHTML = Object.keys(window.SAMPLES).map(k => `<option value="${k}">${esc(window.SAMPLES[k].label)}</option>`).join("");
@@ -2798,6 +3003,7 @@ function init() {
     const go = e.target.closest("[data-go]"); if (go) { showStep(Number(go.dataset.go)); return; }
     const acc = e.target.closest("[data-acc]"); if (acc) { openAcc(acc.dataset.acc); return; }
   });
+  $(".brand[data-menu]").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showMode("home"); } });
   // Vorlagen-Galerie
   const g = $("#gallery");
   g.addEventListener("click", e => {
@@ -2828,8 +3034,8 @@ function init() {
   $("#exportLayout").addEventListener("click", exportLayout);
   $("#importLayout").addEventListener("click", importLayout);
   // Daten
-  $("#loadSample").addEventListener("click", () => { populate(window.SAMPLES[$("#sampleSelect").value].data); status("Beispiel geladen.", "ok"); });
-  $("#clearAll").addEventListener("click", () => { populate(EMPTY); status("Formular geleert – trage jetzt deine Daten ein.", "ok"); $("#acc_personal").open = true; });
+  $("#loadSample").addEventListener("click", () => { populate(window.SAMPLES[$("#sampleSelect").value].data); renderPreview(); schedule(); status("Beispiel geladen.", "ok"); });
+  $("#clearAll").addEventListener("click", () => { populate(EMPTY); renderPreview(); schedule(); status("Formular geleert – trage jetzt deine Daten ein.", "ok"); $("#acc_personal").open = true; });
   $("#addJob").addEventListener("click", () => { $("#jobs").appendChild(buildItem("jobs", {})); renumber("jobs"); });
   $("#addEdu").addEventListener("click", () => { $("#edu").appendChild(buildItem("edu", {})); renumber("edu"); });
   bindRepeater("jobs"); bindRepeater("edu");
@@ -2860,6 +3066,7 @@ function init() {
   let rz = null;
   let lastW = window.innerWidth;
   window.addEventListener("resize", () => { if (window.innerWidth === lastW) return; /* Handy: Adressleiste ein-/ausblenden löst nur eine Höhenänderung aus */ lastW = window.innerWidth; clearTimeout(rz); rz = setTimeout(() => { if (document.body.dataset.mode === "home") return; renderPreview(); if (state.step === 1) renderGallery(); }, 200); });
+  initPreviewEdit();
   uiReady = true; uiRefresh(); renderPreview(); showMode("home");
 }
 
