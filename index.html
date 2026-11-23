@@ -2,8 +2,17 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lebenslauf-Ersteller</title>
+<meta name="description" content="Lebenslauf und Bewerbungsschreiben erstellen – alles bleibt auf deinem Gerät.">
+<meta name="theme-color" content="#1f4e79">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lebenslauf">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTIwIiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCI+CiAgPHJlY3Qgd2lkdGg9IjEyMCIgaGVpZ2h0PSIxMjAiIHJ4PSIyOCIgZmlsbD0iIzFmNGU3OSIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDMwIDIwKSI+CiAgICA8cGF0aCBkPSJNNCAwaDM4bDE2IDE2djY4YTQgNCAwIDAgMS00IDRINGE0IDQgMCAwIDEtNC00VjRhNCA0IDAgMCAxIDQtNHoiIGZpbGw9IiNmZmYiLz4KICAgIDxwYXRoIGQ9Ik00MiAwbDE2IDE2SDQ2YTQgNCAwIDAgMS00LTR6IiBmaWxsPSIjYjlkM2VhIi8+CiAgICA8Y2lyY2xlIGN4PSIxOSIgY3k9IjI3IiByPSI4IiBmaWxsPSIjMWY0ZTc5Ii8+CiAgICA8cGF0aCBkPSJNNiA0N2MxLTggNi0xMiAxMy0xMnMxMiA0IDEzIDEyeiIgZmlsbD0iIzFmNGU3OSIvPgogICAgPHJlY3QgeD0iMzgiIHk9IjI2IiB3aWR0aD0iMTQiIGhlaWdodD0iNCIgcng9IjIiIGZpbGw9IiNiOWQzZWEiLz4KICAgIDxyZWN0IHg9IjYiIHk9IjU2IiB3aWR0aD0iNDYiIGhlaWdodD0iNCIgcng9IjIiIGZpbGw9IiNiOWQzZWEiLz4KICAgIDxyZWN0IHg9IjYiIHk9IjY2IiB3aWR0aD0iNDYiIGhlaWdodD0iNCIgcng9IjIiIGZpbGw9IiNiOWQzZWEiLz4KICAgIDxyZWN0IHg9IjYiIHk9Ijc2IiB3aWR0aD0iMjgiIGhlaWdodD0iNCIgcng9IjIiIGZpbGw9IiNmMmE5M2IiLz4KICA8L2c+Cjwvc3ZnPg==">
 <style>
 :root { --ui: #1f4e79; --ui-dark: #163a5a; --bg: #eef1f5; --card: #fff; --line: #d7dde5; --fg: #1f2933; --muted: #6b7684; --ok: #1b7a34; --warn: #b45309; --err: #b00020; }
@@ -266,6 +275,13 @@ body:not([data-mode="cv"]) .brand p { display: none; }
 .brand .logo svg { transition: transform .15s; }
 .brand[data-menu]:focus-visible { outline: 2px solid #fff; }
 
+/* App-Installation (PWA) */
+.homeinst { margin-top: 14px; font-size: 14px; color: var(--muted); }
+.homeinst .link { font-size: 15px; font-weight: 600; }
+.top { padding-top: env(safe-area-inset-top); }
+.top-in { padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(18px, env(safe-area-inset-right)); }
+@media (display-mode: standalone) { body { overscroll-behavior-y: none; } }
+
 </style>
 </head>
 <body data-mode="home">
@@ -294,6 +310,8 @@ body:not([data-mode="cv"]) .brand p { display: none; }
     <button type="button" class="homecard" data-open="letter"><span class="hic">✉</span><b>Bewerbungsschreiben</b><span class="hd">Ein Anschreiben passend zu deinem Lebenslauf erzeugen</span></button>
   </div>
   <p class="homecv">Aktueller Lebenslauf: <b id="homeCvName" class="cvn"></b> <button type="button" class="link" data-go="4">Verwalten</button></p>
+  <p class="homeinst" id="installRow" hidden><button type="button" class="link" id="installBtn">📲 Als App installieren</button></p>
+  <p class="homeinst" id="iosHint" hidden>📲 Auf dem iPhone/iPad: Teilen-Symbol antippen → „Zum Home-Bildschirm“. Dann startet die App wie eine normale App – auch offline.</p>
 </section>
 
 <div class="app">
@@ -1600,6 +1618,8 @@ function buildLetterHtml(d, layoutIn, lt, forPrint, fit) {
    Schlüssel = deutscher Originaltext. Die Sprache folgt der Sprache des Lebenslaufs.
    =================================================================== */
 const I18N_ROWS = [
+  ["📲 Als App installieren", "📲 Install as app", "📲 Telepítés alkalmazásként"],
+  ["📲 Auf dem iPhone/iPad: Teilen-Symbol antippen → „Zum Home-Bildschirm“. Dann startet die App wie eine normale App – auch offline.", "📲 On iPhone/iPad: tap the Share icon → “Add to Home Screen”. The app then starts like a normal app – also offline.", "📲 iPhone/iPad: koppints a Megosztás ikonra → „Főképernyőhöz adás”. Utána úgy indul, mint egy átlagos alkalmazás – offline is."],
   ["💡 Tipp: Klicke in der Vorschau auf einen Text, um ihn direkt zu ändern.", "💡 Tip: click a text in the preview to change it directly.", "💡 Tipp: kattints az előnézetben egy szövegre, hogy közvetlenül módosítsd."],
   ["Im Formular zeigen", "Show in form", "Megmutatás az űrlapon"],
   ["Schließen", "Close", "Bezárás"],
@@ -3067,13 +3087,28 @@ function init() {
   let lastW = window.innerWidth;
   window.addEventListener("resize", () => { if (window.innerWidth === lastW) return; /* Handy: Adressleiste ein-/ausblenden löst nur eine Höhenänderung aus */ lastW = window.innerWidth; clearTimeout(rz); rz = setTimeout(() => { if (document.body.dataset.mode === "home") return; renderPreview(); if (state.step === 1) renderGallery(); }, 200); });
   initPreviewEdit();
+  // App installieren (PWA) und Direktstart über ?open=cv / ?open=letter
+  if (/^https?:$/.test(location.protocol)) {
+    let deferred = null;
+    const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+    window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; $("#installRow").hidden = false; });
+    window.addEventListener("appinstalled", () => { deferred = null; $("#installRow").hidden = true; $("#iosHint").hidden = true; });
+    $("#installBtn").addEventListener("click", async () => { if (!deferred) return; deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; $("#installRow").hidden = true; });
+    if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) $("#iosHint").hidden = false;
+  }
   uiReady = true; uiRefresh(); renderPreview(); showMode("home");
+  try { const o = new URLSearchParams(location.search).get("open"); if (o === "cv" || o === "letter") showMode(o); } catch (e) {}
 }
 
 window.CVMaker = { setUiLang, t, renderPdfBlob, computeFit, pageBackground, bleed, buildHtml, PRESETS, sanitizeLayout, collect, populate, state, fileBase, DEFAULT_LAYOUT };
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 
 })();
+</script>
+<script>
+if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+}
 </script>
 </body>
 </html>

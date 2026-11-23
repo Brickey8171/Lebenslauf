@@ -1,0 +1,23 @@
+{
+  "name": "Lebenslauf-Ersteller",
+  "short_name": "Lebenslauf",
+  "description": "Lebenslauf und Bewerbungsschreiben erstellen – alles bleibt auf deinem Gerät.",
+  "lang": "de",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1f4e79",
+  "theme_color": "#1f4e79",
+  "categories": ["productivity", "business"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Lebenslauf", "url": "./?open=cv", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Bewerbungsschreiben", "url": "./?open=letter", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

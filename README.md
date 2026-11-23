@@ -18,6 +18,7 @@ plus a matching cover letter. Everything stays on your own device.
 ![No install](https://img.shields.io/badge/install-none-2e7d32)
 ![No account](https://img.shields.io/badge/account-not%20needed-2e7d32)
 ![Works offline](https://img.shields.io/badge/works-offline-6a1b9a)
+![PWA](https://img.shields.io/badge/PWA-installable-5a0fc8)
 ![Languages](https://img.shields.io/badge/CV%20%26%20UI-DE%20%7C%20EN%20%7C%20HU-ff9a3c)
 [![GitHub stars](https://img.shields.io/github/stars/Brickey8171/Lebenslauf?style=flat&color=ffb400)](https://github.com/Brickey8171/Lebenslauf/stargazers)
 
@@ -35,6 +36,7 @@ plus a matching cover letter. Everything stays on your own device.
 - **114 templates.** Classic, modern, sidebar and creative designs, with free choice of colours, fonts and spacing.
 - **CV *and* cover letter.** A main menu lets you switch between the two; each CV keeps its own letter.
 - **Three languages.** German, English and Hungarian — the language of your CV also switches the whole interface.
+- **Installable app (PWA).** Add it to your home screen or desktop and use it offline like a normal app.
 - **Private by default.** Your data is stored in your browser and never uploaded anywhere.
 
 ## 📸 Screenshots
@@ -115,9 +117,18 @@ plus a matching cover letter. Everything stays on your own device.
 
 Open **[brickey8171.github.io/Lebenslauf](https://brickey8171.github.io/Lebenslauf/)** — nothing to install.
 
+### Install it as an app
+
+Open the live page, then:
+
+- **Android / Chrome / Edge (desktop):** click **📲 Als App installieren** on the main menu, or use the browser's install icon in the address bar.
+- **iPhone / iPad (Safari):** tap the Share icon → **Add to Home Screen**.
+
+The app then starts in its own window and works **offline** — the first visit stores everything it needs. Long-press the app icon for shortcuts straight to *Lebenslauf* or *Bewerbungsschreiben*.
+
 ### Use it locally
 
-1. Download **[`index.html`](https://github.com/Brickey8171/Lebenslauf/raw/main/index.html)** (or clone the repo: `git clone https://github.com/Brickey8171/Lebenslauf.git`).
+1. Download **[`index.html`](https://github.com/Brickey8171/Lebenslauf/raw/main/index.html)** (it works on its own; the PWA files only add installing) (or clone the repo: `git clone https://github.com/Brickey8171/Lebenslauf.git`).
 2. Open it in a modern browser (Chrome, Edge, Firefox or Safari).
 3. Choose **Lebenslauf** or **Bewerbungsschreiben** and start.
 
@@ -156,6 +167,7 @@ Plain HTML, CSS and JavaScript in one file, with no framework, no libraries and 
 - **PDF** — the page is rendered into images with an invisible text layer on top, so text stays selectable and searchable
 - **Translations** — German, English and Hungarian interface texts, applied live
 - **Storage** — `localStorage`, with a backup file for moving data
+- **PWA** — `manifest.webmanifest`, a small service worker (`sw.js`) and the icons in `icons/` make it installable and available offline; the app itself still works as the single `index.html` without them
 
 ## ⚠️ Known limitations
 
@@ -170,7 +182,6 @@ Plain HTML, CSS and JavaScript in one file, with no framework, no libraries and 
 - [ ] Job-ad keyword helper
 - [ ] Download CV and letter as one bundle
 - [ ] Running header on page 2 of long letters
-- [ ] Installable app (PWA)
 
 ## 📄 License
 
