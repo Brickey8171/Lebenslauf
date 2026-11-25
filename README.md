@@ -179,7 +179,6 @@ Plain HTML, CSS and JavaScript in one file, with no framework, no libraries and 
 ## 🗺 Ideas
 
 - [ ] Match the cover letter automatically to the CV template
-- [ ] Job-ad keyword helper
 - [ ] Download CV and letter as one bundle
 - [ ] Running header on page 2 of long letters
 
