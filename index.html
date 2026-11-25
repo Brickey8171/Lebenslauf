@@ -282,6 +282,21 @@ body:not([data-mode="cv"]) .brand p { display: none; }
 .top-in { padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(18px, env(safe-area-inset-right)); }
 @media (display-mode: standalone) { body { overscroll-behavior-y: none; } }
 
+/* Stellenanzeigen-Check */
+#kwBox textarea { width: 100%; font: inherit; font-size: 14px; padding: 9px 10px; border: 1px solid #b9c3cf; border-radius: 6px; resize: vertical; min-height: 110px; }
+#kwOut { margin-top: 12px; }
+.kwsum { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; margin-bottom: 8px; }
+.kwbar { flex: 1 1 120px; height: 8px; background: #e3e9f0; border-radius: 99px; overflow: hidden; min-width: 90px; }
+.kwbar i { display: block; height: 100%; background: linear-gradient(90deg, #f2a93b, #2e7d32); border-radius: 99px; }
+.kwgrp { margin: 8px 0; line-height: 2; }
+.kwh { display: block; font-size: 12.5px; color: var(--muted); line-height: 1.4; margin-bottom: 2px; }
+.kwchip { display: inline-block; font: inherit; font-size: 13.5px; padding: 3px 10px; border-radius: 99px; margin: 0 6px 6px 0; border: 1px solid transparent; line-height: 1.4; }
+.kwchip.ok { background: #e6f4ea; color: #1b5e20; border-color: #b7dfc0; }
+.kwchip.add { background: #fff4de; color: #7a4b00; border-color: #f0cf94; cursor: pointer; }
+.kwchip.add:hover, .kwchip.add:focus-visible { background: #ffe9bd; }
+#kwOut .kwchip { width: auto; display: inline-block; margin-top: 0; }
+#kwBox .inline { margin-top: 10px; }
+
 </style>
 </head>
 <body data-mode="home">
@@ -591,6 +606,14 @@ body:not([data-mode="cv"]) .brand p { display: none; }
         <div><label>PLZ</label><input type="text" data-lt="zip" inputmode="numeric" autocomplete="off"></div>
         <div><label>Ort</label><input type="text" data-lt="city" autocomplete="off"></div>
       </div>
+    </div>
+
+    <div class="box" id="kwBox">
+      <h3>Stellenanzeigen-Check</h3>
+      <p class="hint">Füge den Text der Stellenanzeige ein. Du siehst, welche wichtigen Stichwörter schon in deinem Lebenslauf stehen und welche fehlen.</p>
+      <textarea data-lt="ad" rows="6" placeholder="Text der Stellenanzeige hier einfügen …" spellcheck="false"></textarea>
+      <div class="inline"><button type="button" id="kwRun" class="primary">Stichwörter prüfen</button><button type="button" id="kwClear" class="link">Leeren</button></div>
+      <div id="kwOut" aria-live="polite"></div>
     </div>
 
     <div class="box">
@@ -1618,6 +1641,18 @@ function buildLetterHtml(d, layoutIn, lt, forPrint, fit) {
    Schlüssel = deutscher Originaltext. Die Sprache folgt der Sprache des Lebenslaufs.
    =================================================================== */
 const I18N_ROWS = [
+  ["Stellenanzeigen-Check", "Job ad check", "Álláshirdetés-ellenőrzés"],
+  ["Füge den Text der Stellenanzeige ein. Du siehst, welche wichtigen Stichwörter schon in deinem Lebenslauf stehen und welche fehlen.", "Paste the text of the job ad. You will see which important keywords are already in your CV and which are missing.", "Illeszd be az álláshirdetés szövegét. Látni fogod, mely fontos kulcsszavak szerepelnek már az önéletrajzodban, és melyek hiányoznak."],
+  ["Text der Stellenanzeige hier einfügen …", "Paste the job ad text here …", "Illeszd be ide a hirdetés szövegét …"],
+  ["Stichwörter prüfen", "Check keywords", "Kulcsszavak ellenőrzése"],
+  ["Leeren", "Clear", "Törlés"],
+  ["Füge oben den Text der Stellenanzeige ein.", "Paste the text of the job ad above.", "Illeszd be fent a hirdetés szövegét."],
+  ["Keine Stichwörter gefunden. Füge mehr Text aus der Anzeige ein.", "No keywords found. Paste more text from the ad.", "Nem találtam kulcsszót. Illessz be több szöveget a hirdetésből."],
+  ["{0} von {1} Stichwörtern gefunden", "{0} of {1} keywords found", "{0} / {1} kulcsszó megtalálva"],
+  ["Schon im Lebenslauf", "Already in your CV", "Már szerepel az önéletrajzban"],
+  ["Im Brief unter „Meine Stärken“", "In the letter under “My strengths”", "A levélben az „Erősségeim” alatt"],
+  ["Fehlt noch – antippen, um es unter „Meine Stärken“ aufzunehmen", "Still missing – tap to add it under “My strengths”", "Még hiányzik – koppints, hogy felvedd az „Erősségeim” közé"],
+  ["Das ist nur ein Wortabgleich. Nimm nur auf, was du wirklich kannst – und ergänze Wichtiges am besten auch im Lebenslauf (Schritt „Daten“).", "This is only a word match. Add only what you can really do – and add important points to your CV too (step “Data”).", "Ez csak szóegyeztetés. Csak azt vedd fel, amit valóban tudsz – és a fontosat add hozzá az önéletrajzhoz is („Adatok” lépés)."],
   ["📲 Als App installieren", "📲 Install as app", "📲 Telepítés alkalmazásként"],
   ["📲 Auf dem iPhone/iPad: Teilen-Symbol antippen → „Zum Home-Bildschirm“. Dann startet die App wie eine normale App – auch offline.", "📲 On iPhone/iPad: tap the Share icon → “Add to Home Screen”. The app then starts like a normal app – also offline.", "📲 iPhone/iPad: koppints a Megosztás ikonra → „Főképernyőhöz adás”. Utána úgy indul, mint egy átlagos alkalmazás – offline is."],
   ["💡 Tipp: Klicke in der Vorschau auf einen Text, um ihn direkt zu ändern.", "💡 Tip: click a text in the preview to change it directly.", "💡 Tipp: kattints az előnézetben egy szövegre, hogy közvetlenül módosítsd."],
@@ -2507,12 +2542,17 @@ const LETTER_SAMPLES = {
   en: { company: "Example Trading Ltd", contact: "Maria Huber", gender: "f", street: "12 Sample Street", zip: "1010", city: "Vienna", job: "", ref: "KW-4711", source: "LinkedIn", start: "from 1 January 2027", salary: "EUR 3,000 gross/month", tone: "formal", strengths: "teamwork, reliability and a structured way of working", motivation: "Your company stands for quality and long-term customer relationships – exactly the environment I want to work in.", attach: "CV\nReferences", place: "", date: "" },
   hu: { company: "Példa Kereskedelmi Kft.", contact: "Kovács Mária", gender: "f", street: "Minta utca 5.", zip: "1051", city: "Budapest", job: "", ref: "KW-4711", source: "profession.hu", start: "2027. január 1-jétől", salary: "bruttó 900 000 Ft/hó", tone: "formal", strengths: "csapatmunka, megbízhatóság és strukturált munkavégzés", motivation: "Cégük a minőségről és a hosszú távú ügyfélkapcsolatokról ismert – pontosan ilyen környezetben szeretnék dolgozni.", attach: "Önéletrajz\nBizonyítványok", place: "", date: "" }
 };
+const KW_SAMPLE_AD = {
+  de: "Softwareentwickler:in (m/w/d) – Java & TypeScript\n\nDeine Aufgaben:\n• Entwicklung und Weiterentwicklung von Webanwendungen mit Java, Spring Boot und Angular\n• Aufbau von CI/CD-Pipelines und Deployment mit Docker und Kubernetes\n• Zusammenarbeit im Scrum-Team, Code Reviews und Qualitätssicherung\n• Anbindung von Cloud-Diensten (AWS)\n\nDein Profil:\n• Abgeschlossenes Studium der Informatik oder vergleichbare Ausbildung\n• Mehrjährige Erfahrung mit Java und SQL, Kenntnisse in TypeScript\n• Erfahrung mit Git, Testautomatisierung und REST-APIs\n• Gute Deutsch- und Englischkenntnisse, Teamfähigkeit und analytisches Denken",
+  en: "Marketing Manager B2B (m/f/d)\n\nResponsibilities:\n- Plan and run B2B campaigns across email, LinkedIn and paid search (SEA)\n- Own SEO and content marketing, report results in Google Analytics and Looker\n- Manage our CRM (HubSpot) and the newsletter programme\n- Run A/B testing and work with stakeholders in sales and product\n\nRequirements:\n- 3+ years of experience in B2B marketing\n- Strong knowledge of Google Analytics, HubSpot and Salesforce\n- Good command of English and German, excellent communication skills\n- Experience with project management and budgeting",
+  hu: "Értékesítési asszisztens (m/f/d)\n\nFeladatok:\n- Rendelésfeldolgozás és számlázás\n- Ügyfélszolgálati feladatok, ügyfelek telefonos és e-mailes kiszolgálása\n- Adminisztráció és raktárkezelés támogatása\n\nElvárások:\n- Jó Microsoft Office és Excel ismeret, SAP ismeret előny\n- Angol és német nyelvtudás\n- Csapatmunka, megbízhatóság, rugalmasság"
+};
 function loadLetterSample() {
   const lg = curLang(), d = collect();
   const cvEmpty = !(d.first || "").trim() && !(d.last || "").trim() && !d.jobs.some(e => e.role || e.company);
   if (cvEmpty) populate(Object.assign({}, window.SAMPLES[lg === "de" ? "dev" : lg].data, { lang: lg }));
   const cv = collect(), fb = { de: ["Buchhalter", "Wien"], en: ["Accountant", "Vienna"], hu: ["Könyvelő", "Budapest"] }[lg] || ["Buchhalter", "Wien"];
-  const s = Object.assign({}, LETTER_SAMPLES[lg] || LETTER_SAMPLES.de, { job: (cv.headline || "").trim() || fb[0], place: (cv.city || "").trim() || fb[1], layout: collectLetter().layout, accent: collectLetter().accent, font: collectLetter().font, edited: false });
+  const s = Object.assign({}, LETTER_SAMPLES[lg] || LETTER_SAMPLES.de, { ad: KW_SAMPLE_AD[lg] || KW_SAMPLE_AD.de, job: (cv.headline || "").trim() || fb[0], place: (cv.city || "").trim() || fb[1], layout: collectLetter().layout, accent: collectLetter().accent, font: collectLetter().font, edited: false });
   populateLetter(s); renderPreview(); renderLetterGallery(); schedule();
   status(cvEmpty ? "Beispiel-Lebenslauf und Beispiel-Anschreiben geladen." : "Beispiel-Anschreiben geladen (dein Lebenslauf bleibt unverändert).", "ok");
 }
@@ -3008,6 +3048,82 @@ function initPreviewEdit() {
   window.addEventListener("resize", () => { if (!pop.hidden && cur) place(cur.box); });
 }
 
+/* ---------- Stellenanzeigen-Check: Stichwörter aus der Anzeige mit Lebenslauf und Brief abgleichen ---------- */
+const KW_LEX = ("java,javascript,typescript,python,php,c++,c#,.net,go,rust,kotlin,swift,ruby,sql,nosql,html,css,react,angular,vue,node.js,spring,spring boot,django,flask,laravel,docker,kubernetes,aws,azure,gcp,linux,git,gitlab,github,jenkins,ci/cd,devops,rest,api,graphql,microservices,agile,scrum,kanban,jira,confluence,testautomatisierung,unit tests,junit,selenium,excel,word,powerpoint,outlook,microsoft office,microsoft 365,office 365,sap,datev,bmd,erp,crm,salesforce,hubspot,power bi,tableau,looker,google analytics,seo,sea,sem,content marketing,social media,e-mail-marketing,newsletter,a/b testing,photoshop,illustrator,indesign,figma,canva,wordpress,shopify,buchhaltung,bilanzbuchhaltung,lohnverrechnung,lohnbuchhaltung,controlling,rechnungswesen,kreditorenbuchhaltung,debitorenbuchhaltung,jahresabschluss,umsatzsteuer,projektmanagement,prozessoptimierung,qualitätssicherung,qualitätsmanagement,vertrieb,verkauf,kundenservice,kundenbetreuung,kundenberatung,key account,lagerlogistik,logistik,einkauf,disposition,personalwesen,recruiting,teamfähigkeit,teamarbeit,kommunikationsstärke,kommunikationsfähigkeit,selbstständigkeit,eigeninitiative,zuverlässigkeit,belastbarkeit,flexibilität,organisationstalent,analytisches denken,problemlösung,führungserfahrung,mitarbeiterführung,englisch,deutsch,französisch,italienisch,spanisch,führerschein,stakeholder management,project management,customer service,teamwork,communication,leadership,problem solving,time management,data analysis,reporting,budgeting,negotiation,english,german,french,spanish,driving licence,ügyfélszolgálat,csapatmunka,kommunikáció,értékesítés,raktárkezelés,könyvelés,angol,német,rendelésfeldolgozás,számlázás,adminisztráció,jogosítvány,megbízhatóság,rugalmasság,terhelhetőség,problémamegoldás,szervezés").split(",");
+const KW_ALIAS = [["javascript", "js"], ["typescript", "ts"], ["kubernetes", "k8s"], ["postgresql", "postgres"], ["englisch", "english", "angol"], ["deutsch", "german", "német"], ["teamfähigkeit", "teamarbeit", "teamwork", "csapatmunka"], ["projektmanagement", "project management"], ["kundenservice", "customer service", "kundenbetreuung", "ügyfélszolgálat"], ["microsoft office", "ms office", "office 365", "microsoft 365"], ["ci/cd", "gitlab ci", "jenkins", "github actions"], ["buchhaltung", "könyvelés", "bilanzbuchhaltung"], ["führerschein", "driving licence", "jogosítvány"]];
+const KW_STOP = new Set(("aber,alle,allen,aller,alles,als,also,am,an,auch,auf,aus,bei,bin,bis,bist,da,dabei,dafür,dann,das,dass,dein,deine,deiner,deinen,dem,den,der,des,die,dich,dir,doch,du,durch,ein,eine,einem,einen,einer,eines,er,es,etwa,euch,eure,für,gegen,gerne,haben,hat,hier,ich,ihr,ihre,ihren,ihrer,im,in,ist,ja,jede,jeden,jeder,kann,kein,keine,können,machen,man,mehr,mit,muss,müssen,nach,nicht,noch,nur,oder,ohne,per,sehr,sein,seine,sich,sie,sind,so,sowie,über,um,und,uns,unser,unsere,unseren,unserem,unserer,von,vor,war,was,we,weitere,weiteren,wenn,wer,werden,wie,wir,wird,wirst,wo,zu,zum,zur,zwischen,aufgaben,anforderungen,profil,bieten,bietest,biete,bewerbung,bewerben,bewerbungen,unternehmen,mitarbeiter,mitarbeiterin,möglichkeit,möglichkeiten,bereich,bereiche,gehalt,monat,brutto,stunden,vollzeit,teilzeit,stelle,position,suchen,suchst,gesucht,jahr,jahre,jahren,erfahrung,erfahrungen,kenntnisse,gute,guten,gutes,sehr,idealerweise,wünschenswert,von,bringst,mitbringen,mitbringst,tätigkeit,tätigkeiten,arbeit,arbeiten,arbeitest,spaß,freude,interesse,abgeschlossene,abgeschlossenes,abgeschlossenen,ausbildung,studium,team,teams,zusammenarbeit,verantwortung,eigenverantwortlich,w,d,x,m,f,a,the,and,or,of,to,in,for,with,on,at,by,from,as,is,are,be,will,you,your,our,we,us,a,an,this,that,it,its,have,has,can,must,should,also,more,than,all,any,who,what,about,into,within,across,work,working,role,job,team,company,experience,skills,ability,strong,good,excellent,responsibilities,requirements,qualifications,offer,apply,join,looking,candidate,years,year,including,such,etc,new,related,using,use,least,plus,preferred,required,knowledge,understanding,degree,bachelor,master,és,a,az,egy,hogy,nem,is,van,vagy,de,meg,el,ki,be,fel,le,csak,mint,még,már,pedig,ez,ezt,azt,aki,amely,során,által,illetve,valamint,kell,lehet,vagyunk,keresünk,kínálunk,feladatok,elvárások,tapasztalat,ismeret,ismeretek,munka,munkakör,cég,csapat,jelentkezés,jelentkezz,előny,előnyt,jelent,magas,jó,jól,szint,szinten,éves,év").split(","));
+const KW_CUES = /(erfahrung|kenntnis|fähigkeit|ausbildung|abschluss|studium|vorausgesetzt|erforderlich|wünschenswert|idealerweise|experience|knowledge|skills?|proficien|required|degree|must|tapasztalat|ismeret|elvárás|előny)/i;
+const kwEsc = s => s.replace(/[.*+?^${}()|[\]\\\/]/g, "\\$&");
+const kwBound = w => new RegExp("(^|[^\\p{L}\\p{N}])" + kwEsc(w) + "($|[^\\p{L}\\p{N}])", "u");
+function kwExtract(text, max) {
+  text = String(text || "").slice(0, 30000); if (!text.trim()) return [];
+  const low = text.toLowerCase(), map = new Map();
+  const add = (key, shown, w) => { const o = map.get(key) || { key, shown, score: 0, n: 0 }; o.score += w; o.n++; map.set(key, o); };
+  // 1. bekannte Begriffe (auch mehrteilige wie „spring boot“, „ci/cd“)
+  const lines = text.split(/\n+/);
+  KW_LEX.forEach(k => {
+    const re = new RegExp("(^|[^\\p{L}\\p{N}])" + kwEsc(k) + "(?=$|[^\\p{L}\\p{N}+#])", "giu"); let m, n = 0;
+    while ((m = re.exec(low))) { n++; if (n > 6) break; }
+    if (n) { const cue = lines.some(l => l.toLowerCase().indexOf(k) >= 0 && KW_CUES.test(l)); add(k, null, 3 + n + (cue ? 1 : 0)); }
+  });
+  // 2. sonstige auffällige Wörter
+  const de = (low.match(/\b(und|der|die|das|wir|sie|mit|für|bei)\b/g) || []).length > (low.match(/\b(and|the|you|with|for|our)\b/g) || []).length;
+  const re = /\.?[\p{L}\p{N}][\p{L}\p{N}+#.\-]*/gu; let m; const seen = {};
+  while ((m = re.exec(text))) {
+    let w = m[0].replace(/[.\-]+$/, ""); if (w.length < 3) continue;
+    const lw = w.toLowerCase(); if (KW_STOP.has(lw) || /^\d+$/.test(lw)) continue;
+    const start = m.index === 0 || /[.:!?\n•\-–·*]\s*$/.test(text.slice(Math.max(0, m.index - 3), m.index));
+    const tech = /[+#]|\.\w|\d/.test(w) || /^[A-ZÄÖÜ]{2,6}$/.test(w) || /^[a-zäöü]+[A-Z][A-Za-z]+$/.test(w) || /^[A-Z][a-z]+[A-Z][A-Za-z]+$/.test(w);
+    const noun = de && /^[A-ZÄÖÜ][a-zäöüß]{5,}$/.test(w) && !start;
+    const o = seen[lw] || (seen[lw] = { shown: w, n: 0, tech, noun }); o.n++; o.tech = o.tech || tech; o.noun = o.noun || noun;
+  }
+  Object.keys(seen).forEach(lw => {
+    const o = seen[lw]; if (map.has(lw) || KW_LEX.some(k => k.indexOf(lw) >= 0 && k.indexOf(" ") > 0 && map.has(k))) return;
+    if (o.tech || o.n >= 2 || o.noun) add(lw, o.shown, o.n + (o.tech ? 2 : 0) + (o.noun ? 0.5 : 0));
+  });
+  const out = [...map.values()].map(o => ({ key: o.key, shown: o.shown || o.key, score: o.score }));
+  out.sort((a, b) => b.score - a.score || a.key.localeCompare(b.key));
+  // schön schreiben: Begriffe aus der Liste so, wie sie in der Anzeige stehen
+  out.forEach(o => { if (!o.shown || o.shown === o.key) { const mm = text.match(new RegExp("(^|[^\\p{L}\\p{N}])(" + kwEsc(o.key) + ")(?=$|[^\\p{L}\\p{N}])", "iu")); o.shown = mm ? mm[2] : o.key; } });
+  return out.slice(0, max || 16);
+}
+function kwHaystack(d) {
+  const parts = [d.headline, d.summary, d.languages, d.it, d.certs, d.interests, d.licence];
+  (d.jobs || []).forEach(e => parts.push(e.role, e.company, e.details)); (d.edu || []).forEach(e => parts.push(e.degree, e.school, e.details));
+  return parts.filter(Boolean).join("\n").toLowerCase();
+}
+function kwIn(word, hay) {
+  const w = word.toLowerCase(), group = KW_ALIAS.find(g => g.indexOf(w) >= 0) || [w];
+  return group.some(a => (a.length <= 3 || /[+#.\/]/.test(a)) ? kwBound(a).test(hay) : (hay.indexOf(a) >= 0 || (a.length >= 7 && hay.indexOf(a.slice(0, a.length - 2)) >= 0)));
+}
+function kwRun() {
+  const ad = $('[data-lt="ad"]').value, out = $("#kwOut"), d = collect(), lt = collectLetter();
+  out.innerHTML = "";
+  if (!ad.trim()) { out.innerHTML = '<p class="hint">' + esc(t("Füge oben den Text der Stellenanzeige ein.")) + "</p>"; return; }
+  const kws = kwExtract(ad, 16); if (!kws.length) { out.innerHTML = '<p class="hint">' + esc(t("Keine Stichwörter gefunden. Füge mehr Text aus der Anzeige ein.")) + "</p>"; return; }
+  const hay = kwHaystack(d), hayL = (String(lt.strengths || "") + " " + String(lt.motivation || "")).toLowerCase();
+  const cv = [], br = [], miss = [];
+  kws.forEach(k => (kwIn(k.key, hay) ? cv : kwIn(k.key, hayL) ? br : miss).push(k));
+  const have = cv.length + br.length, pct = Math.round(100 * have / kws.length);
+  const chip = (k, cls, mark) => '<span class="kwchip ' + cls + '">' + mark + esc(k.shown) + "</span>";
+  let h = '<div class="kwsum"><b>' + esc(t("{0} von {1} Stichwörtern gefunden", have, kws.length)) + '</b><span class="kwbar"><i style="width:' + pct + '%"></i></span><span>' + pct + " %</span></div>";
+  if (cv.length) h += '<div class="kwgrp"><span class="kwh">' + esc(t("Schon im Lebenslauf")) + "</span> " + cv.map(k => chip(k, "ok", "✓ ")).join("") + "</div>";
+  if (br.length) h += '<div class="kwgrp"><span class="kwh">' + esc(t("Im Brief unter „Meine Stärken“")) + "</span> " + br.map(k => chip(k, "ok", "✓ ")).join("") + "</div>";
+  if (miss.length) h += '<div class="kwgrp"><span class="kwh">' + esc(t("Fehlt noch – antippen, um es unter „Meine Stärken“ aufzunehmen")) + '</span> ' + miss.map(k => '<button type="button" class="kwchip add" data-kw="' + esc(k.shown) + '">＋ ' + esc(k.shown) + "</button>").join("") + "</div>";
+  h += '<p class="hint">' + esc(t("Das ist nur ein Wortabgleich. Nimm nur auf, was du wirklich kannst – und ergänze Wichtiges am besten auch im Lebenslauf (Schritt „Daten“).")) + "</p>";
+  out.innerHTML = h;
+}
+function initKeywords() {
+  $("#kwRun").addEventListener("click", kwRun);
+  $("#kwClear").addEventListener("click", () => { const el = $('[data-lt="ad"]'); el.value = ""; el.dispatchEvent(new Event("input", { bubbles: true })); $("#kwOut").innerHTML = ""; });
+  $("#kwOut").addEventListener("click", e => {
+    const b = e.target.closest("[data-kw]"); if (!b) return;
+    const el = $('[data-lt="strengths"]'), cur = el.value.trim().replace(/[,;\s]+$/, "");
+    el.value = cur ? cur + ", " + b.dataset.kw : b.dataset.kw; el.dispatchEvent(new Event("input", { bubbles: true }));
+    kwRun();
+  });
+}
+
 function init() {
   state.silhouette = makeSilhouette();
   $("#sampleSelect").innerHTML = Object.keys(window.SAMPLES).map(k => `<option value="${k}">${esc(window.SAMPLES[k].label)}</option>`).join("");
@@ -3086,7 +3202,7 @@ function init() {
   let rz = null;
   let lastW = window.innerWidth;
   window.addEventListener("resize", () => { if (window.innerWidth === lastW) return; /* Handy: Adressleiste ein-/ausblenden löst nur eine Höhenänderung aus */ lastW = window.innerWidth; clearTimeout(rz); rz = setTimeout(() => { if (document.body.dataset.mode === "home") return; renderPreview(); if (state.step === 1) renderGallery(); }, 200); });
-  initPreviewEdit();
+  initPreviewEdit(); initKeywords();
   // App installieren (PWA) und Direktstart über ?open=cv / ?open=letter
   if (/^https?:$/.test(location.protocol)) {
     let deferred = null;
