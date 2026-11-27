@@ -48,7 +48,7 @@ plus a matching cover letter. Everything stays on your own device.
   </tr>
   <tr>
     <td width="50%"><img src="docs/dark.png" alt="Dark CV layout, ready to save"><br><sub><b>Dark layouts</b> — and the PDF export screen</sub></td>
-    <td width="50%"><img src="docs/letter.png" alt="Cover letter generator with signature and layouts"><br><sub><b>Cover letter</b> — generated from your CV, 9 layouts, signature</sub></td>
+    <td width="50%"><img src="docs/letter.png" alt="Cover letter generator with signature and layouts"><br><sub><b>Cover letter</b> — generated from your CV, 58 layouts, signature</sub></td>
   </tr>
   <tr>
     <td colspan="2" align="center"><img src="docs/settings.png" alt="Several CVs and language settings" width="50%"><br><sub><b>CVs &amp; language</b> — manage several CVs, change the language (gear, top right)</sub></td>
@@ -76,7 +76,7 @@ plus a matching cover letter. Everything stays on your own device.
 
 - Letter text is **generated from your CV data** plus job, company, contact person and your strengths
 - Choose a **formal** or a **modern & personal** tone — every paragraph changes
-- **9 layouts** with colours and fonts
+- **58 layouts** with colours and fonts
 - Correct salutation (e.g. *Sehr geehrte Frau Huber*), in German, English and Hungarian
 - Text stays **fully editable**; regenerate it whenever you like
 - Sample letter to try it out

@@ -1,7 +1,7 @@
 /* Service Worker – macht den Lebenslauf-Ersteller offline nutzbar.
    HTML: erst Netzwerk (damit Updates sofort ankommen), sonst Cache.
    Alles andere: erst Cache, dann Netzwerk. Zum Erzwingen eines Updates VERSION erhöhen. */
-const VERSION = "lebenslauf-v3";
+const VERSION = "lebenslauf-v6";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-32.png"];
 
 self.addEventListener("install", e => {
