@@ -6,7 +6,7 @@
 
 **CV and cover letter maker in a single HTML file.**
 
-Pick one of 114 templates, fill in your details and download a clean PDF —<br>
+Pick one of 159 templates, fill in your details and download a clean PDF —<br>
 plus a matching cover letter. Everything stays on your own device.
 
 [**▶ Try it live**](https://brickey8171.github.io/Lebenslauf/) &nbsp;·&nbsp;
@@ -33,7 +33,7 @@ plus a matching cover letter. Everything stays on your own device.
 ## ✨ Why Lebenslauf-Ersteller?
 
 - **One file, zero setup.** Double-click `index.html` or host it on GitHub Pages. No build step, no server, no sign-up.
-- **114 templates.** Classic, modern, sidebar and creative designs, with free choice of colours, fonts and spacing.
+- **159 templates.** Classic, modern, sidebar and creative designs, with free choice of colours, fonts and spacing.
 - **CV *and* cover letter.** A main menu lets you switch between the two; each CV keeps its own letter.
 - **Three languages.** German, English and Hungarian — the language of your CV also switches the whole interface.
 - **Installable app (PWA).** Add it to your home screen or desktop and use it offline like a normal app.
@@ -60,7 +60,7 @@ plus a matching cover letter. Everything stays on your own device.
 <details open>
 <summary><b>📋 CV (Lebenslauf)</b></summary>
 
-- **114 templates** in four groups: Classic (14), Modern (38), Sidebars & columns (30), Creative & eye-catching (32)
+- **159 templates** in four groups: Classic (19), Modern (48), Sidebars & columns (43), Creative & eye-catching (49)
 - Favourites, similar-template sorting and your own saved templates
 - Colours, fonts, spacing, column layout and header style adjustable
 - Guided flow in three steps: **Template → Data → Done**
@@ -179,6 +179,7 @@ Plain HTML, CSS and JavaScript in one file, with no framework, no libraries and 
 ## 🗺 Ideas
 
 - [ ] Match the cover letter automatically to the CV template
+- [ ] Job-ad keyword helper
 - [ ] Download CV and letter as one bundle
 - [ ] Running header on page 2 of long letters
 

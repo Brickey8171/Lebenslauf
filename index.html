@@ -893,16 +893,16 @@ const LAYOUT_SPEC = [
   { k: "sideWidth", label: "Breite der Seitenleiste (%)", type: "num", min: 26, max: 40, step: 1 },
   { k: "sideDark", label: "Seitenleiste in Akzentfarbe (dunkel)", type: "bool" },
   { k: "nameInSide", label: "Name in der Seitenleiste", type: "bool" },
-  { k: "header", label: "Kopfbereich (eine Spalte)", type: "enum", options: [["plain", "Schlicht"], ["band", "Farbiges Band"], ["tint", "Helle Tönung"], ["topbar", "Farbbalken oben"], ["center", "Zentriert"], ["accent", "Akzentlinie links"], ["stripes", "Farbstreifen oben"], ["box", "Name im Rahmen"], ["vbar", "Balken + Symbole"], ["block", "Grauer Block"], ["corner", "Ecke mit Rundfoto"], ["title", "Großer Titel"], ["navyBlock", "Dunkler Fotoblock"], ["photoCorner", "Foto links mit Fläche"], ["bandRound", "Band mit Rundfoto"], ["circleTitle", "Titel mit Kreis"], ["gradient", "Farbverlauf-Banner"], ["wave", "Banner mit Welle"], ["slant", "Schräges Banner"], ["hero", "Foto-Hero"], ["stripesDiag", "Diagonale Streifen"]] },
+  { k: "header", label: "Kopfbereich (eine Spalte)", type: "enum", options: [["plain", "Schlicht"], ["band", "Farbiges Band"], ["tint", "Helle Tönung"], ["topbar", "Farbbalken oben"], ["center", "Zentriert"], ["accent", "Akzentlinie links"], ["stripes", "Farbstreifen oben"], ["box", "Name im Rahmen"], ["vbar", "Balken + Symbole"], ["block", "Grauer Block"], ["corner", "Ecke mit Rundfoto"], ["title", "Großer Titel"], ["navyBlock", "Dunkler Fotoblock"], ["photoCorner", "Foto links mit Fläche"], ["bandRound", "Band mit Rundfoto"], ["circleTitle", "Titel mit Kreis"], ["gradient", "Farbverlauf-Banner"], ["wave", "Banner mit Welle"], ["slant", "Schräges Banner"], ["hero", "Foto-Hero"], ["stripesDiag", "Diagonale Streifen"], ["hexGrid", "Banner: Sechsecke"], ["lowPoly", "Banner: Low-Poly"], ["halftone", "Banner: Rasterpunkte"], ["chevrons", "Banner: Pfeile"], ["blueprint", "Banner: Bauplan-Raster"], ["mosaic", "Banner: Mosaik"], ["skyline", "Banner: Balkenstadt"], ["zigzag", "Banner: Zickzack-Kante"], ["overlap", "Banner mit überlappendem Foto"], ["tickerTape", "Banner: Schrägstreifen"]] },
   { k: "nameSize", label: "Namensgröße (pt)", type: "num", min: 18, max: 54, step: 1 },
   { k: "nameStack", label: "Vor- und Nachname untereinander", type: "bool" },
   { k: "nameUpper", label: "Name in Großbuchstaben", type: "bool" },
   { k: "nameSplit", label: "Vorname dünn, Nachname fett", type: "bool" },
   { k: "photoPos", label: "Foto-Position (eine Spalte)", type: "enum", options: [["right", "Rechts"], ["left", "Links"]] },
   { k: "photoShape", label: "Foto-Form", type: "enum", options: [["rect", "Rechteck (Hochformat)"], ["round", "Rund"]] },
-  { k: "headStyle", label: "Überschriften", type: "enum", options: [["underline", "Unterstrichen"], ["plain", "Nur Farbe"], ["bar", "Farbbalken"], ["leftbar", "Balken links"], ["dotted", "Gepunktete Linie"], ["centered", "Zentriert mit Linien"], ["double", "Doppelte Linie"], ["boxed", "Rahmen"], ["spaced", "Gesperrte Schrift"], ["greybar", "Grauer Balken"], ["icon", "Symbol + Linie"]] },
+  { k: "headStyle", label: "Überschriften", type: "enum", options: [["underline", "Unterstrichen"], ["plain", "Nur Farbe"], ["bar", "Farbbalken"], ["leftbar", "Balken links"], ["dotted", "Gepunktete Linie"], ["centered", "Zentriert mit Linien"], ["double", "Doppelte Linie"], ["boxed", "Rahmen"], ["spaced", "Gesperrte Schrift"], ["greybar", "Grauer Balken"], ["icon", "Symbol + Linie"], ["pill", "Kapsel"], ["arrow", "Pfeil-Etikett"], ["trail", "Text + Linie"]] },
   { k: "headUpper", label: "Überschriften in Großbuchstaben", type: "bool" },
-  { k: "dateStyle", label: "Datumsangaben", type: "enum", options: [["left", "Linke Spalte"], ["above", "Über dem Eintrag"], ["right", "Rechte Spalte"], ["timeline", "Zeitstrahl"], ["dots", "Zeitstrahl mit Punkten"]] },
+  { k: "dateStyle", label: "Datumsangaben", type: "enum", options: [["left", "Linke Spalte"], ["above", "Über dem Eintrag"], ["right", "Rechte Spalte"], ["timeline", "Zeitstrahl"], ["dots", "Zeitstrahl mit Punkten"], ["badge", "Datum als Etikett"]] },
   { k: "dateWidth", label: "Breite der Datumsspalte (%)", type: "num", min: 16, max: 34, step: 1 },
   { k: "bullet", label: "Aufzählungszeichen", type: "enum", options: [["disc", "Rund"], ["circle", "Hohl"], ["square", "Eckig"]] },
   { k: "contact", label: "Kontaktdaten (nicht bei Seitenleiste)", type: "enum", options: [["table", "Tabelle mit Beschriftung"], ["line", "Kompakte Zeilen"], ["icons", "Zeilen mit Symbolen"], ["strip", "Farbige Leiste"], ["iconGrid", "Symbole im Raster"], ["iconTable", "Symbole mit Beschriftung"]] },
@@ -1036,7 +1036,55 @@ const PRESETS = [
   { id: "eins9", cat: "einseite", name: "Vollbild rechts", layout: { font: "Calibri", accent: "#1e3a8a", accent2: "#3b82f6", page: "sideBleed", columns: "sidebarRight", sideDark: true, sideWidth: 30, photoShape: "round", skillStyle: "bars", headStyle: "underline", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
   { id: "eins10", cat: "einseite", name: "Creme Zweispaltig", layout: { font: "Georgia", accent: "#7a5c2e", page: "cream", header: "center", nameSize: 24, nameSplit: true, columns: "split", sideWidth: 31, contact: "line", headStyle: "double", headUpper: true, dateStyle: "above", spacing: "compact", baseSize: 9 } },
   { id: "eins11", cat: "einseite", name: "Tabelle Grau", layout: { font: "Arial", accent: "#374151", header: "block", headStyle: "greybar", headUpper: false, dateStyle: "left", dateWidth: 17, zebra: true, spacing: "compact", baseSize: 9 } },
-  { id: "eins12", cat: "einseite", name: "Wellenband", layout: { font: "Segoe UI", accent: "#0ea5e9", accent2: "#6366f1", header: "wave", nameSize: 26, columns: "split", sideWidth: 32, skillStyle: "rings", headStyle: "icon", headUpper: false, dateStyle: "above", spacing: "compact", baseSize: 9 } }
+  { id: "eins12", cat: "einseite", name: "Wellenband", layout: { font: "Segoe UI", accent: "#0ea5e9", accent2: "#6366f1", header: "wave", nameSize: 26, columns: "split", sideWidth: 32, skillStyle: "rings", headStyle: "icon", headUpper: false, dateStyle: "above", spacing: "compact", baseSize: 9 } },
+  // ---- weitere Vorlagen ----
+  { id: "amtlich", cat: "klassisch", name: "Amtlich", layout: { font: "Arial", accent: "#1f3a5f", header: "plain", nameSize: 22, contact: "table", headStyle: "greybar", headUpper: true, dateStyle: "left", dateWidth: 28, rules: true, baseSize: 10 } },
+  { id: "notar", cat: "klassisch", name: "Notar", layout: { font: "Garamond", accent: "#4a3728", header: "center", nameSize: 26, nameUpper: true, contact: "line", headStyle: "double", headUpper: true, dateStyle: "right", dateWidth: 22, rules: true, baseSize: 11 } },
+  { id: "diplomat", cat: "klassisch", name: "Diplomat", layout: { font: "Cambria", accent: "#1b2a41", header: "topbar", nameSize: 28, nameSplit: true, contact: "line", headStyle: "underline", headUpper: false, dateStyle: "above", bullet: "square", baseSize: 10.5 } },
+  { id: "lehrbuch", cat: "klassisch", name: "Lehrbuch", layout: { font: "Times New Roman", accent: "#7b1e1e", header: "plain", nameSize: 26, nameSplit: true, contact: "line", headStyle: "leftbar", headUpper: false, dateStyle: "left", dateWidth: 22, bullet: "circle", spacing: "airy", baseSize: 11 } },
+  { id: "swiss", cat: "klassisch", name: "Swiss", layout: { font: "Arial", accent: "#d32f2f", header: "plain", nameSize: 30, nameSplit: true, contact: "table", headStyle: "plain", headUpper: true, headNum: true, dateStyle: "left", dateWidth: 20, rules: true, bullet: "square", baseSize: 10 } },
+  { id: "pastellRosa", cat: "modern", name: "Pastell Rosa", layout: { font: "Calibri", accent: "#d6457a", header: "tint", nameSize: 28, nameSplit: true, contact: "line", headStyle: "spaced", headUpper: true, dateStyle: "above", skillStyle: "chips", baseSize: 10.5 } },
+  { id: "ozeanLinie", cat: "modern", name: "Ozean Linie", layout: { font: "Segoe UI", accent: "#0369a1", header: "accent", nameSize: 28, contact: "icons", headStyle: "underline", headUpper: true, dateStyle: "timeline", dateWidth: 20, skillStyle: "bars", baseSize: 10 } },
+  { id: "waldgruen", cat: "modern", name: "Waldgrün", layout: { font: "Georgia", accent: "#166534", header: "band", nameSize: 28, nameSplit: true, contact: "line", headStyle: "dotted", headUpper: false, dateStyle: "above", skillStyle: "dots", baseSize: 10.5 } },
+  { id: "indigoChips", cat: "modern", name: "Indigo Etiketten", layout: { font: "Segoe UI", accent: "#3730a3", header: "plain", nameSize: 34, nameSplit: true, contact: "strip", headStyle: "bar", headUpper: true, dateStyle: "right", dateWidth: 21, skillStyle: "chips", baseSize: 10 } },
+  { id: "anthrazitZebra", cat: "modern", name: "Anthrazit Zebra", layout: { font: "Arial", accent: "#374151", header: "band", nameSize: 26, contact: "line", headStyle: "greybar", headUpper: false, dateStyle: "left", dateWidth: 20, zebra: true, spacing: "compact", baseSize: 10 } },
+  { id: "sonnengelb", cat: "modern", name: "Sonnengelb", layout: { font: "Trebuchet MS", accent: "#ca8a04", header: "stripes", nameSize: 28, contact: "icons", headStyle: "leftbar", headUpper: true, dateStyle: "timeline", dateWidth: 20, bullet: "square", baseSize: 10 } },
+  { id: "terminal", cat: "modern", name: "Code", layout: { font: "Courier New", accent: "#16a34a", header: "plain", nameSize: 24, contact: "line", headStyle: "plain", headUpper: true, dateStyle: "left", dateWidth: 24, bullet: "square", baseSize: 10 } },
+  { id: "punkteZeit", cat: "modern", name: "Zeitleiste mit Punkten", layout: { font: "Calibri", accent: "#0891b2", header: "tint", nameSize: 28, contact: "iconGrid", headStyle: "icon", headUpper: false, dateStyle: "dots", dateWidth: 21, skillStyle: "bars", baseSize: 10 } },
+  { id: "magentaNr", cat: "modern", name: "Magenta Nummern", layout: { font: "Segoe UI", accent: "#a21caf", header: "plain", nameSize: 32, nameSplit: true, contact: "strip", headStyle: "spaced", headUpper: true, headNum: true, dateStyle: "above", baseSize: 10 } },
+  { id: "sachlichBlau", cat: "modern", name: "Sachlich Blau", layout: { font: "Calibri", accent: "#1d4ed8", header: "box", nameSize: 26, contact: "line", headStyle: "underline", headUpper: true, dateStyle: "right", dateWidth: 20, rules: true, baseSize: 10 } },
+  { id: "seiteGruen", cat: "seite", name: "Seite Grün hell", layout: { font: "Calibri", accent: "#15803d", columns: "sidebarLeft", sideDark: false, sideWidth: 30, photoShape: "round", headStyle: "bar", headUpper: true, dateStyle: "timeline", dateWidth: 20, skillStyle: "bars", baseSize: 10 } },
+  { id: "seiteViolett", cat: "seite", name: "Seite Violett", layout: { font: "Segoe UI", accent: "#5b21b6", columns: "sidebarLeft", sideDark: true, sideWidth: 32, nameInSide: true, photoShape: "round", headStyle: "underline", headUpper: true, dateStyle: "above", skillStyle: "dots", baseSize: 10 } },
+  { id: "seiteRechtsHell", cat: "seite", name: "Seite rechts Sand", layout: { font: "Georgia", accent: "#b45309", columns: "sidebarRight", sideDark: false, sideWidth: 30, nameSplit: true, headStyle: "dotted", headUpper: false, dateStyle: "above", skillStyle: "chips", baseSize: 10 } },
+  { id: "seiteNacht", cat: "seite", name: "Seite Mitternacht", layout: { font: "Segoe UI", accent: "#0f172a", columns: "sidebarLeft", sideDark: true, sideWidth: 33, sideCenter: true, nameInSide: true, photoShape: "round", skillStyle: "rings", headStyle: "plain", headUpper: true, dateStyle: "left", dateWidth: 22, baseSize: 10 } },
+  { id: "zweiRot", cat: "seite", name: "Zwei Spalten Rot", layout: { font: "Trebuchet MS", accent: "#b91c1c", header: "band", nameSize: 28, columns: "split", sideWidth: 31, contact: "line", headStyle: "underline", headUpper: true, dateStyle: "above", skillStyle: "chips", baseSize: 10 } },
+  { id: "zweiLinksGruen", cat: "seite", name: "Spalte links Smaragd", layout: { font: "Calibri", accent: "#047857", header: "tint", nameSize: 28, columns: "splitLeft", sideWidth: 31, contact: "icons", headStyle: "leftbar", headUpper: true, dateStyle: "left", dateWidth: 24, skillStyle: "bars", baseSize: 10 } },
+  { id: "leisteOrange", cat: "seite", name: "Schmale Leiste Orange", layout: { font: "Arial", accent: "#ea580c", columns: "sidebarLeft", sideDark: true, sideWidth: 27, headStyle: "leftbar", headUpper: true, dateStyle: "above", skillStyle: "bars", baseSize: 10 } },
+  { id: "cremeSeite", cat: "fancy", name: "Creme mit Seitenleiste", layout: { font: "Georgia", accent: "#78350f", page: "cream", columns: "sidebarLeft", sideDark: true, sideWidth: 31, nameSplit: true, nameInSide: true, photoShape: "round", headStyle: "double", headUpper: true, dateStyle: "above", baseSize: 10 } },
+  { id: "dunkelWelle", cat: "fancy", name: "Dunkle Welle", layout: { font: "Segoe UI", accent: "#34d399", accent2: "#38bdf8", page: "dark", header: "wave", nameSize: 32, headStyle: "icon", headUpper: false, dateStyle: "dots", dateWidth: 22, skillStyle: "bars", baseSize: 10 } },
+  { id: "goldVerlauf", cat: "fancy", name: "Gold Verlauf", layout: { font: "Georgia", accent: "#b45309", accent2: "#f59e0b", page: "cream", header: "gradient", nameSize: 32, photoShape: "round", structure: "glass", headStyle: "plain", headUpper: false, dateStyle: "right", dateWidth: 22, baseSize: 10 } },
+  { id: "nachtKarten", cat: "fancy", name: "Nacht Karten", layout: { font: "Segoe UI", accent: "#f472b6", accent2: "#818cf8", page: "dark", header: "plain", nameSize: 34, nameSplit: true, contact: "icons", structure: "glass", headStyle: "plain", headUpper: true, dateStyle: "above", baseSize: 10 } },
+  { id: "blockRosa", cat: "fancy", name: "Datenblock Rosé", layout: { font: "Calibri", accent: "#be185d", page: "cream", header: "block", headStyle: "underline", headUpper: true, dateStyle: "left", dateWidth: 23, skillStyle: "dots", baseSize: 10 } },
+  { id: "seitenGruenVoll", cat: "fancy", name: "Vollbild Smaragd", layout: { font: "Segoe UI", accent: "#065f46", accent2: "#10b981", page: "sideBleed", columns: "sidebarLeft", sideDark: true, sideWidth: 32, nameInSide: true, photoShape: "round", headStyle: "leftbar", headUpper: true, dateStyle: "above", skillStyle: "bars", baseSize: 10 } },
+  { id: "heroPastell", cat: "fancy", name: "Hero Pastell", layout: { font: "Trebuchet MS", accent: "#7c3aed", accent2: "#38bdf8", page: "gradient", header: "hero", nameSize: 36, nameStack: true, nameUpper: true, structure: "glass", headStyle: "plain", headUpper: true, dateStyle: "above", baseSize: 10 } },
+  { id: "welleSand", cat: "fancy", name: "Sand Welle", layout: { font: "Georgia", accent: "#a16207", accent2: "#f59e0b", page: "cream", header: "wave", nameSize: 30, nameSplit: true, headStyle: "dotted", headUpper: false, dateStyle: "timeline", dateWidth: 22, skillStyle: "chips", baseSize: 10 } },
+  // ---- neue Designs ----
+  { id: "hexNavy", cat: "fancy", name: "Sechseck Marine", layout: { font: "Segoe UI", accent: "#1e3a5f", accent2: "#38bdf8", header: "hexGrid", nameSize: 30, headStyle: "arrow", headUpper: true, dateStyle: "timeline", dateWidth: 22, skillStyle: "bars", baseSize: 10 } },
+  { id: "polyViolett", cat: "fancy", name: "Low-Poly Violett", layout: { font: "Calibri", accent: "#6d28d9", accent2: "#ec4899", header: "lowPoly", nameSize: 32, headStyle: "pill", headUpper: false, dateStyle: "badge", dateWidth: 24, skillStyle: "chips", baseSize: 10 } },
+  { id: "rasterRot", cat: "fancy", name: "Rasterpunkte Rot", layout: { font: "Helvetica", accent: "#be123c", accent2: "#fb7185", header: "halftone", nameSize: 32, nameStack: false, headStyle: "trail", headUpper: true, dateStyle: "left", dateWidth: 22, skillStyle: "dots", baseSize: 10 } },
+  { id: "pfeileTeal", cat: "fancy", name: "Pfeile Petrol", layout: { font: "Trebuchet MS", accent: "#0f766e", accent2: "#fbbf24", header: "chevrons", nameSize: 30, headStyle: "arrow", headUpper: false, dateStyle: "dots", dateWidth: 22, skillStyle: "rings", baseSize: 10 } },
+  { id: "bauplan", cat: "fancy", name: "Bauplan", layout: { font: "Consolas", accent: "#0b2a4a", accent2: "#7dd3fc", header: "blueprint", nameSize: 28, headStyle: "trail", headUpper: true, dateStyle: "right", dateWidth: 22, skillStyle: "bars", baseSize: 10 } },
+  { id: "bauhaus", cat: "fancy", name: "Bauhaus Mosaik", layout: { font: "Arial", accent: "#111827", accent2: "#f59e0b", header: "mosaic", nameSize: 32, nameUpper: true, headStyle: "leftbar", headUpper: true, dateStyle: "badge", dateWidth: 24, skillStyle: "chips", baseSize: 10 } },
+  { id: "stadtGruen", cat: "fancy", name: "Balkenstadt Grün", layout: { font: "Verdana", accent: "#14532d", accent2: "#a3e635", header: "skyline", nameSize: 30, headStyle: "pill", headUpper: false, dateStyle: "timeline", dateWidth: 22, skillStyle: "bars", baseSize: 10 } },
+  { id: "zickzackOrange", cat: "fancy", name: "Zickzack Orange", layout: { font: "Calibri", accent: "#c2410c", accent2: "#fdba74", header: "zigzag", nameSize: 32, headStyle: "underline", headUpper: false, dateStyle: "above", skillStyle: "rings", baseSize: 10 } },
+  { id: "ueberlappBlau", cat: "fancy", name: "Foto überlappt", layout: { font: "Segoe UI", accent: "#1d4ed8", accent2: "#0ea5e9", header: "overlap", nameSize: 30, headStyle: "trail", headUpper: false, dateStyle: "badge", dateWidth: 24, skillStyle: "chips", baseSize: 10 } },
+  { id: "schraegSchwarz", cat: "fancy", name: "Schrägstreifen Gelb", layout: { font: "Arial", accent: "#111827", accent2: "#facc15", header: "tickerTape", nameSize: 32, nameUpper: true, headStyle: "arrow", headUpper: true, dateStyle: "left", dateWidth: 22, skillStyle: "bars", baseSize: 10 } },
+  { id: "hexSeite", cat: "fancy", name: "Sechseck + Seitenleiste", layout: { font: "Calibri", accent: "#134e4a", accent2: "#5eead4", header: "hexGrid", columns: "sidebarLeft", sideDark: false, sideWidth: 32, nameSize: 30, headStyle: "trail", headUpper: false, dateStyle: "badge", dateWidth: 24, skillStyle: "bars", baseSize: 10 } },
+  { id: "polySeite", cat: "fancy", name: "Low-Poly + Seite rechts", layout: { font: "Trebuchet MS", accent: "#9a3412", accent2: "#f59e0b", header: "lowPoly", columns: "sidebarRight", sideDark: false, sideWidth: 30, nameSize: 30, headStyle: "arrow", headUpper: true, dateStyle: "above", skillStyle: "chips", baseSize: 10 } },
+  { id: "rasterSpalte", cat: "fancy", name: "Raster + Spalte", layout: { font: "Segoe UI", accent: "#4338ca", accent2: "#a5b4fc", header: "halftone", columns: "split", sideWidth: 32, contact: "iconTable", nameSize: 28, headStyle: "pill", headUpper: false, dateStyle: "badge", dateWidth: 24, skillStyle: "rings", baseSize: 10 } },
+  { id: "mosaikNacht", cat: "fancy", name: "Mosaik Nacht", layout: { font: "Segoe UI", accent: "#7c3aed", accent2: "#22d3ee", page: "dark", header: "mosaic", nameSize: 32, headStyle: "trail", headUpper: true, dateStyle: "dots", dateWidth: 22, skillStyle: "bars", baseSize: 10 } },
+  { id: "pfeileSand", cat: "fancy", name: "Pfeile Creme", layout: { font: "Georgia", accent: "#9a3412", accent2: "#d97706", page: "cream", header: "chevrons", nameSize: 30, nameSplit: true, headStyle: "trail", headUpper: false, dateStyle: "timeline", dateWidth: 22, skillStyle: "chips", baseSize: 10 } },
+  { id: "bauplanSeite", cat: "fancy", name: "Bauplan + Seitenleiste", layout: { font: "Consolas", accent: "#1e3a8a", accent2: "#93c5fd", header: "blueprint", columns: "sidebarLeft", sideDark: true, sideWidth: 32, nameSize: 26, headStyle: "arrow", headUpper: true, dateStyle: "right", dateWidth: 22, skillStyle: "bars", baseSize: 10 } }
 ];
 
 const ICONS = {
@@ -1062,7 +1110,9 @@ function levelOf(t) {
   return 0.6;
 }
 const SPECIAL_HEADERS = ["vbar", "block", "corner", "title", "navyBlock", "photoCorner", "bandRound", "circleTitle", "gradient", "wave", "slant", "hero", "stripesDiag"];
-const BLEED_HEADERS = ["gradient", "wave", "slant", "hero", "stripesDiag"];
+const NEWB = ["hexGrid", "lowPoly", "halftone", "chevrons", "blueprint", "mosaic", "skyline", "zigzag", "overlap", "tickerTape"];
+SPECIAL_HEADERS.push(...NEWB);
+const BLEED_HEADERS = ["gradient", "wave", "slant", "hero", "stripesDiag", ...NEWB];
 function bleed(l) { l = sanitizeLayout(l); return l.page !== "white" || BLEED_HEADERS.indexOf(l.header) >= 0; }
 function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 function lumHex(h) { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; const c = hexRgb(h); return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); }
@@ -1221,6 +1271,9 @@ function buildHtml(d, layoutIn, forPrint, fit) {
     if (side) return P(base(sideAccent, fs + 0.5, `font-weight:bold;${m}padding-bottom:2pt;border-bottom:1pt solid ${sideAccent};`), esc(t));
     const b = (extra, size) => P(base(a, size || big, `font-weight:bold;${m}${extra}`), esc(t));
     switch (Ly.headStyle) {
+      case "pill": return P(base("#ffffff", big - 0.5, `font-weight:bold;${m}`), `<span style="display:inline-block;background-color:${a};color:#ffffff;border-radius:11pt;padding:2pt 14pt;">${esc(t)}</span>`);
+      case "arrow": return `<div style="${m}"><div style="display:inline-block;background-color:${a};color:#ffffff;${fontCss}font-size:${big}pt;font-weight:bold;padding:2.5pt 22pt 2.5pt 10pt;clip-path:polygon(0 0,calc(100% - 9pt) 0,100% 50%,calc(100% - 9pt) 100%,0 100%);">${esc(t)}</div></div>`;
+      case "trail": return `<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;margin-top:${sp.sec}pt;"><tr><td valign="middle" style="white-space:nowrap;padding:0 8pt 3pt 0;">${P(base(a, big, "font-weight:bold;margin:0;"), esc(t))}</td><td width="100%" valign="middle" style="width:100%;padding-bottom:3pt;"><div style="border-top:1pt solid ${tint(a, 0.55)};height:1pt;"></div></td></tr></table>` + spacer(2);
       case "greybar": return P(base("#222222", big, `font-weight:bold;${m}background-color:#d9d9d9;padding:2pt 6pt;`), esc(t));
       case "icon": return `<table width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;margin-top:${sp.sec}pt;"><tr><td width="24" valign="middle" style="width:24px;padding:0 6px 3pt 0;border-bottom:1.5pt solid ${a};">${svgBadge(SEC_ICON[title] || "dot", 18, "#333333")}</td><td valign="middle" style="padding-bottom:3pt;border-bottom:1.5pt solid ${a};">${P(base("#222222", big, "font-weight:bold;margin:0;"), esc(t))}</td></tr></table>` + spacer(4);
       case "plain": return b("");
@@ -1261,6 +1314,10 @@ function buildHtml(d, layoutIn, forPrint, fit) {
         `<td width="14" valign="top" style="width:14px;padding:0;border-left:1.5pt solid ${lc};position:relative;"><div style="position:absolute;left:-6pt;top:${sp.ent + 2}pt;width:8pt;height:8pt;border-radius:50%;border:1.5pt solid ${a};background-color:#ffffff;"></div></td>` +
         `<td width="${100 - dw}%" valign="top" style="${base()}width:${100 - dw}%;padding:${sp.ent}pt 0 ${sp.ent + 1}pt 12pt;">${entryBody(e, tk, ok)}</td></tr>`));
     }
+    if (Ly.dateStyle === "badge") {
+      return table(its.map(e => `<tr><td width="${dw}%" valign="top" style="width:${dw}%;padding:${sp.ent}pt 8pt ${sp.ent + 1}pt 0;"><span style="display:inline-block;${base(a, fs - 1, "font-weight:bold;")}background-color:${tint(a, 0.86)};border-radius:8pt;padding:1.5pt 7pt;">${esc(X.dateText(e.from, e.to))}</span></td>` +
+        `<td width="${100 - dw}%" valign="top" style="${base()}width:${100 - dw}%;padding:${sp.ent}pt 0 ${sp.ent + 1}pt 0;">${entryBody(e, tk, ok)}</td></tr>`));
+    }
     if (Ly.dateStyle === "right") {
       return table(its.map(e => `<tr><td width="${100 - dw}%" valign="top" style="${base()}width:${100 - dw}%;padding:${sp.ent}pt 8pt ${sp.ent + 1}pt 0;">${entryBody(e, tk, ok)}</td>` +
         `<td width="${dw}%" valign="top" align="right" style="${base(a, fs - 0.5, "font-weight:bold;")}width:${dw}%;padding:${sp.ent}pt 0 ${sp.ent + 1}pt 0;text-align:right;">${esc(X.dateText(e.from, e.to))}</td></tr>`));
@@ -1295,7 +1352,7 @@ function buildHtml(d, layoutIn, forPrint, fit) {
         `<td width="72%" valign="top" style="width:72%;padding:${sp.sec - 4}pt 0 2pt 0;border-top:1pt solid #cccccc;">${x[1]}</td></tr>`));
     }
     if (Ly.structure === "glass") {
-      return secs.map(x => `<div style="background-color:#ffffff;border-radius:8pt;box-shadow:0 1pt 6pt rgba(0,0,0,0.18);padding:2pt 14pt 10pt 14pt;margin:0 0 10pt 0;">${section(x[0]) + x[1]}</div>`).join("");
+      return secs.map(x => `<div style="background-color:${DK ? "#1c2437" : "#ffffff"};border-radius:8pt;box-shadow:0 1pt 6pt rgba(0,0,0,${DK ? "0.45" : "0.18"});padding:2pt 14pt 10pt 14pt;margin:0 0 10pt 0;">${section(x[0]) + x[1]}</div>`).join("");
     }
     if (Ly.structure === "cards") {
       const bg = tint(a, 0.92);
@@ -1370,12 +1427,74 @@ function buildHtml(d, layoutIn, forPrint, fit) {
         return T(`<tr>${hasPhoto ? `<td width="150" valign="top" bgcolor="${tint(a, 0.8)}" style="width:150px;background-color:${tint(a, 0.8)};padding:10pt 0 0 10pt;">${imgTag}</td>` : ""}<td valign="top" style="padding:6pt 0 0 14pt;">${P(base("#222222", Ly.nameSize, "margin:0;font-weight:bold;"), nameHtml)}${P(base("#666666", fs + 1, "margin:0 0 6pt 0;"), esc(d.headline || L.cv))}${iconTableHtml(X.pItems, false)}</td></tr>`) + spacer(4);
       case "bandRound":
         return T(`<tr><td bgcolor="${a}" style="background-color:${a};padding:12pt 14pt;"><table cellspacing="0" cellpadding="0"><tr>${hasPhoto ? `<td valign="middle" style="padding-right:16pt;">${imgTag}</td>` : ""}<td valign="middle">${P(base("#ffffff", Ly.nameSize, "margin:0;"), nameHtml)}${P(base("#ffffff", fs + 1, "margin:2pt 0 0 0;"), esc(d.headline || L.cv))}</td></tr></table></td></tr>`) + spacer(8);
-      case "gradient": case "wave": case "slant": case "hero": case "stripesDiag": {
+      case "gradient": case "wave": case "slant": case "hero": case "stripesDiag": case "hexGrid": case "lowPoly": case "halftone": case "chevrons": case "blueprint": case "mosaic": case "skyline": case "zigzag": case "overlap": case "tickerTape": {
         const lines2 = col => cLines().map(t => P(base(col, fs - 0.5, "margin:1pt 0 0 0;"), esc(t))).join("");
         const roundPhoto = size => hasPhoto ? `<img src="${d.photo}" width="${size}" height="${size}" alt="Foto" style="width:${size}px;height:${size}px;border-radius:${size / 2}px;object-fit:cover;object-position:50% 15%;border:4pt solid #ffffff;box-sizing:content-box;">` : "";
         const mono = `<div style="width:104px;height:104px;border-radius:52px;background-color:rgba(255,255,255,0.18);border:4pt solid #ffffff;text-align:center;line-height:104px;${fontCss}font-size:32pt;font-weight:bold;color:#ffffff;">${esc(((X.lead || "").charAt(0) + (X.trail || "").charAt(0)).toUpperCase() || "CV")}</div>`;
         const nm = col => P(base(col, Ly.nameSize, "margin:0;font-weight:bold;line-height:1.08;"), nameHtml) + (d.headline ? P(base(col, fs + 3, "margin:4pt 0 8pt 0;"), esc(d.headline)) : "");
         const inner = T(`<tr><td valign="middle">${nm("#ffffff")}${lines2("#ffffff")}</td>${hasPhoto ? `<td width="150" align="right" valign="middle" style="width:150px;text-align:right;">${roundPhoto(112)}</td>` : ""}</tr>`);
+
+        if (NEWB.indexOf(Ly.header) >= 0) {
+          const W = 800, H = 200, rnd = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+          const hx = (cx, cy, r) => { let p = []; for (let i = 0; i < 6; i++) { const t = Math.PI / 3 * i + Math.PI / 6; p.push((cx + r * Math.cos(t)).toFixed(1) + "," + (cy + r * Math.sin(t)).toFixed(1)); } return p.join(" "); };
+          let g = "", bgc = a, bottom = "";
+          const hd = Ly.header;
+          if (hd === "hexGrid") {
+            const r = 26, w = r * Math.sqrt(3);
+            for (let row = 0; row < 8; row++) for (let c = 0; c < 14; c++) {
+              const cx = 330 + c * w + (row % 2 ? w / 2 : 0), cy = -6 + row * r * 1.5, k = rnd(row * 20 + c);
+              if (cx > W + 30) continue;
+              const near = (cx - 330) / 470;
+              g += `<polygon points="${hx(cx, cy, r - 2.5)}" fill="${k > 0.72 ? "#ffffff" : (k > 0.5 ? a2 : "none")}" fill-opacity="${k > 0.72 ? 0.16 : 0.5}" stroke="#ffffff" stroke-opacity="${(0.1 + near * 0.22).toFixed(2)}" stroke-width="1.2"/>`;
+            }
+          } else if (hd === "lowPoly") {
+            const cw = 70, ch = 50;
+            for (let r = 0; r < 5; r++) for (let c = 0; c < 12; c++) {
+              const x = c * cw, y = r * ch, j = k => (rnd(r * 31 + c * 7 + k) - 0.5) * 24;
+              const p0 = [x + j(1), y + j(2)], p1 = [x + cw + j(3), y + j(4)], p2 = [x + j(5), y + ch + j(6)], p3 = [x + cw + j(7), y + ch + j(8)];
+              [[p0, p1, p2], [p1, p3, p2]].forEach((tri, i) => { const k = rnd(r * 91 + c * 13 + i * 5); g += `<polygon points="${tri.map(q => q[0].toFixed(0) + "," + q[1].toFixed(0)).join(" ")}" fill="${k > 0.5 ? "#ffffff" : "#000000"}" fill-opacity="${(0.03 + k * 0.12 * (0.4 + c / 12)).toFixed(3)}"/>`; });
+            }
+            bgc = `linear-gradient(120deg, ${a}, ${a2})`;
+          } else if (hd === "halftone") {
+            for (let r = 0; r < 12; r++) for (let c = 0; c < 28; c++) {
+              const x = 330 + c * 18, y = 8 + r * 18, f = (c / 28), rad = 1 + f * 7 * (0.5 + 0.5 * Math.sin(r * 0.5 + 1));
+              if (x < W + 10) g += `<circle cx="${x}" cy="${y}" r="${rad.toFixed(1)}" fill="#ffffff" fill-opacity="${(0.1 + f * 0.3).toFixed(2)}"/>`;
+            }
+          } else if (hd === "chevrons") {
+            for (let i = 0; i < 7; i++) { const x = 440 + i * 56; g += `<polyline points="${x},-10 ${x + 70},100 ${x},210" fill="none" stroke="${i % 3 === 1 ? a2 : "#ffffff"}" stroke-opacity="${(0.1 + i * 0.07).toFixed(2)}" stroke-width="${22 - i * 1.5}" stroke-linejoin="miter"/>`; }
+          } else if (hd === "blueprint") {
+            for (let x = 0; x <= W; x += 20) g += `<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="#ffffff" stroke-opacity="${x % 100 === 0 ? 0.2 : 0.07}" stroke-width="${x % 100 === 0 ? 1.2 : 0.8}"/>`;
+            for (let y = 0; y <= H; y += 20) g += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#ffffff" stroke-opacity="${y % 100 === 0 ? 0.2 : 0.07}" stroke-width="${y % 100 === 0 ? 1.2 : 0.8}"/>`;
+            g += `<path d="M560 150H760M560 142V158M760 142V158" stroke="${a2}" stroke-width="1.6" fill="none"/><rect x="590" y="30" width="150" height="70" fill="none" stroke="${a2}" stroke-width="1.6" stroke-dasharray="6 4"/><path d="M590 100L740 30" stroke="#ffffff" stroke-opacity="0.35" stroke-width="1"/>`;
+          } else if (hd === "mosaic") {
+            const q = 50, cols = [a2, "#ffffff", tint(a2, 0.5), "#000000"];
+            for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) {
+              const x = 500 + c * q, y = -2 + r * q, k = Math.floor(rnd(r * 17 + c * 3) * 6), col = cols[Math.floor(rnd(r * 5 + c * 11) * 4)];
+              if (k === 0) g += `<rect x="${x}" y="${y}" width="${q}" height="${q}" fill="${col}" fill-opacity="0.28"/>`;
+              else if (k === 1) g += `<polygon points="${x},${y + q} ${x + q},${y + q} ${x + q},${y}" fill="${col}" fill-opacity="0.34"/>`;
+              else if (k === 2) g += `<polygon points="${x},${y} ${x + q},${y} ${x},${y + q}" fill="${col}" fill-opacity="0.25"/>`;
+              else if (k === 3) g += `<path d="M${x} ${y + q}A${q} ${q} 0 0 1 ${x + q} ${y}V${y + q}Z" fill="${col}" fill-opacity="0.3"/>`;
+              else if (k === 4) g += `<rect x="${x + 10}" y="${y + 10}" width="${q - 20}" height="${q - 20}" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3"/>`;
+            }
+          } else if (hd === "skyline") {
+            for (let i = 0; i < 26; i++) { const h = 30 + rnd(i * 3) * 100 * (0.35 + i / 26), x = 400 + i * 15.4; g += `<rect x="${x.toFixed(0)}" y="${(H - h).toFixed(0)}" width="11" height="${h.toFixed(0)}" fill="${i % 4 === 0 ? a2 : "#ffffff"}" fill-opacity="${i % 4 === 0 ? 0.55 : (0.08 + (i / 26) * 0.2).toFixed(2)}"/>`; }
+          } else if (hd === "zigzag") {
+            g += `<polygon points="520,0 800,0 800,200 700,200" fill="#ffffff" fill-opacity="0.07"/><polygon points="640,0 800,0 800,120" fill="${a2}" fill-opacity="0.35"/>`;
+            let pts = "0,0"; for (let x = 0; x <= 40; x++) pts += ` ${x * 20},${x % 2 ? 40 : 8}`; pts += " 800,0";
+            bottom = `<div style="margin:0 -${C2} 10pt -${C2};line-height:0;"><svg viewBox="0 0 800 40" preserveAspectRatio="none" width="100%" height="22" style="display:block;"><polygon points="${pts}" fill="${a}"/></svg></div>`;
+          } else if (hd === "tickerTape") {
+            for (let i = 0; i < 10; i++) g += `<rect x="${440 + i * 38}" y="-20" width="16" height="260" fill="#ffffff" fill-opacity="${(0.04 + i * 0.012).toFixed(3)}" transform="skewX(-24)"/>`;
+            g += `<rect x="0" y="${H - 14}" width="${W}" height="14" fill="${a2}"/>`;
+          }
+          const svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMaxYMid slice" width="100%" height="100%" style="position:absolute;left:0;top:0;width:100%;height:100%;display:block;">${g}</svg>`;
+          const bgCss = /gradient/.test(bgc) ? `background:${bgc};` : `background-color:${bgc};`;
+          if (hd === "overlap") {
+            const ph = hasPhoto ? `<div style="height:0;text-align:right;position:relative;"><div style="position:absolute;right:0;top:-78pt;width:100pt;"><img src="${d.photo}" alt="Foto" style="width:100pt;height:128pt;object-fit:cover;object-position:50% 15%;border:4pt solid #ffffff;box-sizing:border-box;display:block;box-shadow:0 2pt 8pt rgba(0,0,0,0.3);"></div></div>` : "";
+            const nmOnly = T(`<tr><td valign="middle" style="padding-right:${hasPhoto ? 120 : 0}pt;">${nm("#ffffff")}${lines2("#ffffff")}</td></tr>`);
+            return `<div style="position:relative;overflow:hidden;margin:-${C2} -${C2} 0 -${C2};padding:${C2} ${C2} 20pt ${C2};background:linear-gradient(120deg, ${a}, ${a2});">${nmOnly}</div>${ph}<div style="height:${hasPhoto ? 56 : 14}pt;"></div>`;
+          }
+          return `<div style="position:relative;overflow:hidden;margin:-${C2} -${C2} ${bottom ? 0 : 16}pt -${C2};padding:${C2} ${C2} 22pt ${C2};${bgCss}">${svg}<div style="position:relative;">${inner}</div></div>` + bottom;
+        }
         if (Ly.header === "gradient") return `<div style="margin:-${C2} -${C2} 16pt -${C2};padding:${C2} ${C2} 22pt ${C2};background:linear-gradient(120deg, ${a}, ${a2});">${inner}</div>`;
         if (Ly.header === "wave") return `<div style="margin:-${C2} -${C2} 0 -${C2};padding:${C2} ${C2} 4pt ${C2};background-color:${a};">${inner}</div><div style="margin:0 -${C2} 10pt -${C2};line-height:0;"><svg viewBox="0 0 800 70" preserveAspectRatio="none" width="100%" height="42" style="display:block;"><path d="M0 0H800V30C660 78 520 62 400 36S130 -6 0 34Z" fill="${a}"/></svg></div>`;
         if (Ly.header === "slant") return `<div style="margin:-${C2} -${C2} -4pt -${C2};padding:${C2} ${C2} 56pt ${C2};background:linear-gradient(120deg, ${a}, ${a2});clip-path:polygon(0 0,100% 0,100% 74%,0 100%);">${inner}</div>`;
@@ -1391,13 +1510,15 @@ function buildHtml(d, layoutIn, forPrint, fit) {
   const out = [];
   if (sidebar) {
     let side = "";
-    if (hasPhoto) side += P("margin:0 0 8pt 0;", imgTag);
-    if (Ly.nameInSide) {
+    const topBanner = NEWB.indexOf(Ly.header) >= 0 && Ly.header !== "overlap";
+    if (topBanner) out.push(headerSpecial());
+    if (hasPhoto && !topBanner) side += P("margin:0 0 8pt 0;", imgTag);
+    if (Ly.nameInSide && !topBanner) {
       side += P(base(sideAccent, Math.max(16, Math.round(Ly.nameSize * 0.75)), "margin:0;font-weight:bold;"), nameHtml) +
         (d.headline ? P(base(sideMuted, fs + 0.5, "margin:2pt 0 4pt 0;"), esc(d.headline)) : "");
     }
-    side += sideBody(true, !Ly.skillsMain);
-    const mainHtml = (Ly.nameInSide ? "" : (Ly.nameBox ? nameBoxHtml() : nameBlock(a, "#555555", "left"))) + normal(msecs());
+    side += sideBody(!topBanner, !Ly.skillsMain);
+    const mainHtml = (Ly.nameInSide || topBanner ? "" : (Ly.nameBox ? nameBoxHtml() : nameBlock(a, "#555555", "left"))) + normal(msecs());
     const sw = Ly.sideWidth, left = Ly.columns === "sidebarLeft";
     const bleedSide = Ly.page === "sideBleed";
     const sideTd = `<td width="${sw}%" valign="top"${bleedSide ? "" : ` bgcolor="${sideBg}"`} style="${bleedSide ? "" : `background-color:${sideBg};`}width:${sw}%;padding:14pt 12pt;">${side}</td>`;
@@ -1711,6 +1832,7 @@ const I18N_ROWS = [
   ["Seitenhintergrund", "Page background", "Oldal háttere"], ["Weiß", "White", "Fehér"], ["Creme", "Cream", "Krém"], ["Dunkel", "Dark", "Sötét"], ["Pastell-Verlauf", "Pastel gradient", "Pasztell színátmenet"], ["Seitenleiste bis zum Rand", "Sidebar to the edge", "Oldalsáv a szélig"],
   ["Spalten", "Columns", "Oszlopok"], ["Eine Spalte", "One column", "Egy oszlop"], ["Seitenleiste links", "Sidebar left", "Oldalsáv balra"], ["Seitenleiste rechts", "Sidebar right", "Oldalsáv jobbra"], ["Zweispaltig, Spalte rechts", "Two columns, column on the right", "Két oszlop, jobb oldali oszlop"], ["Zweispaltig, Spalte links", "Two columns, column on the left", "Két oszlop, bal oldali oszlop"],
   ["Breite der Seitenleiste (%)", "Sidebar width (%)", "Oldalsáv szélessége (%)"], ["Seitenleiste in Akzentfarbe (dunkel)", "Sidebar in accent colour (dark)", "Oldalsáv kiemelő színnel (sötét)"], ["Name in der Seitenleiste", "Name in the sidebar", "Név az oldalsávban"],
+  ["Banner: Sechsecke", "Banner: hexagons", "Szalag: hatszögek"], ["Banner: Low-Poly", "Banner: low-poly", "Szalag: low-poly"], ["Banner: Rasterpunkte", "Banner: halftone dots", "Szalag: raszterpontok"], ["Banner: Pfeile", "Banner: chevrons", "Szalag: nyilak"], ["Banner: Bauplan-Raster", "Banner: blueprint grid", "Szalag: tervrajz-rács"], ["Banner: Mosaik", "Banner: mosaic", "Szalag: mozaik"], ["Banner: Balkenstadt", "Banner: skyline bars", "Szalag: várossziluett"], ["Banner: Zickzack-Kante", "Banner: zigzag edge", "Szalag: cikkcakk él"], ["Banner mit überlappendem Foto", "Banner with overlapping photo", "Szalag átlógó fotóval"], ["Banner: Schrägstreifen", "Banner: slanted stripes", "Szalag: ferde csíkok"], ["Kapsel", "Pill", "Kapszula"], ["Pfeil-Etikett", "Arrow label", "Nyíl címke"], ["Text + Linie", "Text + line", "Szöveg + vonal"], ["Datum als Etikett", "Date as label", "Dátum címkeként"], ["Sechseck Marine", "Hexagon Navy", "Hatszög tengerkék"], ["Low-Poly Violett", "Low-poly Violet", "Low-poly lila"], ["Rasterpunkte Rot", "Halftone Red", "Raszter piros"], ["Pfeile Petrol", "Chevron Teal", "Nyilak petrol"], ["Bauplan", "Blueprint", "Tervrajz"], ["Bauhaus Mosaik", "Bauhaus Mosaic", "Bauhaus mozaik"], ["Balkenstadt Grün", "Skyline Green", "Várossziluett zöld"], ["Zickzack Orange", "Zigzag Orange", "Cikkcakk narancs"], ["Foto überlappt", "Overlapping Photo", "Átlógó fotó"], ["Schrägstreifen Gelb", "Slanted Stripes Yellow", "Ferde csíkok sárga"], ["Sechseck + Seitenleiste", "Hexagon + Sidebar", "Hatszög + oldalsáv"], ["Low-Poly + Seite rechts", "Low-poly + Right Sidebar", "Low-poly + jobb sáv"], ["Raster + Spalte", "Halftone + Column", "Raszter + oszlop"], ["Mosaik Nacht", "Mosaic Night", "Mozaik éjszaka"], ["Pfeile Creme", "Chevron Cream", "Nyilak krém"], ["Bauplan + Seitenleiste", "Blueprint + Sidebar", "Tervrajz + oldalsáv"],
   ["Kopfbereich (eine Spalte)", "Header area (one column)", "Fejléc (egy oszlop)"], ["Schlicht", "Plain", "Egyszerű"], ["Farbiges Band", "Colour band", "Színes sáv"], ["Helle Tönung", "Light tint", "Világos árnyalat"], ["Farbbalken oben", "Colour bar on top", "Színsáv felül"], ["Zentriert", "Centred", "Középre igazított"], ["Akzentlinie links", "Accent line on the left", "Kiemelő vonal balra"], ["Farbstreifen oben", "Colour stripes on top", "Színes csíkok felül"], ["Name im Rahmen", "Name in a frame", "Név keretben"], ["Balken + Symbole", "Bar + icons", "Sáv + ikonok"], ["Grauer Block", "Grey block", "Szürke blokk"], ["Ecke mit Rundfoto", "Corner with round photo", "Sarok kerek fotóval"], ["Großer Titel", "Large title", "Nagy cím"], ["Dunkler Fotoblock", "Dark photo block", "Sötét fotóblokk"], ["Foto links mit Fläche", "Photo left with panel", "Fotó balra panellel"], ["Band mit Rundfoto", "Band with round photo", "Sáv kerek fotóval"], ["Titel mit Kreis", "Title with circle", "Cím körrel"], ["Farbverlauf-Banner", "Gradient banner", "Színátmenetes szalag"], ["Banner mit Welle", "Banner with wave", "Szalag hullámmal"], ["Schräges Banner", "Slanted banner", "Ferde szalag"], ["Foto-Hero", "Photo hero", "Fotós főcím"], ["Diagonale Streifen", "Diagonal stripes", "Átlós csíkok"],
   ["Namensgröße (pt)", "Name size (pt)", "Névméret (pt)"], ["Vor- und Nachname untereinander", "First and last name stacked", "Keresztnév és vezetéknév egymás alatt"], ["Name in Großbuchstaben", "Name in capitals", "Név nagybetűvel"], ["Vorname dünn, Nachname fett", "First name light, last name bold", "Keresztnév vékony, vezetéknév félkövér"],
   ["Foto-Position (eine Spalte)", "Photo position (one column)", "Fotó helye (egy oszlop)"], ["Rechts", "Right", "Jobbra"], ["Links", "Left", "Balra"], ["Rechteck (Hochformat)", "Rectangle (portrait)", "Téglalap (álló)"],
